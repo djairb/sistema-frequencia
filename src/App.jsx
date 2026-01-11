@@ -1,25 +1,31 @@
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/auth';
+import Login from './pages/Login';
+
+// Componente temporário só pra testar o redirecionamento
+const PaginaEmConstrucao = ({ titulo }) => (
+  <div className="p-10 text-center">
+    <h1 className="text-2xl font-bold mb-4">{titulo}</h1>
+    <p>Área restrita. Em breve aqui terá o dashboard.</p>
+    <a href="/" className="text-blue-500 hover:underline mt-4 block">Voltar para Login (Logout manual)</a>
+  </div>
+);
+
 export default function App() {
   return (
-    // Fundo escuro que ocupa a tela toda (min-h-screen) e centraliza tudo (flex justify-center items-center)
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      
-      {/* O Card Branco com sombra */}
-      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border-4 border-blue-500/30">
-        
-        <h1 className="text-4xl font-extrabold text-blue-600 mb-4">
-          Tailwind tá ON! 🚀
-        </h1>
-        
-        <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-          Se você está vendo este card branco centralizado num fundo escuro, 
-          com esse botão bonitão abaixo, a configuração foi um sucesso.
-        </p>
+    <AuthProvider>
+      <HashRouter>
+        <Routes>
+          {/* Rota Pública */}
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
 
-        <button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 duration-300">
-          Partiu Sistema de Frequência!
-        </button>
-        
-      </div>
-    </div>
-  )
+          {/* Rotas Privadas (Futuramente vamos proteger isso com <PrivateRoute>) */}
+          <Route path="/app/gestao-turmas" element={<PaginaEmConstrucao titulo="Painel do Coordenador" />} />
+          <Route path="/app/meu-diario" element={<PaginaEmConstrucao titulo="Diário do Professor" />} />
+          <Route path="/app/home" element={<PaginaEmConstrucao titulo="Home Geral" />} />
+        </Routes>
+      </HashRouter>
+    </AuthProvider>
+  );
 }
