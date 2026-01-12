@@ -127,7 +127,21 @@ export const api = {
       throw new Error(errorData.error || 'Erro ao vincular professor');
     }
     return await response.json();
-  }
+  },
+
+  // ... resto da api ...
+
+  // 9. MINHAS TURMAS (Professor)
+  getTurmasDoProfessor: async (professorId) => {
+    try {
+      const response = await fetch(`${API_URL}/professores/${professorId}/turmas`);
+      const dados = await response.json();
+      return { data: dados };
+    } catch (error) {
+      console.error("Erro getTurmasDoProfessor:", error);
+      return { data: [] };
+    }
+  },
 
 
 

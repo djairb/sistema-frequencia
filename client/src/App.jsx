@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import { DefaultLayout } from './layouts/DefaultLayout';
 import GestaoTurmas from './pages/GestaoTurmas';
 import DetalhesTurma from './pages/DetalhesTurma';
+import MinhasTurmas from './pages/MinhasTurmas';
 
 // Componente temporário (Placeholder)
 const PaginaEmConstrucao = ({ titulo }) => (
@@ -33,7 +34,7 @@ export default function App() {
 
             {/* Rotas de Professor */}
             <Route path="meu-diario" element={<PaginaEmConstrucao titulo="Meu Diário de Classe" />} />
-            <Route path="minhas-turmas" element={<PaginaEmConstrucao titulo="Minhas Turmas" />} />
+            <Route path="minhas-turmas" element={<MinhasTurmas />} />
             
             {/* Rota Padrão (Fallback) */}
             <Route path="home" element={<PaginaEmConstrucao titulo="Bem-vindo ao SysConex" />} />

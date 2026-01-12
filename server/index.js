@@ -222,6 +222,31 @@ app.get("/turmas/:id/professores", async (req, res) => {
     }
 });
 
+// --- ROTA: LISTAR TURMAS DE UM PROFESSOR ESPECÍFICO ---
+app.get("/professores/:id/turmas", async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Faz um JOIN para pegar as turmas ligadas a esse professor
+        const sql = `
+            SELECT t.* FROM turmas t
+            JOIN turma_professores tp ON t.id = tp.turma_id
+            WHERE tp.professor_id = ?
+        `;
+        const results = await query(sql, [id]);
+        
+        // Formata os dias de aula igual na rota geral
+        const turmasFormatadas = results.map(t => ({
+            ...t,
+            dias_aula: JSON.parse(t.dias_aula || "[]"),
+            ativo: t.ativo === 1
+        }));
+
+        res.json(turmasFormatadas);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- INICIALIZAÇÃO ---
 const PORT = 10000;
 app.listen(PORT, () => {
