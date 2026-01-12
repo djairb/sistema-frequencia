@@ -143,6 +143,22 @@ export const api = {
     }
   },
 
+  // 8. REGISTRAR AULA E CHAMADA (O que estava faltando)
+  registrarAula: async (turmaId, payload) => {
+    // payload = { professor_id, data_aula, conteudo, lista_presenca }
+    const response = await fetch(`${API_URL}/turmas/${turmaId}/aulas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Erro ao registrar aula');
+    }
+    return await response.json();
+  },
+
 
 
 

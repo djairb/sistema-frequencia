@@ -247,6 +247,46 @@ app.get("/professores/:id/turmas", async (req, res) => {
     }
 });
 
+// --- ROTA: REGISTRAR AULA E CHAMADA (COM STATUS P/F/J) ---
+app.post("/turmas/:id/aulas", async (req, res) => {
+    const { id: turmaId } = req.params;
+    const { professor_id, data_aula, conteudo, lista_presenca } = req.body;
+    
+    // O Frontend vai mandar:
+    // lista_presenca: [{ matricula_id: 10, status: 'Presente' }, { matricula_id: 11, status: 'Justificado' }]
+
+    try {
+        // 1. Cria a AULA na tabela
+        // Definimos numero_aulas = 1 por padrão
+        const sqlAula = `
+            INSERT INTO aulas (turma_id, professor_id, data_aula, conteudo, numero_aulas) 
+            VALUES (?, ?, ?, ?, 1)
+        `;
+        const resultAula = await query(sqlAula, [turmaId, professor_id, data_aula, conteudo]);
+        
+        const aulaId = resultAula.insertId;
+
+        // 2. Salva as FREQUÊNCIAS (Chamada)
+        if (lista_presenca && lista_presenca.length > 0) {
+            // Prepara os dados pro Insert em Lote (Bulk Insert)
+            const values = lista_presenca.map(item => [
+                aulaId, 
+                item.matricula_id, 
+                item.status // Grava direto a string: 'Presente', 'Ausente' ou 'Justificado'
+            ]);
+            
+            const sqlFreq = "INSERT INTO frequencias (aula_id, matricula_id, status) VALUES ?";
+            await query(sqlFreq, [values]);
+        }
+
+        res.status(201).json({ message: "Aula e chamada registradas com sucesso!", aulaId });
+
+    } catch (error) {
+        console.error("Erro ao registrar aula:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- INICIALIZAÇÃO ---
 const PORT = 10000;
 app.listen(PORT, () => {

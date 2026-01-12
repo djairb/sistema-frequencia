@@ -89,7 +89,7 @@ export default function MinhasTurmas() {
               
               <div className="bg-gray-50 p-4 border-t border-gray-100">
                 <button 
-                  onClick={() => navigate(`/app/turmas/${turma.id}`)}
+                  onClick={() => navigate(`/app/turmas/${turma.id}/diario`)}
                   className="w-full bg-white border border-gray-200 text-blue-600 font-bold py-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all flex justify-center items-center gap-2 shadow-sm"
                 >
                   Acessar Diário <ArrowRight size={16}/>
