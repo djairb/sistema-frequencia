@@ -98,5 +98,39 @@ export const api = {
       throw new Error(errorData.message || 'Erro ao matricular');
     }
     return await response.json();
+  },
+
+  // ... dentro do objeto api ...
+
+  // 6. LISTAR PROFESSORES VINCULADOS (Do Banco)
+  getProfessoresTurma: async (turmaId) => {
+    try {
+      const response = await fetch(`${API_URL}/turmas/${turmaId}/professores`);
+      const dados = await response.json();
+      return { data: dados };
+    } catch (error) {
+      console.error("Erro getProfessoresTurma:", error);
+      return { data: [] };
+    }
+  },
+
+  // 7. VINCULAR PROFESSOR
+  vincularProfessor: async (turmaId, professorId) => {
+    const response = await fetch(`${API_URL}/turmas/${turmaId}/professores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ professor_id: professorId })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Erro ao vincular professor');
+    }
+    return await response.json();
   }
+
+
+
+
+
 };

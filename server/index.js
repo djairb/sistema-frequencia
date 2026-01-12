@@ -188,6 +188,40 @@ app.get("/turmas/:id/matriculas", async (req, res) => {
     }
 });
 
+
+// --- ROTA DE VINCULAR PROFESSOR ---
+app.post("/turmas/:id/professores", async (req, res) => {
+    const { id: turmaId } = req.params;
+    const { professor_id } = req.body; // Vem do Frontend (Mock ID)
+
+    try {
+        // Tenta inserir na tabela de junção
+        await query(
+            "INSERT INTO turma_professores (turma_id, professor_id) VALUES (?, ?)", 
+            [turmaId, professor_id]
+        );
+        res.status(201).json({ message: "Professor vinculado com sucesso!" });
+    } catch (error) {
+        // Se tentar vincular o mesmo professor 2x, o MySQL reclama (ER_DUP_ENTRY)
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: "Professor já está vinculado a esta turma." });
+        }
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// --- ROTA DE LISTAR PROFESSORES (ESSA QUE TÁ FALTANDO) ---
+app.get("/turmas/:id/professores", async (req, res) => {
+    try {
+        const sql = "SELECT id, professor_id FROM turma_professores WHERE turma_id = ?";
+        const results = await query(sql, [req.params.id]);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- INICIALIZAÇÃO ---
 const PORT = 10000;
 app.listen(PORT, () => {

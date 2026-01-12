@@ -2,286 +2,300 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { 
-  ArrowLeft, Users, Calendar, Plus, Search, Trash2, Loader2, AlertCircle 
+  ArrowLeft, Users, Calendar, Plus, Search, Trash2, Loader2, GraduationCap 
 } from 'lucide-react';
 
 export default function DetalhesTurma() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Estados da Turma e Alunos
   const [turma, setTurma] = useState(null);
   const [alunosMatriculados, setAlunosMatriculados] = useState([]);
   const [todosBeneficiarios, setTodosBeneficiarios] = useState([]); 
   
-  // Modal e Busca
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [buscaAluno, setBuscaAluno] = useState("");
+  // Estados dos Professores
+  const [professoresVinculados, setProfessoresVinculados] = useState([]);
+  const [todosUsuarios, setTodosUsuarios] = useState([]); // Mock de Usuarios (pra pegar professores)
+
+  // Modais
+  const [modalAlunoOpen, setModalAlunoOpen] = useState(false);
+  const [modalProfOpen, setModalProfOpen] = useState(false);
+  
+  const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Carrega tudo
-  // Carregar Dados Iniciais (VERSÃO DEBUG)
-  // Função Completa de Carregamento de Dados
+  // --- CARREGAMENTO DE DADOS ---
   async function loadData() {
     try {
       setLoading(true);
       
-      console.log(`📡 Iniciando busca para Turma ID: ${id}`);
-
-      // 1. Busca tudo em paralelo (Turma, Matrículas e Mock de Pessoas)
-      const [dadosTurma, dadosMatriculas, dadosMock] = await Promise.all([
+      // Busca TUDO em paralelo
+      const [
+        dadosTurma, 
+        dadosMatriculas, 
+        dadosProfsVinculados,
+        dadosBeneficiarios,
+        dadosUsuarios
+      ] = await Promise.all([
         api.getTurmaById(id),
         api.getMatriculasTurma(id),
-        api.getBeneficiarios()
+        api.getProfessoresTurma(id), // <--- Novo
+        api.getBeneficiarios(),
+        api.getUsuariosPorPerfil() // <--- Novo (Traz todos usuários do mock)
       ]);
 
-      // --- LOGS PARA DEBUG (Olhe no Console F12) ---
-      console.log("📦 TURMA (Bruto):", dadosTurma);
-      console.log("📦 MATRÍCULAS (Bruto):", dadosMatriculas);
-
-      // 2. TRATAMENTO INTELIGENTE DA TURMA
-      // Passo A: Tenta pegar o dado direto ou dentro de .data
+      // 1. Tratamento da Turma
       let objTurma = dadosTurma.data || dadosTurma;
+      if (Array.isArray(objTurma)) objTurma = objTurma.length > 0 ? objTurma[0] : null;
+      setTurma(objTurma);
 
-      // Passo B: Se o Backend mandou uma lista [ {nome...} ], pega o primeiro item
-      if (Array.isArray(objTurma)) {
-        objTurma = objTurma.length > 0 ? objTurma[0] : null;
-      }
+      // 2. Mock de Pessoas e Usuários
+      const listaBenef = Array.isArray(dadosBeneficiarios.data) ? dadosBeneficiarios.data : [];
+      setTodosBeneficiarios(listaBenef);
 
-      // Passo C: Validação Final
-      if (!objTurma || (!objTurma.nome && !objTurma.projeto_id)) {
-         console.error("❌ O objeto Turma está vazio ou inválido!", objTurma);
-         // Opcional: setTurma({ nome: "Erro ao carregar", periodo: "--" });
-      } else {
-         console.log("✅ Turma processada com sucesso:", objTurma);
-      }
+      const listaUsers = Array.isArray(dadosUsuarios.data) ? dadosUsuarios.data : [];
+      console.log(listaUsers)
+      setTodosUsuarios(listaUsers);
 
-      setTurma(objTurma); // Salva no estado
-
-      // 3. PREPARAÇÃO DAS LISTAS DE ALUNOS
-      const listaMatriculas = Array.isArray(dadosMatriculas) 
-        ? dadosMatriculas 
-        : (dadosMatriculas.data || []);
-      
-      const listaBeneficiarios = Array.isArray(dadosMock.data) 
-        ? dadosMock.data 
-        : (dadosMock || []);
-      
-      setTodosBeneficiarios(listaBeneficiarios);
-
-      // 4. CRUZAMENTO DE DADOS (Matrícula + Dados Pessoais)
-      const listaCompleta = listaMatriculas.map(mat => {
-        // Acha o aluno no mock pelo ID
-        const infoAluno = listaBeneficiarios.find(b => Number(b.id) === Number(mat.aluno_id));
-        
-        // Extrai os dados da gaveta 'pessoa' (onde vimos que está o nome)
-        const dadosPessoa = infoAluno?.pessoa || {};
-
+      // 3. Cruzamento: Alunos
+      const listaMatriculas = Array.isArray(dadosMatriculas) ? dadosMatriculas : (dadosMatriculas.data || []);
+      const alunosCruzados = listaMatriculas.map(mat => {
+        const info = listaBenef.find(b => Number(b.id) === Number(mat.aluno_id));
+        const pessoa = info?.pessoa || {};
         return {
-          ...mat, // Mantém ID da matrícula, status, data...
-          // Tenta pegar o nome completo, ou nome simples, ou avisa erro
-          nome: dadosPessoa.nome_completo || dadosPessoa.nome || "Nome Desconhecido",
-          cpf: dadosPessoa.cpf || "---"
+          ...mat,
+          nome: pessoa.nome_completo || pessoa.nome || "Nome Desconhecido",
+          cpf: pessoa.cpf || "---"
         };
       });
+      setAlunosMatriculados(alunosCruzados);
 
-      setAlunosMatriculados(listaCompleta);
+      // 4. Cruzamento: Professores (ATUALIZADO)
+      const listaProfsBanco = Array.isArray(dadosProfsVinculados.data) ? dadosProfsVinculados.data : dadosProfsVinculados;
+      
+      const profsCruzados = listaProfsBanco.map(vinculo => {
+        // Acha o usuário no mock pelo ID
+        const infoUser = listaUsers.find(u => Number(u.id) === Number(vinculo.professor_id));
+        
+        // --- CORREÇÃO AQUI ---
+        // Entra em 'pessoa' para pegar o nome e 'colaborador' para o email
+        return {
+          ...vinculo,
+          nome: infoUser?.pessoa?.nome_completo || infoUser?.login || "Professor não encontrado",
+          email: infoUser?.colaborador?.email_institucional || "---"
+        };
+      });
+      
+      setProfessoresVinculados(profsCruzados);
 
     } catch (error) {
-      console.error("❌ ERRO FATAL NO LOADDATA:", error);
-      alert("Ocorreu um erro ao carregar os dados. Verifique o Console.");
+      console.error("Erro loadData:", error);
+      alert("Erro ao carregar dados.");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    loadData();
-  }, [id]);
+  useEffect(() => { loadData(); }, [id]);
 
-  async function handleMatricular(alunoId) {
+  // --- AÇÕES ---
+  async function handleVincularAluno(alunoId) {
     try {
-      // 1. Manda o Backend gravar
       await api.matricularAluno(id, alunoId);
-      
-      // 2. Fecha o modal pra dar feedback visual
-      setIsModalOpen(false);
-      
-      // 3. Limpa a busca pra facilitar adicionar o próximo
-      setBuscaAluno(""); 
-
-      // 4. Pequeno delay de segurança (100ms) pro MySQL garantir a gravação
-      // antes da gente ler de novo
-      setTimeout(() => {
-          loadData(); 
-          alert("Aluno matriculado com sucesso!");
-      }, 100);
-
+      setModalAlunoOpen(false);
+      setBusca("");
+      setTimeout(loadData, 100);
     } catch (error) {
-      alert(`❌ ERRO: ${error.message}`);
+      alert(`Erro: ${error.message}`);
     }
   }
 
-  // Filtro Seguro
-  // Filtro Seguro (Considerando o objeto 'pessoa')
-  const alunosDisponiveis = todosBeneficiarios.filter(b => {
-    const dadosPessoa = b.pessoa || {};
-    const nomeReal = dadosPessoa.nome_completo || dadosPessoa.nome || "";
-    
-    const termo = buscaAluno.toLowerCase();
-    const matchBusca = nomeReal.toLowerCase().includes(termo);
-    const jaMatriculado = alunosMatriculados.some(m => m.aluno_id === b.id);
-    
-    return matchBusca && !jaMatriculado;
-  });
-
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-64 text-blue-600 gap-2">
-        <Loader2 className="animate-spin" size={40} />
-        <p>Carregando dados da turma...</p>
-      </div>
-    );
+  async function handleVincularProfessor(profId) {
+    try {
+      await api.vincularProfessor(id, profId);
+      setModalProfOpen(false);
+      alert("Professor vinculado!");
+      setTimeout(loadData, 100);
+    } catch (error) {
+      alert(`Erro: ${error.message}`);
+    }
   }
 
-  if (!turma) return <div className="p-8 text-center text-gray-500">Turma não encontrada.</div>;
+  // --- FILTROS ---
+  
+  // Filtra alunos para o modal
+  const alunosDisponiveis = todosBeneficiarios.filter(b => {
+    const pessoa = b.pessoa || {};
+    const nome = (pessoa.nome_completo || pessoa.nome || "").toLowerCase();
+    const jaTem = alunosMatriculados.some(m => Number(m.aluno_id) === Number(b.id));
+    return nome.includes(busca.toLowerCase()) && !jaTem;
+  });
+
+  // Filtra APENAS PROFESSORES para o modal
+  const professoresDisponiveis = todosUsuarios.filter(u => {
+    // 1. ACESSA A DESCRIÇÃO DENTRO DO OBJETO PERFIL
+    // O ?. previne erro se o perfil vier nulo
+    const descPerfil = u.perfil?.descricao || ""; 
+    
+    // 2. Verifica se contém "Professor" (ignorando maiúsculas/minúsculas)
+    const ehProfessor = descPerfil.toLowerCase().includes('professor');
+    
+    // 3. Verifica se já está vinculado pra não duplicar
+    const jaTem = professoresVinculados.some(p => Number(p.professor_id) === Number(u.id));
+    
+    return ehProfessor && !jaTem;
+  });
+
+  if (loading) return <div className="p-8 text-center"><Loader2 className="animate-spin inline"/> Carregando...</div>;
+  if (!turma) return <div className="p-8 text-center">Turma não encontrada.</div>;
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-8 pb-10">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
           <ArrowLeft size={24} />
         </button>
         <div>
-          {/* AQUI ESTÁ O NOME DA TURMA - Agora protegido com ? */}
-          <h1 className="text-2xl font-bold text-gray-800">
-            {turma?.nome || "Nome Indisponível"}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-800">{turma.nome || "Turma sem nome"}</h1>
           <div className="flex gap-3 text-sm text-gray-500 mt-1">
-            <span className="flex items-center gap-1">
-              <Calendar size={14}/> {turma?.periodo || "---"}
-            </span>
-            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-bold uppercase">
-              {turma?.turno || "---"}
-            </span>
-            <span className="text-xs text-gray-400 border px-1 rounded">
-                Projeto ID: {turma?.projeto_id}
-            </span>
+            <span className="flex items-center gap-1"><Calendar size={14}/> {turma.periodo}</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-bold uppercase">{turma.turno}</span>
           </div>
         </div>
       </div>
 
-      {/* Tabela de Alunos */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="font-bold text-gray-800 flex items-center gap-2">
-            <Users className="text-blue-600" size={20}/> 
-            Alunos Matriculados ({alunosMatriculados.length})
-          </h2>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-          >
-            <Plus size={16} /> Adicionar Aluno
-          </button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* === SEÇÃO 1: ALUNOS === */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <h2 className="font-bold text-gray-800 flex items-center gap-2">
+              <Users className="text-blue-600" size={20}/> 
+              Alunos ({alunosMatriculados.length})
+            </h2>
+            <button onClick={() => setModalAlunoOpen(true)} className="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-blue-100">
+              + Aluno
+            </button>
+          </div>
+          <div className="overflow-y-auto max-h-[400px]">
+            <table className="w-full text-left">
+              <tbody className="divide-y divide-gray-100">
+                {alunosMatriculados.map(mat => (
+                  <tr key={mat.id} className="hover:bg-gray-50">
+                    <td className="p-4 py-3">
+                      <p className="font-medium text-gray-800 text-sm">{mat.nome}</p>
+                      <p className="text-xs text-gray-400">{mat.cpf}</p>
+                    </td>
+                    <td className="p-4 py-3 text-right">
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">{mat.status}</span>
+                    </td>
+                  </tr>
+                ))}
+                {alunosMatriculados.length === 0 && <tr className="text-center text-gray-400 text-sm"><td colSpan="2" className="p-6">Nenhum aluno.</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-            <tr>
-              <th className="p-4">Nome do Aluno</th>
-              <th className="p-4">CPF</th>
-              <th className="p-4">Status</th>
-              <th className="p-4 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {alunosMatriculados.length === 0 ? (
-              <tr><td colSpan="4" className="p-8 text-center text-gray-400">Nenhum aluno nesta turma ainda.</td></tr>
-            ) : (
-              alunosMatriculados.map(mat => (
-                <tr key={mat.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 font-medium text-gray-800">{mat.nome}</td>
-                  <td className="p-4 text-gray-500 text-sm">{mat.cpf}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                      mat.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {mat.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button className="text-red-400 hover:text-red-600 p-2 rounded hover:bg-red-50 transition-colors">
-                      <Trash2 size={16}/>
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        {/* === SEÇÃO 2: PROFESSORES === */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <h2 className="font-bold text-gray-800 flex items-center gap-2">
+              <GraduationCap className="text-purple-600" size={20}/> 
+              Corpo Docente ({professoresVinculados.length})
+            </h2>
+            <button onClick={() => setModalProfOpen(true)} className="text-purple-600 hover:bg-purple-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-purple-100">
+              + Professor
+            </button>
+          </div>
+          <div className="overflow-y-auto max-h-[400px]">
+             <table className="w-full text-left">
+              <tbody className="divide-y divide-gray-100">
+                {professoresVinculados.map(prof => (
+                  <tr key={prof.id} className="hover:bg-gray-50">
+                    <td className="p-4 py-3">
+                      <p className="font-medium text-gray-800 text-sm">{prof.nome}</p>
+                      <p className="text-xs text-gray-400">{prof.email}</p>
+                    </td>
+                    <td className="p-4 py-3 text-right">
+                      <button className="text-red-300 hover:text-red-500"><Trash2 size={16}/></button>
+                    </td>
+                  </tr>
+                ))}
+                {professoresVinculados.length === 0 && <tr className="text-center text-gray-400 text-sm"><td colSpan="2" className="p-6">Nenhum professor vinculado.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="font-bold text-gray-700">Vincular Aluno</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <ArrowLeft size={20} className="rotate-180"/>
-              </button>
+      {/* === MODAL ALUNOS === */}
+      {modalAlunoOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b flex justify-between items-center bg-blue-50">
+              <h3 className="font-bold text-blue-900">Vincular Aluno</h3>
+              <button onClick={() => setModalAlunoOpen(false)}><ArrowLeft size={20} className="rotate-180 text-blue-900"/></button>
             </div>
-            
-            <div className="p-4 border-b">
-              <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg focus-within:ring-2 ring-blue-500/20 transition-all">
-                <Search size={18} className="text-gray-400"/>
-                <input 
-                  autoFocus
-                  placeholder="Buscar por nome..." 
-                  className="bg-transparent outline-none w-full text-gray-700"
-                  value={buscaAluno}
-                  onChange={e => setBuscaAluno(e.target.value)}
-                />
-              </div>
+            <div className="p-3 border-b bg-white">
+              <input 
+                autoFocus placeholder="Buscar aluno..." 
+                className="w-full bg-gray-100 p-2 rounded outline-none border focus:border-blue-300"
+                value={busca} onChange={e => setBusca(e.target.value)}
+              />
             </div>
-
-            <div className="overflow-y-auto p-2 space-y-1 flex-1">
-              {alunosDisponiveis.map(aluno => {
-                // AQUI A MÁGICA: Extraímos os dados de dentro de 'pessoa'
-                const dadosPessoa = aluno.pessoa || {};
-                const nomeMostravel = dadosPessoa.nome_completo || dadosPessoa.nome || "Sem Nome";
-                const cpfMostravel = dadosPessoa.cpf || "CPF Indisponível";
-
-                return (
-                  <div key={aluno.id} className="flex items-center justify-between p-3 hover:bg-blue-50 rounded-lg group transition-colors">
+            <div className="overflow-y-auto p-2 space-y-1 flex-1 bg-white">
+              {alunosDisponiveis.map(a => {
+                 const p = a.pessoa || {};
+                 return (
+                  <div key={a.id} className="flex justify-between p-3 hover:bg-gray-50 rounded border border-transparent hover:border-gray-200">
                     <div>
-                      <p className="font-medium text-gray-800">
-                        {nomeMostravel}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        CPF: {cpfMostravel}
-                      </p>
+                      <p className="font-medium text-sm">{p.nome_completo || p.nome}</p>
+                      <p className="text-xs text-gray-400">{p.cpf}</p>
                     </div>
-                    <button 
-                      onClick={() => handleMatricular(aluno.id)}
-                      className="bg-white border border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded text-sm font-medium opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-                    >
-                      Vincular
-                    </button>
+                    <button onClick={() => handleVincularAluno(a.id)} className="text-blue-600 font-bold text-xs px-2 py-1 bg-blue-50 rounded">ADD</button>
                   </div>
-                );
+                 )
               })}
-              {alunosDisponiveis.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-8 text-gray-400 gap-2">
-                  <AlertCircle size={32} className="opacity-20"/>
-                  <p>Nenhum aluno encontrado.</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
       )}
+
+      {/* === MODAL PROFESSORES === */}
+      {modalProfOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b flex justify-between items-center bg-purple-50">
+              <h3 className="font-bold text-purple-900">Adicionar Professor</h3>
+              <button onClick={() => setModalProfOpen(false)}><ArrowLeft size={20} className="rotate-180 text-purple-900"/></button>
+            </div>
+            <div className="overflow-y-auto p-2 space-y-1 flex-1 bg-white">
+              {professoresDisponiveis.length === 0 ? <p className="p-4 text-center text-gray-400">Nenhum professor disponível.</p> :
+               professoresDisponiveis.map(u => {
+                  // AQUI O SEGREDO: Pegamos os dados das gavetas certas
+                  const nome = u.pessoa?.nome_completo || u.login || "Sem Nome";
+                  const email = u.colaborador?.email_institucional || "---";
+
+                  return (
+                    <div key={u.id} className="flex justify-between p-3 hover:bg-gray-50 rounded border border-transparent hover:border-gray-200">
+                      <div>
+                        <p className="font-medium text-sm">{nome}</p>
+                        <p className="text-xs text-gray-400">{email}</p>
+                      </div>
+                      <button onClick={() => handleVincularProfessor(u.id)} className="text-purple-600 font-bold text-xs px-2 py-1 bg-purple-50 rounded">ADD</button>
+                    </div>
+                  );
+               })
+              }
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
