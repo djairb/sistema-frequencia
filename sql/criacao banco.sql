@@ -2,6 +2,10 @@
 CREATE DATABASE IF NOT EXISTS sysfrequencia;
 USE sysfrequencia;
 
+
+
+
+
 -- 2. TABELA DE TURMAS (Híbrida)
 -- O 'curso_id' virou 'projeto_id' que vem do Mock
 DROP TABLE IF EXISTS turmas;
@@ -38,10 +42,17 @@ DROP TABLE IF EXISTS turma_professores;
 CREATE TABLE turma_professores (
     id INT AUTO_INCREMENT PRIMARY KEY,
     turma_id INT NOT NULL,
-    professor_id INT NOT NULL,   -- ID do Professor (Vem do Mock)
+    professor_id INT NOT NULL,
+    disciplina_id INT NOT NULL, -- Agora é obrigatório saber a matéria
+    
+    ativo BOOLEAN DEFAULT TRUE, -- Para controlar substituições
     
     FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE CASCADE,
-    UNIQUE KEY professor_turma_unico (turma_id, professor_id)
+    FOREIGN KEY (professor_id) REFERENCES professores(id) ON DELETE CASCADE, -- Supondo tabela professores
+    FOREIGN KEY (disciplina_id) REFERENCES disciplinas(id) ON DELETE CASCADE,
+    
+    -- Garante que não duplique a MESMA matéria para o MESMO professor na MESMA turma
+    UNIQUE KEY professor_turma_disciplina (turma_id, professor_id, disciplina_id)
 );
 
 -- 5. TABELA DE DISCIPLINAS (Opcional por enquanto, mas já deixa pronto)
@@ -81,3 +92,5 @@ CREATE TABLE frequencias (
     FOREIGN KEY (aula_id) REFERENCES aulas(id) ON DELETE CASCADE,
     FOREIGN KEY (matricula_id) REFERENCES matriculas(id) ON DELETE CASCADE
 );
+
+

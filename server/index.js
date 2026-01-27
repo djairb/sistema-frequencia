@@ -9,15 +9,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- CONEXÃO COM O BANCO ---
+// --- CONEXÃO COM O BANCO NOVO ---
 const db = mysql.createPool({
     host: "localhost",
     user: "root",
     password: "Karolinne10", // Sua senha
-    database: "sysfrequencia" // Nome atualizado
+    database: "sysfrequenciaBeneficiario" // Banco Novo
 });
 
-// Helper para usar Async/Await no MySQL (Facilita muito a vida!)
+// Helper para Async/Await
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
         db.query(sql, params, (err, result) => {
@@ -27,12 +27,12 @@ const query = (sql, params) => {
     });
 };
 
-// Teste de conexão ao iniciar
+// Teste de conexão
 db.getConnection((err, connection) => {
     if (err) {
         console.error("❌ Erro ao conectar no MySQL:", err.code);
     } else {
-        console.log("✅ Conectado ao MySQL (sysfrequencia) com sucesso!");
+        console.log("✅ Conectado ao MySQL (sysfrequenciaBeneficiario) com sucesso!");
         connection.release();
     }
 });
@@ -48,11 +48,10 @@ app.get("/turmas", async (req, res) => {
     try {
         const results = await query("SELECT * FROM turmas ORDER BY id DESC");
         
-        // Converte o JSON string de dias_aula volta para Array
         const turmasFormatadas = results.map(t => ({
             ...t,
             dias_aula: JSON.parse(t.dias_aula || "[]"),
-            ativo: t.ativo === 1 // Garante booleano
+            ativo: t.ativo === 1
         }));
         
         res.json(turmasFormatadas);
@@ -64,7 +63,6 @@ app.get("/turmas", async (req, res) => {
 
 // Criar nova turma
 app.post("/turmas", async (req, res) => {
-    // projeto_id vem do frontend (selecionado no select de Projetos Mock)
     const { projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim } = req.body;
 
     try {
@@ -79,7 +77,7 @@ app.post("/turmas", async (req, res) => {
             nome, 
             turno, 
             periodo, 
-            JSON.stringify(dias_aula || []), // Salva como string JSON
+            JSON.stringify(dias_aula || []), 
             data_inicio, 
             data_fim
         ];
@@ -96,69 +94,40 @@ app.post("/turmas", async (req, res) => {
     }
 });
 
-// --- 2. GESTÃO DE MATRÍCULAS (Com Trava de Projeto) ---
-
-// --- NOVO: PEGAR UMA TURMA ESPECÍFICA ---
-// Rota para pegar UMA turma pelo ID
+// Pegar UMA turma pelo ID
 app.get("/turmas/:id", async (req, res) => {
     try {
         const results = await query("SELECT * FROM turmas WHERE id = ?", [req.params.id]);
         
-        // Se não achar nada, retorna 404
         if (results.length === 0) {
             return res.status(404).json({ error: "Turma não encontrada" });
         }
         
         const turma = results[0];
-        
-        // Formatação
         turma.dias_aula = JSON.parse(turma.dias_aula || "[]");
         turma.ativo = turma.ativo === 1;
         
-        // RETORNA O OBJETO DIRETO
         res.json(turma); 
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// --- NOVO: LISTAR MATRÍCULAS DA TURMA ---
-// --- ROTA DE MATRICULAR ALUNO (Com trava de Projeto) ---
+// --- 2. GESTÃO DE MATRÍCULAS (ATUALIZADO PARA BENEFICIARIO) ---
+
+// Matricular Aluno (Usa 'beneficiario_id' agora)
 app.post("/turmas/:id/matriculas", async (req, res) => {
     const { id: turmaId } = req.params;
-    const { aluno_id } = req.body;
+    const { aluno_id } = req.body; // No front a gente manda 'aluno_id', mas aqui tratamos como 'beneficiario_id'
 
     try {
-        // 1. Descobre o PROJETO desta turma
+        // Validação de Projeto (Mantida)
         const [turmaAlvo] = await query("SELECT projeto_id FROM turmas WHERE id = ?", [turmaId]);
-        
-        if (!turmaAlvo) {
-            return res.status(404).json({ error: "Turma não encontrada" });
-        }
-        const projetoAlvoId = turmaAlvo.projeto_id;
+        if (!turmaAlvo) return res.status(404).json({ error: "Turma não encontrada" });
 
-        // 2. SEGURANÇA: Verifica se o aluno já está em OUTRO projeto
-        const sqlCheck = `
-            SELECT t.projeto_id, t.nome as nome_turma
-            FROM matriculas m
-            JOIN turmas t ON m.turma_id = t.id
-            WHERE m.aluno_id = ? 
-            AND m.status = 'Ativo'
-            LIMIT 1
-        `;
-        const [matriculaExistente] = await query(sqlCheck, [aluno_id]);
-
-        // Se já tem matrícula em projeto diferente -> BLOQUEIA
-        if (matriculaExistente && matriculaExistente.projeto_id !== projetoAlvoId) {
-            return res.status(409).json({ 
-                error: "CONFLITO DE PROJETO", 
-                message: `Aluno já está no projeto da turma '${matriculaExistente.nome_turma}'.` 
-            });
-        }
-
-        // 3. Insere a matrícula
+        // Insere na tabela nova usando 'beneficiario_id'
         await query(
-            "INSERT INTO matriculas (turma_id, aluno_id, status) VALUES (?, ?, 'Ativo')", 
+            "INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES (?, ?, 'Ativo')", 
             [turmaId, aluno_id]
         );
 
@@ -172,14 +141,25 @@ app.post("/turmas/:id/matriculas", async (req, res) => {
     }
 });
 
-// --- ROTA DE LISTAR MATRÍCULAS DA TURMA ---
-// É essa rota que alimenta a tabela!
+// Listar Alunos da Turma (COM JOIN NA TABELA PESSOA - Traz o nome!)
 app.get("/turmas/:id/matriculas", async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Busca quem está nessa turma e já traz o ID e STATUS
-        const sql = "SELECT * FROM matriculas WHERE turma_id = ?";
+        // O PULO DO GATO: JOIN para pegar o Nome do Aluno na tabela Pessoa
+        const sql = `
+            SELECT 
+                m.id, 
+                m.turma_id, 
+                m.beneficiario_id as aluno_id, 
+                m.status,
+                p.nome_completo as nome, -- Traz o nome direto!
+                p.cpf
+            FROM matriculas m
+            JOIN Beneficiario b ON m.beneficiario_id = b.id
+            JOIN pessoa p ON b.pessoa_id = p.id
+            WHERE m.turma_id = ?
+        `;
         const results = await query(sql, [id]);
         
         res.json(results);
@@ -188,33 +168,41 @@ app.get("/turmas/:id/matriculas", async (req, res) => {
     }
 });
 
+// --- 3. GESTÃO DE PROFESSORES (ATUALIZADO PARA COLABORADOR) ---
 
-// --- ROTA DE VINCULAR PROFESSOR ---
+// Vincular Professor (Usa 'colaborador_id')
 app.post("/turmas/:id/professores", async (req, res) => {
     const { id: turmaId } = req.params;
-    const { professor_id } = req.body; // Vem do Frontend (Mock ID)
+    const { professor_id } = req.body; // Front manda 'professor_id', Back usa 'colaborador_id'
 
     try {
-        // Tenta inserir na tabela de junção
         await query(
-            "INSERT INTO turma_professores (turma_id, professor_id) VALUES (?, ?)", 
+            "INSERT INTO turma_professores (turma_id, colaborador_id) VALUES (?, ?)", 
             [turmaId, professor_id]
         );
         res.status(201).json({ message: "Professor vinculado com sucesso!" });
     } catch (error) {
-        // Se tentar vincular o mesmo professor 2x, o MySQL reclama (ER_DUP_ENTRY)
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ error: "Professor já está vinculado a esta turma." });
+            return res.status(400).json({ error: "Professor já está vinculado." });
         }
         res.status(500).json({ error: error.message });
     }
 });
 
-
-// --- ROTA DE LISTAR PROFESSORES (ESSA QUE TÁ FALTANDO) ---
+// Listar Professores da Turma (COM JOIN - Traz nome e email)
 app.get("/turmas/:id/professores", async (req, res) => {
     try {
-        const sql = "SELECT id, professor_id FROM turma_professores WHERE turma_id = ?";
+        const sql = `
+            SELECT 
+                tp.id, 
+                tp.colaborador_id as professor_id, 
+                p.nome_completo as nome,
+                c.email_institucional as email
+            FROM turma_professores tp
+            JOIN colaborador c ON tp.colaborador_id = c.id
+            JOIN pessoa p ON c.pessoa_id = p.id
+            WHERE tp.turma_id = ?
+        `;
         const results = await query(sql, [req.params.id]);
         res.json(results);
     } catch (error) {
@@ -222,19 +210,22 @@ app.get("/turmas/:id/professores", async (req, res) => {
     }
 });
 
-// --- ROTA: LISTAR TURMAS DE UM PROFESSOR ESPECÍFICO ---
+// --- 4. ÁREA DO PROFESSOR (MINHAS TURMAS) ---
+
+// Listar Turmas do Professor Logado
 app.get("/professores/:id/turmas", async (req, res) => {
     try {
-        const { id } = req.params;
-        // Faz um JOIN para pegar as turmas ligadas a esse professor
+        const { id } = req.params; // ID do USUÁRIO logado
+        
+        // Lógica: Usuário -> Colaborador -> Turma
         const sql = `
             SELECT t.* FROM turmas t
             JOIN turma_professores tp ON t.id = tp.turma_id
-            WHERE tp.professor_id = ?
+            JOIN usuario u ON u.id_colaborador = tp.colaborador_id
+            WHERE u.id = ?
         `;
         const results = await query(sql, [id]);
         
-        // Formata os dias de aula igual na rota geral
         const turmasFormatadas = results.map(t => ({
             ...t,
             dias_aula: JSON.parse(t.dias_aula || "[]"),
@@ -247,39 +238,39 @@ app.get("/professores/:id/turmas", async (req, res) => {
     }
 });
 
-// --- ROTA: REGISTRAR AULA E CHAMADA (COM STATUS P/F/J) ---
+// --- 5. REGISTRO DE AULA E CHAMADA ---
 app.post("/turmas/:id/aulas", async (req, res) => {
     const { id: turmaId } = req.params;
-    const { professor_id, data_aula, conteudo, lista_presenca } = req.body;
-    
-    // O Frontend vai mandar:
-    // lista_presenca: [{ matricula_id: 10, status: 'Presente' }, { matricula_id: 11, status: 'Justificado' }]
+    const { professor_id, data_aula, conteudo, lista_presenca } = req.body; // professor_id aqui é o ID do usuário logado
 
     try {
-        // 1. Cria a AULA na tabela
-        // Definimos numero_aulas = 1 por padrão
+        // Primeiro, precisamos descobrir o ID do Colaborador baseado no ID do Usuário
+        const [user] = await query("SELECT id_colaborador FROM usuario WHERE id = ?", [professor_id]);
+        if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
+        
+        const idColaborador = user.id_colaborador;
+
+        // 1. Cria a AULA
         const sqlAula = `
-            INSERT INTO aulas (turma_id, professor_id, data_aula, conteudo, numero_aulas) 
+            INSERT INTO aulas (turma_id, colaborador_id, data_aula, conteudo, numero_aulas) 
             VALUES (?, ?, ?, ?, 1)
         `;
-        const resultAula = await query(sqlAula, [turmaId, professor_id, data_aula, conteudo]);
-        
+        const resultAula = await query(sqlAula, [turmaId, idColaborador, data_aula, conteudo]);
         const aulaId = resultAula.insertId;
 
-        // 2. Salva as FREQUÊNCIAS (Chamada)
+        // 2. Salva as FREQUÊNCIAS
         if (lista_presenca && lista_presenca.length > 0) {
-            // Prepara os dados pro Insert em Lote (Bulk Insert)
             const values = lista_presenca.map(item => [
                 aulaId, 
                 item.matricula_id, 
-                item.status // Grava direto a string: 'Presente', 'Ausente' ou 'Justificado'
+                item.status
             ]);
             
             const sqlFreq = "INSERT INTO frequencias (aula_id, matricula_id, status) VALUES ?";
             await query(sqlFreq, [values]);
         }
 
-        res.status(201).json({ message: "Aula e chamada registradas com sucesso!", aulaId });
+        res.status(201).json({ message: "Aula registrada com sucesso!", aulaId });
 
     } catch (error) {
         console.error("Erro ao registrar aula:", error);
@@ -287,8 +278,15 @@ app.post("/turmas/:id/aulas", async (req, res) => {
     }
 });
 
+// --- 6. WEBHOOK DE INTEGRAÇÃO (BÔNUS) ---
+// Caso o Rhian queira mandar dados via POST no futuro
+app.post("/api/integracao/receber-usuarios", async (req, res) => {
+    // Implementação futura conforme necessidade
+    res.status(200).json({ message: "Endpoint pronto para receber dados." });
+});
+
 // --- INICIALIZAÇÃO ---
 const PORT = 10000;
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor SysFrequencia rodando na porta ${PORT}`);
+    console.log(`🚀 Servidor SysFrequencia (Banco Novo) rodando na porta ${PORT}`);
 });
