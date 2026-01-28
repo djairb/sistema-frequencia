@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 require('dotenv').config();
 
 const app = express();
@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // --- CONEXÃO COM O BANCO NOVO ---
-const db = mysql.createPool({
+const dbFreqBeneficiario = mysql.createPool({
     host: "localhost",
     user: "root",
     password: "Karolinne10", // Sua senha
@@ -20,7 +20,7 @@ const db = mysql.createPool({
 // Helper para Async/Await
 const query = (sql, params) => {
     return new Promise((resolve, reject) => {
-        db.query(sql, params, (err, result) => {
+        dbFreqBeneficiario.query(sql, params, (err, result) => {
             if (err) reject(err);
             else resolve(result);
         });
@@ -28,7 +28,7 @@ const query = (sql, params) => {
 };
 
 // Teste de conexão
-db.getConnection((err, connection) => {
+dbFreqBeneficiario.getConnection((err, connection) => {
     if (err) {
         console.error("❌ Erro ao conectar no MySQL:", err.code);
     } else {
@@ -44,7 +44,7 @@ db.getConnection((err, connection) => {
 // --- 1. CRUD DE TURMAS ---
 
 // Listar todas as turmas
-app.get("/turmas", async (req, res) => {
+app.get("/sysconex-freq/turmas", async (req, res) => {
     try {
         const results = await query("SELECT * FROM turmas ORDER BY id DESC");
         
@@ -62,7 +62,7 @@ app.get("/turmas", async (req, res) => {
 });
 
 // Criar nova turma
-app.post("/turmas", async (req, res) => {
+app.post("/sysconex-freq/turmas", async (req, res) => {
     const { projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim } = req.body;
 
     try {
@@ -95,7 +95,7 @@ app.post("/turmas", async (req, res) => {
 });
 
 // Pegar UMA turma pelo ID
-app.get("/turmas/:id", async (req, res) => {
+app.get("/sysconex-freq/turmas/:id", async (req, res) => {
     try {
         const results = await query("SELECT * FROM turmas WHERE id = ?", [req.params.id]);
         
@@ -116,7 +116,7 @@ app.get("/turmas/:id", async (req, res) => {
 // --- 2. GESTÃO DE MATRÍCULAS (ATUALIZADO PARA BENEFICIARIO) ---
 
 // Matricular Aluno (Usa 'beneficiario_id' agora)
-app.post("/turmas/:id/matriculas", async (req, res) => {
+app.post("/sysconex-freq/turmas/:id/matriculas", async (req, res) => {
     const { id: turmaId } = req.params;
     const { aluno_id } = req.body; // No front a gente manda 'aluno_id', mas aqui tratamos como 'beneficiario_id'
 
@@ -142,7 +142,7 @@ app.post("/turmas/:id/matriculas", async (req, res) => {
 });
 
 // Listar Alunos da Turma (COM JOIN NA TABELA PESSOA - Traz o nome!)
-app.get("/turmas/:id/matriculas", async (req, res) => {
+app.get("/sysconex-freq/turmas/:id/matriculas", async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -171,7 +171,7 @@ app.get("/turmas/:id/matriculas", async (req, res) => {
 // --- 3. GESTÃO DE PROFESSORES (ATUALIZADO PARA COLABORADOR) ---
 
 // Vincular Professor (Usa 'colaborador_id')
-app.post("/turmas/:id/professores", async (req, res) => {
+app.post("/sysconex-freq/turmas/:id/professores", async (req, res) => {
     const { id: turmaId } = req.params;
     const { professor_id } = req.body; // Front manda 'professor_id', Back usa 'colaborador_id'
 
@@ -190,7 +190,7 @@ app.post("/turmas/:id/professores", async (req, res) => {
 });
 
 // Listar Professores da Turma (COM JOIN - Traz nome e email)
-app.get("/turmas/:id/professores", async (req, res) => {
+app.get("/sysconex-freq/turmas/:id/professores", async (req, res) => {
     try {
         const sql = `
             SELECT 
@@ -213,7 +213,7 @@ app.get("/turmas/:id/professores", async (req, res) => {
 // --- 4. ÁREA DO PROFESSOR (MINHAS TURMAS) ---
 
 // Listar Turmas do Professor Logado
-app.get("/professores/:id/turmas", async (req, res) => {
+app.get("/sysconex-freq/professores/:id/turmas", async (req, res) => {
     try {
         const { id } = req.params; // ID do USUÁRIO logado
         
@@ -239,7 +239,7 @@ app.get("/professores/:id/turmas", async (req, res) => {
 });
 
 // --- 5. REGISTRO DE AULA E CHAMADA ---
-app.post("/turmas/:id/aulas", async (req, res) => {
+app.post("/sysconex-freq/turmas/:id/aulas", async (req, res) => {
     const { id: turmaId } = req.params;
     const { professor_id, data_aula, conteudo, lista_presenca } = req.body; // professor_id aqui é o ID do usuário logado
 
@@ -279,10 +279,138 @@ app.post("/turmas/:id/aulas", async (req, res) => {
 });
 
 // --- 6. WEBHOOK DE INTEGRAÇÃO (BÔNUS) ---
-// Caso o Rhian queira mandar dados via POST no futuro
-app.post("/api/integracao/receber-usuarios", async (req, res) => {
-    // Implementação futura conforme necessidade
-    res.status(200).json({ message: "Endpoint pronto para receber dados." });
+// ========================================================
+// 🔄 ROTA DE INTEGRAÇÃO (WEBHOOK) - RECEBE DADOS DO RHIAN
+// ========================================================
+app.post("/api/sysconex-freq/integracao/receber-dados", async (req, res) => {
+    const listaUsuarios = req.body;
+
+    if (!Array.isArray(listaUsuarios)) {
+        return res.status(400).json({ error: "O corpo deve ser uma lista JSON." });
+    }
+
+    const connection = await dbFreqBeneficiario.getConnection(); //
+
+    try {
+        await connection.beginTransaction(); // Inicia modo de segurança (ou salva tudo ou nada)
+
+        let criados = 0;
+        let atualizados = 0;
+
+        for (const u of listaUsuarios) {
+            // 1. Validação Básica (CPF é a chave de tudo)
+            if (!u.cpf) continue; 
+            
+            // Limpa formatação do CPF (deixa só números)
+            const cpfLimpo = u.cpf.replace(/\D/g, '');
+
+            // 2. Tenta achar a PESSOA pelo CPF
+            const [rows] = await connection.query("SELECT id FROM pessoa WHERE cpf = ?", [cpfLimpo]);
+            
+            let pessoaId;
+
+            // DADOS PADRÃO (Pra não quebrar os NOT NULL do banco se ele não mandar)
+            const nomeMae = u.nome_mae || "NÃO INFORMADO";
+            const naturalidade = "BRASIL";
+            const nacionalidade = "BRASIL";
+            const genero = u.genero_id || 1; // Default: 1
+            const etnia = u.etnia_id || 1;   // Default: 1
+            const escolaridade = 1;          // Default
+            const orgao = 1;                 // Default
+
+            if (rows.length > 0) {
+                // --- ATUALIZAR (UPDATE) ---
+                pessoaId = rows[0].id;
+                await connection.query(
+                    "UPDATE pessoa SET nome_completo = ?, email = ? WHERE id = ?",
+                    [u.nome_completo, u.email, pessoaId]
+                );
+                atualizados++;
+            } else {
+                // --- CRIAR NOVO (INSERT) ---
+                // Precisamos preencher TODOS os NOT NULL da tabela 'pessoa'
+                const sqlInsert = `
+                    INSERT INTO pessoa 
+                    (nome_completo, cpf, email, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
+                
+                const [resPessoa] = await connection.query(sqlInsert, [
+                    u.nome_completo, 
+                    cpfLimpo, 
+                    u.email, 
+                    u.data_nasc || '2000-01-01', // Data default se vier vazio
+                    nomeMae,
+                    naturalidade,
+                    nacionalidade,
+                    genero,
+                    etnia,
+                    escolaridade,
+                    orgao
+                ]);
+                pessoaId = resPessoa.insertId;
+                criados++;
+            }
+
+            // 3. LOGICA ESPECÍFICA: É ALUNO OU PROFESSOR?
+            if (u.tipo === "ALUNO") {
+                // Vincula na tabela Beneficiario (se não existir ainda)
+                const [checkBenef] = await connection.query("SELECT id FROM Beneficiario WHERE pessoa_id = ?", [pessoaId]);
+                
+                if (checkBenef.length === 0) {
+                    await connection.query(
+                        "INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)",
+                        [pessoaId, u.projeto_id || 1] // Se não mandar projeto, joga no 1
+                    );
+                }
+
+
+            } else if (u.tipo === "PROFESSOR") {
+                // 1. Cria/Atualiza Colaborador
+                const [checkColab] = await connection.query("SELECT id FROM colaborador WHERE pessoa_id = ?", [pessoaId]);
+                let colabId;
+
+                if (checkColab.length === 0) {
+                    const [resColab] = await connection.query(
+                        "INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional) VALUES (?, ?, ?)",
+                        [pessoaId, u.cargo_id || 6, u.email || 'sem_email@inst.com'] // Cargo 6 = Professor
+                    );
+                    colabId = resColab.insertId;
+                } else {
+                    colabId = checkColab[0].id;
+                }
+
+                // 2. Cria Usuário de Login (Obrigatório pra Professor)
+                const [checkUser] = await connection.query("SELECT id FROM usuario WHERE id_colaborador = ?", [colabId]);
+                
+                if (checkUser.length === 0) {
+                    await connection.query(
+                        "INSERT INTO usuario (id_colaborador, id_perfil_usuario, login, senha, status) VALUES (?, 6, ?, '$2b$10$naDMvm5M7NVIxt6sDtpAi.0uwmVpvvJKLGdcwzUDTunu/flYK8d82', 1)",
+                        [colabId, cpfLimpo] // Login = CPF, Senha = hash do 'admin' (temporário) ou '123456'
+                    );
+                }
+            }
+        }
+
+        await connection.commit(); // ✅ Salva tudo no banco
+        console.log(`Webhook Processado: ${criados} novos, ${atualizados} atualizados.`);
+        
+        res.status(200).json({ 
+            message: "Sincronização realizada com sucesso!", 
+            resumo: { criados, atualizados }
+        });
+
+    } catch (error) {
+        await connection.rollback(); // ❌ Deu erro? Cancela tudo!
+        console.error("Erro no Webhook:", error);
+        res.status(500).json({ error: "Erro ao processar dados: " + error.message });
+    } finally {
+        connection.release();
+    }
+});
+
+app.get("/api/sysconex-freq/integracao", (req, res) => {
+  res.send("API DE INTEGRAÇÃO RODANDO")
 });
 
 // --- INICIALIZAÇÃO ---

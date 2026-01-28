@@ -1,170 +1,93 @@
-CREATE DATABASE IF NOT EXISTS sysfrequenciaBeneficiario;
-USE sysfrequenciaBeneficiario;
--- Estrutura para tabela `Beneficiario`
---
+-- ==========================================================
+-- 🚀 SCRIPT DEFINITIVO E LIMPO - SYSFREQUENCIA (INTEGRADO)
+-- ==========================================================
 
-CREATE TABLE `Beneficiario` (
-  `id` int NOT NULL,
-  `pessoa_id` int NOT NULL,
-  `id_projeto` int NOT NULL,
-  `id_processo_inscricao` int NOT NULL,
-  `data_vinculo` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS sys_limpo_final;
+USE sys_limpo_final;
 
---
--- Despejando dados para a tabela `Beneficiario`
---
+-- ==========================================================
+-- 1. TABELAS AUXILIARES (DEPENDÊNCIAS DA PESSOA)
+-- ==========================================================
 
-INSERT INTO `Beneficiario` (`id`, `pessoa_id`, `id_projeto`, `id_processo_inscricao`, `data_vinculo`) VALUES
-(3, 2, 1, 1, '2026-01-26 12:13:27.002'),
-(4, 3, 1, 1, '2026-01-26 13:22:51.421');
+-- Etnia
+CREATE TABLE IF NOT EXISTS etnia (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  descricao varchar(191) NOT NULL
+);
+INSERT INTO etnia (id, descricao) VALUES (1, 'Branca'), (2, 'Preta'), (3, 'Amarela'), (4, 'Parda'), (5, 'Indígena');
 
--- --------------------------------------------------------
+-- Gênero
+CREATE TABLE IF NOT EXISTS identidade_genero (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  descricao varchar(191) NOT NULL
+);
+INSERT INTO identidade_genero (id, descricao) VALUES (1, 'Cisgênero'), (2, 'Transgênero'), (3, 'Não-binário');
 
---
--- Estrutura para tabela `cargo`
---
+CREATE TABLE IF NOT EXISTS genero (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  descricao varchar(191) NOT NULL,
+  identidade_id int NOT NULL,
+  FOREIGN KEY (identidade_id) REFERENCES identidade_genero (id)
+);
+INSERT INTO genero (id, descricao, identidade_id) VALUES (1, 'Homem', 1), (2, 'Mulher', 1), (3, 'Outro', 3);
 
-CREATE TABLE `cargo` (
-  `id` int NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `setor_id` int DEFAULT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Escolaridade
+CREATE TABLE IF NOT EXISTS escolaridade (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  descricao varchar(191) NOT NULL
+);
+INSERT INTO escolaridade (id, descricao) VALUES (1, 'Fundamental'), (2, 'Médio'), (3, 'Superior');
 
---
--- Despejando dados para a tabela `cargo`
---
+-- Órgão Emissor
+CREATE TABLE IF NOT EXISTS orgao_emissor (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  descricao varchar(191) NOT NULL,
+  uf_emissor varchar(191) NOT NULL
+);
+INSERT INTO orgao_emissor (id, descricao, uf_emissor) VALUES (1, 'SSP', 'PE'), (2, 'SDS', 'PE');
 
-INSERT INTO `cargo` (`id`, `descricao`, `setor_id`, `status`) VALUES
-(1, 'Coordenador(a) Geral', 1, 1),
-(2, 'Coordenador(a) de Projetos', 2, 1),
-(3, 'Coordenador(a) de Financeira', 3, 1),
-(4, 'Nutricionista', 4, 1),
-(5, 'Assistente Administrativo(a)', 5, 1),
-(6, 'Assistente', 5, 1),
-(7, 'Assistente Social', 5, 1),
-(8, 'Serviços de Limpeza', 5, 1),
-(9, 'Motorista', 5, 1),
-(10, 'Motorista', 14, 1),
-(11, 'Coordenador(a) Pedagógico(a)', 6, 1),
-(12, 'Assessor(a) de Coordenação Pedagógica', 6, 1),
-(13, 'Educador(a)', 6, 1),
-(14, 'Educador(a) de Apoio', 6, 1),
-(15, 'Educador(a) Social', 6, 1),
-(16, 'Educador(a) Social de Apoio', 6, 1),
-(17, 'Educador(a)/Instrutor(a)', 6, 1),
-(18, 'Jornalista', 7, 1),
-(19, 'Design Gráfico', 7, 1),
-(20, 'Reprografia', 8, 1),
-(21, 'Coordenador(a) de Monitoramento', 9, 1),
-(22, 'Coordenador(a) de Tecnologia', 10, 1),
-(23, 'Educador(a) de Tecnologia', 10, 1),
-(24, 'Coordenador(a) de Multidisciplinar', 11, 1),
-(25, 'Psicólogo(a)', 11, 1),
-(26, 'Enfermeiro(a)', 11, 1),
-(27, 'Educador(a) Físico(a)', 12, 1),
-(28, 'Atendente/Recepção', 13, 1),
-(29, 'Apoio na Alimentação', 15, 1),
-(30, 'Cozinheiro(a)', 15, 1),
-(31, 'Técnico(a) Agrícola', 16, 1),
-(32, 'Equipe Multidisciplinar', 11, 1),
-(33, 'Voluntário(a)', 17, 1),
-(34, 'Estagiário(a)', 18, 1);
+-- Tipo de Documento
+CREATE TABLE IF NOT EXISTS tipo_documento (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  nome varchar(191) NOT NULL,
+  categoria varchar(191) NOT NULL,
+  obrigatorio tinyint(1) DEFAULT '0'
+);
 
--- --------------------------------------------------------
+-- Perfis de Acesso
+CREATE TABLE IF NOT EXISTS perfil_usuario (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  descricao varchar(191) NOT NULL
+);
 
---
--- Estrutura para tabela `colaborador`
---
+INSERT INTO `perfil_usuario` (`id`, `descricao`) VALUES
+(1, 'Administrador'),
+(2, 'Coordenador'),
+(3, 'Colaborador'),
+(4, 'Estagiário'),
+(5, 'Visualizador'),
+(6, 'Professor');
 
-CREATE TABLE `colaborador` (
-  `id` int NOT NULL,
-  `pessoa_id` int DEFAULT NULL,
-  `cargo_id` int NOT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT '1',
-  `email_institucional` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `tipo_documento` (`id`, `nome`, `descricao`, `categoria`, `obrigatorio`) VALUES
+(1, 'cpf', 'CPF', 'documento', 0),
+(2, 'rg', 'RG', 'documento', 0),
+(3, 'certidao_nascimento', 'Certidão de Nascimento', 'documento', 0),
+(4, 'comprovante_residencia', 'Comprovante de Residência', 'documento', 0),
+(5, 'contrato', 'Contrato', 'documento', 0),
+(6, 'carteira_trabalho', 'Carteira de Trabalho', 'documento', 0),
+(7, 'titulo_eleitor', 'Título de Eleitor', 'documento', 0),
+(8, 'certificado_reservista', 'Certificado de Reservista', 'documento', 0),
+(9, 'passaporte', 'Passaporte', 'documento', 0),
+(10, 'carteira_profissional', 'Carteira Profissional', 'documento', 0),
+(11, 'foto_perfil', 'Foto de Perfil', 'foto', 1),
+(12, 'foto_documento', 'Foto de Documento', 'foto', 0),
+(13, 'foto_comprovante', 'Foto do Comprovante', 'foto', 0),
+(14, 'curriculo', 'Currículo', 'documento', 0),
+(15, 'cursos_certificados', 'Cursos e Certificados', 'documento', 0),
+(16, 'comprovante_experiencia', 'Comprovante de Experiência', 'documento', 0),
+(17, 'comprovacoes_fiscais_mei', 'Comprovações fiscais MEI', 'documento', 0),
+(18, 'medicamentos', 'Medicamentos da pessoa', 'documento', 0);
 
---
--- Despejando dados para a tabela `colaborador`
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `contato`
---
-
-CREATE TABLE `contato` (
-  `id` int NOT NULL,
-  `pessoa_id` int NOT NULL,
-  `telefone_fixo` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `celular` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `whatsapp` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `contato`
----- --------------------------------------------------------
-
---
--- Estrutura para tabela `documento`
---
-
-CREATE TABLE `documento` (
-  `id` int NOT NULL,
-  `pessoa_id` int NOT NULL,
-  `tipo_documento_id` int NOT NULL,
-  `nome_original` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nome_arquivo` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `caminho_minio` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tamanho` int NOT NULL,
-  `tipo_mime` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `extensao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `data_upload` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `status` tinyint(1) NOT NULL DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `documento`
---
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `endereco`
---
-
-CREATE TABLE `endereco` (
-  `id` int NOT NULL,
-  `pessoa_id` int NOT NULL,
-  `cep` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `localidade` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `rua` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ponto_referencia` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `numero` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `bairro` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `cidade` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `estado` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `zona_localidade` enum('Zona Urbana','Zona Rural') COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `endereco`
----- --------------------------------------------------------
-
---
--- Estrutura para tabela `escolaridade`
---
-
-CREATE TABLE `escolaridade` (
-  `id` int NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `escolaridade`
---
 
 INSERT INTO `escolaridade` (`id`, `descricao`) VALUES
 (1, 'Não-alfabetizado'),
@@ -176,43 +99,12 @@ INSERT INTO `escolaridade` (`id`, `descricao`) VALUES
 (7, 'Superior completo'),
 (8, 'Pós-graduação');
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `etnia`
---
-
-CREATE TABLE `etnia` (
-  `id` int NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `etnia`
---
-
 INSERT INTO `etnia` (`id`, `descricao`) VALUES
 (1, 'Branca'),
 (2, 'Preta'),
 (3, 'Amarela'),
 (4, 'Parda'),
 (5, 'Indígena');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `genero`
---
-
-CREATE TABLE `genero` (
-  `id` int NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `identidade_id` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `genero`
---
 
 INSERT INTO `genero` (`id`, `descricao`, `identidade_id`) VALUES
 (1, 'Homem', 1),
@@ -224,42 +116,11 @@ INSERT INTO `genero` (`id`, `descricao`, `identidade_id`) VALUES
 (7, 'Agênero', 3),
 (8, 'Prefere não informar', 4);
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `identidade_genero`
---
-
-CREATE TABLE `identidade_genero` (
-  `id` int NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `identidade_genero`
---
-
 INSERT INTO `identidade_genero` (`id`, `descricao`) VALUES
 (1, 'Cisgênero'),
 (2, 'Transgênero'),
 (3, 'Não-binário'),
 (4, 'Prefere não informar');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `orgao_emissor`
---
-
-CREATE TABLE `orgao_emissor` (
-  `id` int NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `uf_emissor` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `orgao_emissor`
---
 
 INSERT INTO `orgao_emissor` (`id`, `descricao`, `uf_emissor`) VALUES
 (1, 'SSP', 'AC'),
@@ -374,21 +235,6 @@ INSERT INTO `orgao_emissor` (`id`, `descricao`, `uf_emissor`) VALUES
 (110, 'MM', 'BR'),
 (111, 'MD', 'BR');
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `perfil_usuario`
---
-
-CREATE TABLE `perfil_usuario` (
-  `id` int NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `perfil_usuario`
---
-
 INSERT INTO `perfil_usuario` (`id`, `descricao`) VALUES
 (1, 'Administrador'),
 (2, 'Coordenador'),
@@ -396,106 +242,6 @@ INSERT INTO `perfil_usuario` (`id`, `descricao`) VALUES
 (4, 'Estagiário'),
 (5, 'Visualizador'),
 (6, 'Professor');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `pessoa`
---
-
-CREATE TABLE `pessoa` (
-  `id` int NOT NULL,
-  `nome_completo` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nome_social` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `apelido` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `data_nasc` datetime(3) NOT NULL,
-  `nome_mae` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nome_pai` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `cpf` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `rg` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `naturalidade` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `nacionalidade` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `genero_id` int NOT NULL,
-  `etnia_id` int NOT NULL,
-  `escolaridade_id` int NOT NULL,
-  `orgao_emissor_id` int NOT NULL,
-  `tipo_sanguineo` enum('A+','A-','B+','B-','AB+','AB-','O+','O-') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT '1',
-  `cin` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `pessoa`
---
--------------------------------------------------------
-
---
--- Estrutura para tabela `processo_inscricao`
---
-
-CREATE TABLE `processo_inscricao` (
-  `id` int NOT NULL,
-  `id_projeto` int DEFAULT NULL,
-  `titulo` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `observacao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `numero_vagas` int DEFAULT NULL,
-  `data_inicio` datetime(3) DEFAULT NULL,
-  `data_fim` datetime(3) DEFAULT NULL,
-  `status` enum('planejado','ativo','fechado','finalizado','cancelado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'planejado'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `processo_inscricao`
---
- --------------------------------------------------------
-
---
--- Estrutura para tabela `projeto`
---
-
-CREATE TABLE `projeto` (
-  `id` int NOT NULL,
-  `titulo` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descricao` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `data_inicio` datetime(3) DEFAULT NULL,
-  `data_final_prevista` datetime(3) DEFAULT NULL,
-  `status` enum('planejado','ativo','finalizado','cancelado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'planejado'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `projeto`
---
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `refresh_token`
---
-
---
--- Despejando dados para a tabela `refresh_token`
---
-
-
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `setor`
---
-
-CREATE TABLE `setor` (
-  `id` int NOT NULL,
-  `nome` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `setor`
---
 
 INSERT INTO `setor` (`id`, `nome`, `descricao`, `status`) VALUES
 (1, 'Coordenação Executiva', 'Topo da hierarquia organizacional', 1),
@@ -517,21 +263,6 @@ INSERT INTO `setor` (`id`, `nome`, `descricao`, `status`) VALUES
 (17, 'Voluntários', 'Equipe de voluntários', 1),
 (18, 'Estagiários', 'Equipe de estagiários', 1);
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `setor_hierarquia`
---
-
-CREATE TABLE `setor_hierarquia` (
-  `id` int NOT NULL,
-  `setor_id` int NOT NULL,
-  `setor_pai_id` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `setor_hierarquia`
---
 
 INSERT INTO `setor_hierarquia` (`id`, `setor_id`, `setor_pai_id`) VALUES
 (1, 2, 1),
@@ -550,426 +281,183 @@ INSERT INTO `setor_hierarquia` (`id`, `setor_id`, `setor_pai_id`) VALUES
 (14, 15, 4),
 (15, 16, 2);
 
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `tipo_documento`
---
-
-CREATE TABLE `tipo_documento` (
-  `id` int NOT NULL,
-  `nome` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descricao` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `categoria` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `obrigatorio` tinyint(1) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `tipo_documento`
---
-
-INSERT INTO `tipo_documento` (`id`, `nome`, `descricao`, `categoria`, `obrigatorio`) VALUES
-(1, 'cpf', 'CPF', 'documento', 0),
-(2, 'rg', 'RG', 'documento', 0),
-(3, 'certidao_nascimento', 'Certidão de Nascimento', 'documento', 0),
-(4, 'comprovante_residencia', 'Comprovante de Residência', 'documento', 0),
-(5, 'contrato', 'Contrato', 'documento', 0),
-(6, 'carteira_trabalho', 'Carteira de Trabalho', 'documento', 0),
-(7, 'titulo_eleitor', 'Título de Eleitor', 'documento', 0),
-(8, 'certificado_reservista', 'Certificado de Reservista', 'documento', 0),
-(9, 'passaporte', 'Passaporte', 'documento', 0),
-(10, 'carteira_profissional', 'Carteira Profissional', 'documento', 0),
-(11, 'foto_perfil', 'Foto de Perfil', 'foto', 1),
-(12, 'foto_documento', 'Foto de Documento', 'foto', 0),
-(13, 'foto_comprovante', 'Foto do Comprovante', 'foto', 0),
-(14, 'curriculo', 'Currículo', 'documento', 0),
-(15, 'cursos_certificados', 'Cursos e Certificados', 'documento', 0),
-(16, 'comprovante_experiencia', 'Comprovante de Experiência', 'documento', 0),
-(17, 'comprovacoes_fiscais_mei', 'Comprovações fiscais MEI', 'documento', 0),
-(18, 'medicamentos', 'Medicamentos da pessoa', 'documento', 0);
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `usuario`
---
-
-
-
---
--- Índices para tabelas despejadas
---
-
---
--- Índices de tabela `Beneficiario`
---
-ALTER TABLE `Beneficiario`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `Beneficiario_pessoa_id_key` (`pessoa_id`),
-  ADD KEY `beneficiario_id_projeto_fkey` (`id_projeto`),
-  ADD KEY `beneficiario_id_processo_inscricao_fkey` (`id_processo_inscricao`);
-
---
--- Índices de tabela `cargo`
---
-ALTER TABLE `cargo`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `cargo_setor_id_fkey` (`setor_id`);
-
---
--- Índices de tabela `colaborador`
---
-ALTER TABLE `colaborador`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `colaborador_email_institucional_key` (`email_institucional`),
-  ADD UNIQUE KEY `colaborador_pessoa_id_key` (`pessoa_id`),
-  ADD KEY `colaborador_cargo_id_fkey` (`cargo_id`);
-
---
--- Índices de tabela `contato`
---
-ALTER TABLE `contato`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `contato_pessoa_id_fkey` (`pessoa_id`);
-
---
--- Índices de tabela `documento`
---
-ALTER TABLE `documento`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `documento_pessoa_id_tipo_documento_id_status_key` (`pessoa_id`,`tipo_documento_id`,`status`),
-  ADD KEY `documento_tipo_documento_id_fkey` (`tipo_documento_id`);
-
---
--- Índices de tabela `endereco`
---
-ALTER TABLE `endereco`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `endereco_pessoa_id_fkey` (`pessoa_id`);
-
---
--- Índices de tabela `escolaridade`
---
-ALTER TABLE `escolaridade`
-  ADD PRIMARY KEY (`id`);
-
---
--- Índices de tabela `etnia`
---
-ALTER TABLE `etnia`
-  ADD PRIMARY KEY (`id`);
-
---
--- Índices de tabela `genero`
---
-ALTER TABLE `genero`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `genero_identidade_id_fkey` (`identidade_id`);
-
---
--- Índices de tabela `identidade_genero`
---
-ALTER TABLE `identidade_genero`
-  ADD PRIMARY KEY (`id`);
-
---
--- Índices de tabela `orgao_emissor`
---
-ALTER TABLE `orgao_emissor`
-  ADD PRIMARY KEY (`id`);
-
---
--- Índices de tabela `perfil_usuario`
---
-ALTER TABLE `perfil_usuario`
-  ADD PRIMARY KEY (`id`);
-
---
--- Índices de tabela `pessoa`
---
-ALTER TABLE `pessoa`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `pessoa_cpf_key` (`cpf`),
-  ADD KEY `pessoa_escolaridade_id_fkey` (`escolaridade_id`),
-  ADD KEY `pessoa_etnia_id_fkey` (`etnia_id`),
-  ADD KEY `pessoa_genero_id_fkey` (`genero_id`),
-  ADD KEY `pessoa_orgao_emissor_id_fkey` (`orgao_emissor_id`);
-
---
--- Índices de tabela `processo_inscricao`
---
-ALTER TABLE `processo_inscricao`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `processo_inscricao_id_projeto_key` (`id_projeto`);
-
---
--- Índices de tabela `projeto`
---
-ALTER TABLE `projeto`
-  ADD PRIMARY KEY (`id`);
-
---
--- Índices de tabela `refresh_token`
---
-ALTER TABLE `refresh_token`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `refresh_token_token_key` (`token`),
-  ADD KEY `refresh_token_usuario_id_fkey` (`usuario_id`),
-  ADD KEY `refresh_token_expires_at_idx` (`expires_at`);
-
---
--- Índices de tabela `setor`
---
-ALTER TABLE `setor`
-  ADD PRIMARY KEY (`id`);
-
---
--- Índices de tabela `setor_hierarquia`
---
-ALTER TABLE `setor_hierarquia`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `setor_hierarquia_setor_id_fkey` (`setor_id`),
-  ADD KEY `setor_hierarquia_setor_pai_id_fkey` (`setor_pai_id`);
-
---
--- Índices de tabela `tipo_documento`
---
-ALTER TABLE `tipo_documento`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `tipo_documento_nome_key` (`nome`);
-
---
--- Índices de tabela `usuario`
---
-ALTER TABLE `usuario`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `usuario_id_colaborador_key` (`id_colaborador`),
-  ADD UNIQUE KEY `usuario_login_key` (`login`),
-  ADD KEY `usuario_id_perfil_usuario_fkey` (`id_perfil_usuario`);
-
---
--- AUTO_INCREMENT para tabelas despejadas
---
-
---
--- AUTO_INCREMENT de tabela `Beneficiario`
---
-ALTER TABLE `Beneficiario`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT de tabela `cargo`
---
-ALTER TABLE `cargo`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
-
---
--- AUTO_INCREMENT de tabela `colaborador`
---
-ALTER TABLE `colaborador`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de tabela `contato`
---
-ALTER TABLE `contato`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT de tabela `documento`
---
-ALTER TABLE `documento`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT de tabela `endereco`
---
-ALTER TABLE `endereco`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de tabela `escolaridade`
---
-ALTER TABLE `escolaridade`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT de tabela `etnia`
---
-ALTER TABLE `etnia`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT de tabela `genero`
---
-ALTER TABLE `genero`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT de tabela `identidade_genero`
---
-ALTER TABLE `identidade_genero`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT de tabela `orgao_emissor`
---
-ALTER TABLE `orgao_emissor`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
-
---
--- AUTO_INCREMENT de tabela `perfil_usuario`
---
-ALTER TABLE `perfil_usuario`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT de tabela `pessoa`
---
-ALTER TABLE `pessoa`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT de tabela `processo_inscricao`
---
-ALTER TABLE `processo_inscricao`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT de tabela `projeto`
---
-ALTER TABLE `projeto`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT de tabela `refresh_token`
---
-ALTER TABLE `refresh_token`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
-
---
--- AUTO_INCREMENT de tabela `setor`
---
-ALTER TABLE `setor`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT de tabela `setor_hierarquia`
---
-ALTER TABLE `setor_hierarquia`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
--- AUTO_INCREMENT de tabela `tipo_documento`
---
-ALTER TABLE `tipo_documento`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT de tabela `usuario`
---
-ALTER TABLE `usuario`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- Restrições para tabelas despejadas
---
-
---
--- Restrições para tabelas `Beneficiario`
---
-ALTER TABLE `Beneficiario`
-  ADD CONSTRAINT `Beneficiario_id_processo_inscricao_fkey` FOREIGN KEY (`id_processo_inscricao`) REFERENCES `processo_inscricao` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `Beneficiario_id_projeto_fkey` FOREIGN KEY (`id_projeto`) REFERENCES `projeto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `Beneficiario_pessoa_id_fkey` FOREIGN KEY (`pessoa_id`) REFERENCES `pessoa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `cargo`
---
-ALTER TABLE `cargo`
-  ADD CONSTRAINT `cargo_setor_id_fkey` FOREIGN KEY (`setor_id`) REFERENCES `setor` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `colaborador`
---
-ALTER TABLE `colaborador`
-  ADD CONSTRAINT `colaborador_cargo_id_fkey` FOREIGN KEY (`cargo_id`) REFERENCES `cargo` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `colaborador_pessoa_id_fkey` FOREIGN KEY (`pessoa_id`) REFERENCES `pessoa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `contato`
---
-ALTER TABLE `contato`
-  ADD CONSTRAINT `contato_pessoa_id_fkey` FOREIGN KEY (`pessoa_id`) REFERENCES `pessoa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `documento`
---
-ALTER TABLE `documento`
-  ADD CONSTRAINT `documento_pessoa_id_fkey` FOREIGN KEY (`pessoa_id`) REFERENCES `pessoa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `documento_tipo_documento_id_fkey` FOREIGN KEY (`tipo_documento_id`) REFERENCES `tipo_documento` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `endereco`
---
-ALTER TABLE `endereco`
-  ADD CONSTRAINT `endereco_pessoa_id_fkey` FOREIGN KEY (`pessoa_id`) REFERENCES `pessoa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `genero`
---
-ALTER TABLE `genero`
-  ADD CONSTRAINT `genero_identidade_id_fkey` FOREIGN KEY (`identidade_id`) REFERENCES `identidade_genero` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `pessoa`
---
-ALTER TABLE `pessoa`
-  ADD CONSTRAINT `pessoa_escolaridade_id_fkey` FOREIGN KEY (`escolaridade_id`) REFERENCES `escolaridade` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pessoa_etnia_id_fkey` FOREIGN KEY (`etnia_id`) REFERENCES `etnia` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pessoa_genero_id_fkey` FOREIGN KEY (`genero_id`) REFERENCES `genero` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pessoa_orgao_emissor_id_fkey` FOREIGN KEY (`orgao_emissor_id`) REFERENCES `orgao_emissor` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `processo_inscricao`
---
-ALTER TABLE `processo_inscricao`
-  ADD CONSTRAINT `processo_inscricao_id_projeto_fkey` FOREIGN KEY (`id_projeto`) REFERENCES `projeto` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `refresh_token`
---
-ALTER TABLE `refresh_token`
-  ADD CONSTRAINT `refresh_token_usuario_id_fkey` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `setor_hierarquia`
---
-ALTER TABLE `setor_hierarquia`
-  ADD CONSTRAINT `setor_hierarquia_setor_id_fkey` FOREIGN KEY (`setor_id`) REFERENCES `setor` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `setor_hierarquia_setor_pai_id_fkey` FOREIGN KEY (`setor_pai_id`) REFERENCES `setor` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `usuario`
---
-ALTER TABLE `usuario`
-  ADD CONSTRAINT `usuario_id_colaborador_fkey` FOREIGN KEY (`id_colaborador`) REFERENCES `colaborador` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `usuario_id_perfil_usuario_fkey` FOREIGN KEY (`id_perfil_usuario`) REFERENCES `perfil_usuario` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
--- =======================================================
--- MÓDULO ACADÊMICO (Nossas tabelas adaptadas ao SysConex)
--- =======================================================
-
--- 1. TABELA DE TURMAS
--- Mantemos igual, mas agora o projeto_id é chave estrangeira real
+
+-- ==========================================================
+-- 2. NÚCLEO: PESSOAS E ENDEREÇO
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS pessoa (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  nome_completo varchar(191) NOT NULL,
+  nome_social varchar(191) DEFAULT NULL,
+  apelido varchar(191) DEFAULT NULL,
+  data_nasc datetime(3) NOT NULL,
+  nome_mae varchar(191) NOT NULL,
+  nome_pai varchar(191) DEFAULT NULL,
+  cpf varchar(191) UNIQUE DEFAULT NULL, -- Chave da Integração
+  rg varchar(191) DEFAULT NULL,
+  naturalidade varchar(191) NOT NULL DEFAULT 'BRASIL',
+  nacionalidade varchar(191) NOT NULL DEFAULT 'BRASIL',
+  genero_id int NOT NULL,
+  etnia_id int NOT NULL,
+  escolaridade_id int NOT NULL,
+  orgao_emissor_id int NOT NULL,
+  tipo_sanguineo enum('A+','A-','B+','B-','AB+','AB-','O+','O-') DEFAULT NULL,
+  status tinyint(1) NOT NULL DEFAULT '1',
+  created_at datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+  
+  FOREIGN KEY (genero_id) REFERENCES genero (id),
+  FOREIGN KEY (etnia_id) REFERENCES etnia (id),
+  FOREIGN KEY (escolaridade_id) REFERENCES escolaridade (id),
+  FOREIGN KEY (orgao_emissor_id) REFERENCES orgao_emissor (id)
+);
+
+CREATE TABLE IF NOT EXISTS endereco (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  pessoa_id int NOT NULL,
+  cep varchar(191) NOT NULL,
+  localidade varchar(191) NOT NULL,
+  rua varchar(191) NOT NULL,
+  numero varchar(191) NOT NULL,
+  bairro varchar(191) NOT NULL,
+  cidade varchar(191) NOT NULL,
+  estado varchar(191) NOT NULL,
+  FOREIGN KEY (pessoa_id) REFERENCES pessoa (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS contato (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  pessoa_id int NOT NULL,
+  celular varchar(191) DEFAULT NULL,
+  email varchar(191) DEFAULT NULL,
+  FOREIGN KEY (pessoa_id) REFERENCES pessoa (id) ON DELETE CASCADE
+);
+
+
+-- ==========================================================
+-- 3. ESTRUTURA ORGANIZACIONAL (CARGOS E SETORES)
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS setor (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  nome varchar(191) NOT NULL,
+  status tinyint(1) DEFAULT '1'
+);
+INSERT INTO setor (id, nome) VALUES (1, 'Pedagógico'), (2, 'Administrativo');
+
+CREATE TABLE IF NOT EXISTS cargo (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  descricao varchar(191) NOT NULL,
+  setor_id int DEFAULT NULL,
+  status tinyint(1) DEFAULT '1',
+  FOREIGN KEY (setor_id) REFERENCES setor (id)
+);
+
+INSERT INTO `cargo` (`id`, `descricao`, `setor_id`, `status`) VALUES
+(1, 'Coordenador(a) Geral', 1, 1),
+(2, 'Coordenador(a) de Projetos', 2, 1),
+(3, 'Coordenador(a) de Financeira', 3, 1),
+(4, 'Nutricionista', 4, 1),
+(5, 'Assistente Administrativo(a)', 5, 1),
+(6, 'Assistente', 5, 1),
+(7, 'Assistente Social', 5, 1),
+(8, 'Serviços de Limpeza', 5, 1),
+(9, 'Motorista', 5, 1),
+(10, 'Motorista', 14, 1),
+(11, 'Coordenador(a) Pedagógico(a)', 6, 1),
+(12, 'Assessor(a) de Coordenação Pedagógica', 6, 1),
+(13, 'Educador(a)', 6, 1),
+(14, 'Educador(a) de Apoio', 6, 1),
+(15, 'Educador(a) Social', 6, 1),
+(16, 'Educador(a) Social de Apoio', 6, 1),
+(17, 'Educador(a)/Instrutor(a)', 6, 1),
+(18, 'Jornalista', 7, 1),
+(19, 'Design Gráfico', 7, 1),
+(20, 'Reprografia', 8, 1),
+(21, 'Coordenador(a) de Monitoramento', 9, 1),
+(22, 'Coordenador(a) de Tecnologia', 10, 1),
+(23, 'Educador(a) de Tecnologia', 10, 1),
+(24, 'Coordenador(a) de Multidisciplinar', 11, 1),
+(25, 'Psicólogo(a)', 11, 1),
+(26, 'Enfermeiro(a)', 11, 1),
+(27, 'Educador(a) Físico(a)', 12, 1),
+(28, 'Atendente/Recepção', 13, 1),
+(29, 'Apoio na Alimentação', 15, 1),
+(30, 'Cozinheiro(a)', 15, 1),
+(31, 'Técnico(a) Agrícola', 16, 1),
+(32, 'Equipe Multidisciplinar', 11, 1),
+(33, 'Voluntário(a)', 17, 1),
+(34, 'Estagiário(a)', 18, 1);
+
+
+-- ==========================================================
+-- 4. STAFF E LOGIN (PROFESSORES E ADMINS)
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS colaborador (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  pessoa_id int DEFAULT NULL,
+  cargo_id int NOT NULL,
+  status tinyint(1) NOT NULL DEFAULT '1',
+  email_institucional varchar(191) UNIQUE NOT NULL,
+  
+  FOREIGN KEY (pessoa_id) REFERENCES pessoa (id) ON DELETE CASCADE,
+  FOREIGN KEY (cargo_id) REFERENCES cargo (id)
+);
+
+CREATE TABLE IF NOT EXISTS usuario (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id_colaborador int NOT NULL UNIQUE,
+  id_perfil_usuario int NOT NULL,
+  login varchar(191) UNIQUE NOT NULL,
+  senha varchar(191) NOT NULL,
+  status tinyint(1) NOT NULL DEFAULT '1',
+  
+  FOREIGN KEY (id_colaborador) REFERENCES colaborador (id) ON DELETE CASCADE,
+  FOREIGN KEY (id_perfil_usuario) REFERENCES perfil_usuario (id)
+);
+
+
+-- ==========================================================
+-- 5. CONTEXTO DO ALUNO (BENEFICIÁRIO)
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS projeto (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  titulo varchar(255) NOT NULL,
+  status enum('planejado','ativo','finalizado') DEFAULT 'ativo'
+);
+INSERT INTO projeto (id, titulo) VALUES (1, 'Curso Técnico 2026');
+
+CREATE TABLE IF NOT EXISTS processo_inscricao (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id_projeto int DEFAULT NULL,
+  titulo varchar(255) NOT NULL,
+  FOREIGN KEY (id_projeto) REFERENCES projeto (id)
+);
+INSERT INTO processo_inscricao (id, id_projeto, titulo) VALUES (1, 1, 'Processo Seletivo 2026.1');
+
+CREATE TABLE IF NOT EXISTS Beneficiario (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  pessoa_id int NOT NULL UNIQUE,
+  id_projeto int NOT NULL,
+  id_processo_inscricao int NOT NULL,
+  data_vinculo datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+  
+  FOREIGN KEY (pessoa_id) REFERENCES pessoa (id) ON DELETE CASCADE,
+  FOREIGN KEY (id_projeto) REFERENCES projeto (id),
+  FOREIGN KEY (id_processo_inscricao) REFERENCES processo_inscricao (id)
+);
+
+
+-- ==========================================================
+-- 6. MÓDULO ACADÊMICO (NOSSAS TABELAS DE FREQUÊNCIA)
+-- ==========================================================
+
+-- TURMAS (Ligadas ao Projeto)
 CREATE TABLE IF NOT EXISTS turmas (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    projeto_id INT NOT NULL,      -- Liga com a tabela 'projeto' do Rhian
+    projeto_id INT NOT NULL,
     nome VARCHAR(100) NOT NULL,   
     turno VARCHAR(20) NOT NULL,   
     periodo VARCHAR(20) NOT NULL, 
@@ -982,7 +470,7 @@ CREATE TABLE IF NOT EXISTS turmas (
     FOREIGN KEY (projeto_id) REFERENCES projeto(id)
 );
 
--- 2. TABELA DE DISCIPLINAS
+-- DISCIPLINAS
 CREATE TABLE IF NOT EXISTS disciplinas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     turma_id INT NOT NULL,
@@ -991,13 +479,12 @@ CREATE TABLE IF NOT EXISTS disciplinas (
     FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE CASCADE
 );
 
--- 3. VÍNCULO PROFESSOR <-> TURMA
--- Atenção: Aqui ligamos com 'colaborador' (que é quem trabalha)
+-- VÍNCULO PROFESSOR <-> TURMA (Usa Colaborador)
 CREATE TABLE IF NOT EXISTS turma_professores (
     id INT AUTO_INCREMENT PRIMARY KEY,
     turma_id INT NOT NULL,
-    colaborador_id INT NOT NULL, -- ID do Professor (tabela colaborador)
-    disciplina_id INT,           -- Pode ser null se for polivalente
+    colaborador_id INT NOT NULL, 
+    disciplina_id INT,           
     ativo BOOLEAN DEFAULT TRUE,
     
     FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE CASCADE,
@@ -1005,12 +492,11 @@ CREATE TABLE IF NOT EXISTS turma_professores (
     FOREIGN KEY (disciplina_id) REFERENCES disciplinas(id)
 );
 
--- 4. MATRÍCULAS (Vínculo Aluno <-> Turma)
--- Atenção: Aqui ligamos com 'Beneficiario' (que são os alunos no SysConex)
+-- MATRÍCULAS (Usa Beneficiario)
 CREATE TABLE IF NOT EXISTS matriculas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     turma_id INT NOT NULL,
-    beneficiario_id INT NOT NULL, -- ID do Aluno (tabela Beneficiario)
+    beneficiario_id INT NOT NULL, 
     data_matricula DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Ativo', 'Trancado', 'Concluido', 'Desistente') DEFAULT 'Ativo',
     
@@ -1019,11 +505,11 @@ CREATE TABLE IF NOT EXISTS matriculas (
     UNIQUE KEY aluno_turma_unico (turma_id, beneficiario_id)
 );
 
--- 5. AULAS (Diário de Classe)
+-- AULAS (Diário)
 CREATE TABLE IF NOT EXISTS aulas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     turma_id INT NOT NULL,
-    colaborador_id INT NOT NULL, -- Quem deu a aula (tabela colaborador)
+    colaborador_id INT NOT NULL, 
     data_aula DATE NOT NULL,
     conteudo TEXT,
     numero_aulas INT DEFAULT 1,
@@ -1033,14 +519,27 @@ CREATE TABLE IF NOT EXISTS aulas (
     FOREIGN KEY (colaborador_id) REFERENCES colaborador(id)
 );
 
--- 6. FREQUÊNCIAS (A Chamada)
+-- FREQUÊNCIAS (Chamada)
 CREATE TABLE IF NOT EXISTS frequencias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     aula_id INT NOT NULL,
-    matricula_id INT NOT NULL, -- Link com a matrícula
+    matricula_id INT NOT NULL, 
     status ENUM('Presente', 'Ausente', 'Justificado') NOT NULL,
     observacao VARCHAR(255),
     
     FOREIGN KEY (aula_id) REFERENCES aulas(id) ON DELETE CASCADE,
     FOREIGN KEY (matricula_id) REFERENCES matriculas(id) ON DELETE CASCADE
 );
+
+-- INSERIR UM ADMIN PADRÃO PRA VOCÊ NÃO FICAR TRANCADO DO LADO DE FORA
+-- 1. Cria a Pessoa
+INSERT INTO pessoa (id, nome_completo, nome_mae, cpf, data_nasc, genero_id, etnia_id, escolaridade_id, orgao_emissor_id) 
+VALUES (1, 'ADMINISTRADOR MESTRE', 'SYSTEM', '00000000000', '2000-01-01', 1, 1, 3, 1);
+
+-- 2. Cria o Colaborador
+INSERT INTO colaborador (id, pessoa_id, cargo_id, email_institucional) 
+VALUES (1, 1, 1, 'admin@sysfrequencia.com'); -- Cargo 1 = Coordenador (já criado acima)
+
+-- 3. Cria o Usuário (Login: admin / Senha: 123 - Hash)
+INSERT INTO usuario (id_colaborador, id_perfil_usuario, login, senha) 
+VALUES (1, 1, 'admin', '$2b$10$naDMvm5M7NVIxt6sDtpAi.0uwmVpvvJKLGdcwzUDTunu/flYK8d82');
