@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { dbSysConex, querySys } = require('../config/database');
 
+const bcrypt = require('bcryptjs'); // Para comparar a senha criptografada
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.SECRET_KEY;
+
 
 const verificarTokenIntegracao = (req, res, next) => {
     const tokenSecreto = process.env.SYSCONEX_API_TOKEN; // Pega do .env
@@ -21,6 +26,69 @@ const verificarTokenIntegracao = (req, res, next) => {
 
     next(); // Se passar, segue para a função de salvar no banco
 };
+
+router.post("/auth/login", async (req, res) => {
+    const { login, senha } = req.body; // No front vamos mandar { login: 'CPF', senha: '...' }
+
+    try {
+        // 1. Busca o usuário no banco pelo Login (CPF)
+        // Trazemos também o nome da pessoa para exibir no Front
+        const sql = `
+            SELECT u.id, u.login, u.senha, u.id_perfil_usuario, p.descricao as perfil, pes.nome_completo
+            FROM usuario u
+            JOIN perfil_usuario p ON u.id_perfil_usuario = p.id
+            JOIN colaborador c ON u.id_colaborador = c.id
+            JOIN pessoa pes ON c.pessoa_id = pes.id
+            WHERE u.login = ? AND u.status = 1
+        `;
+        
+        const results = await querySys(sql, [login]);
+
+        // 2. Verifica se usuário existe
+        if (results.length === 0) {
+            return res.status(401).json({ error: "Usuário não encontrado ou inativo." });
+        }
+
+        const usuario = results[0];
+
+        // 3. Compara a senha enviada com o Hash do banco
+        const senhaBate = await bcrypt.compare(senha, usuario.senha);
+        
+        if (!senhaBate) {
+            return res.status(401).json({ error: "Senha incorreta." });
+        }
+
+        // 4. Gera o Token de Acesso (O "Crachá" digital)
+        const token = jwt.sign(
+            { 
+                id: usuario.id, 
+                perfil: usuario.id_perfil_usuario, 
+                nome: usuario.nome_completo 
+            },
+            JWT_SECRET,
+            { expiresIn: '8h' } // Token expira em 8 horas
+        );
+
+        // 5. Devolve tudo pro Frontend
+        res.json({
+            message: "Login realizado com sucesso!",
+            token,
+            user: {
+                nome: usuario.nome_completo,
+                perfil: usuario.perfil,
+                perfil_id: usuario.id_perfil_usuario
+            }
+        });
+
+    } catch (error) {
+        console.error("Erro no Login:", error);
+        res.status(500).json({ error: "Erro interno ao realizar login." });
+    }
+});
+
+
+
+
 
 router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, res) => {
     const listaUsuarios = req.body;
