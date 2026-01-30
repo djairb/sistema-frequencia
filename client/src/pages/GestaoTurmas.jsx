@@ -1,344 +1,242 @@
-import { useEffect, useState } from 'react';
-import { api } from '../services/api'; // Sua api.js híbrida
-import {
-  Users, GraduationCap, Calendar, Plus, Search, MoreVertical, X, Loader2
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { getTurmas, criarTurma } from '../services/sysconex';
+// Se você usar ícones (lucide-react, heroicons), pode importar aqui. 
+// Vou usar texto/emoji pra garantir que rode sem instalar nada extra.
 
-// src/pages/GestaoTurmas.jsx
-import { useNavigate } from 'react-router-dom'; // <--- Adicione isso
-
-export default function GestaoTurmas() {
-
-  const navigate = useNavigate();
+const GestaoTurmas = () => {
   const [turmas, setTurmas] = useState([]);
-  const [projetos, setProjetos] = useState([]); // <--- NOVIDADE: Lista de Projetos
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
-  // Estados do Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Formulário (Agora com projeto_id e datas)
-  const [formData, setFormData] = useState({
-    projeto_id: '',
+  // Estado do Formulário
+  const [novaTurma, setNovaTurma] = useState({
+    projeto_id: 1, // Valor padrão (pode mudar se tiver gestão de projetos)
     nome: '',
-    turno: 'Matutino',
+    turno: 'Manhã',
     periodo: '2026.1',
     data_inicio: '',
     data_fim: '',
     dias_aula: []
   });
 
-  // Carregar Dados Iniciais
-  async function loadData() {
-    try {
-      setLoading(true);
-      // Busca turmas (do MySQL) e Projetos (do Mock) em paralelo
-      const [resTurmas, resProjetos] = await Promise.all([
-        api.getTurmas(),
-        api.getProjetos()
-      ]);
+  const diasOpcoes = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-      setTurmas(resTurmas.data || []); // O backend retorna direto o array ou {data: []} dependendo da implementação, ajusta aqui se precisar
-      setProjetos(resProjetos.data || []);
+  // 1. Carregar Turmas
+  useEffect(() => {
+    carregarDados();
+  }, []);
+
+  const carregarDados = async () => {
+    setLoading(true);
+    try {
+      const dados = await getTurmas();
+      setTurmas(dados);
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-      alert("Erro ao conectar com o servidor. Verifique se o backend está rodando!");
+      console.error(error);
+      alert('Erro ao conectar com o servidor (Porta 10000).');
     } finally {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Manipular inputs
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Manipular dias da semana
-  const toggleDia = (dia) => {
-    setFormData(prev => {
-      const dias = prev.dias_aula.includes(dia)
-        ? prev.dias_aula.filter(d => d !== dia)
-        : [...prev.dias_aula, dia];
-      return { ...prev, dias_aula: dias };
+  // 2. Manipular Checkbox de Dias
+  const handleDiaChange = (dia) => {
+    setNovaTurma(prev => {
+      const diasAtuais = prev.dias_aula;
+      if (diasAtuais.includes(dia)) {
+        return { ...prev, dias_aula: diasAtuais.filter(d => d !== dia) };
+      } else {
+        return { ...prev, dias_aula: [...diasAtuais, dia] };
+      }
     });
   };
 
-  // Salvar Turma (Envia pro Backend Node.js)
-  async function handleSubmit(e) {
+  // 3. Enviar Formulário
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validação básica
-    if (!formData.projeto_id) {
-      alert("Por favor, selecione um projeto!");
-      return;
-    }
-
-    setIsSaving(true);
+    if (!novaTurma.nome || !novaTurma.data_inicio) return alert("Preencha os campos obrigatórios");
 
     try {
-      // Chama a API real
-      await api.createTurma(formData);
-
-      // Recarrega a lista
-      const response = await api.getTurmas();
-      setTurmas(response.data || response); // Ajuste conforme o retorno da sua API
-
-      // Fecha modal
-      setIsModalOpen(false);
-      setFormData({
-        projeto_id: '', nome: '', turno: 'Matutino',
-        periodo: '2026.1', data_inicio: '', data_fim: '', dias_aula: []
-      });
-      alert("Turma criada com sucesso!");
+      await criarTurma(novaTurma);
+      alert("Turma criada com sucesso! 🚀");
+      setShowModal(false);
+      carregarDados();
+      // Resetar form
+      setNovaTurma({ ...novaTurma, nome: '', dias_aula: [] });
     } catch (error) {
-      console.error(error);
-      alert("Erro ao criar turma. Veja o console.");
-    } finally {
-      setIsSaving(false);
+      alert("Erro ao criar turma.");
     }
-  }
-
-  // Função auxiliar para achar nome do projeto pelo ID (Visualização)
-  const getNomeProjeto = (id) => {
-    const proj = projetos.find(p => p.id === Number(id));
-    return proj ? proj.titulo : 'Projeto Desconhecido';
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-64 text-blue-600 gap-2">
-        <Loader2 className="animate-spin" size={40} />
-        <p>Carregando sistema...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative animate-fade-in">
-      {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Gestão de Turmas</h1>
-          <p className="text-gray-500">Administre as turmas dos projetos ativos.</p>
+          <p className="text-gray-500">Administre as turmas e cronogramas do projeto</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
+        <button 
+          onClick={() => setShowModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-all flex items-center gap-2"
         >
-          <Plus size={20} />
-          Nova Turma
+          <span>+</span> Nova Turma
         </button>
       </div>
 
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><GraduationCap size={24} /></div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium">Turmas Ativas</p>
-            <h3 className="text-2xl font-bold text-gray-800">{turmas.filter(t => t.ativo).length}</h3>
-          </div>
-        </div>
-        {/* Adicione mais cards aqui se quiser */}
-      </div>
-
-      {/* Lista de Turmas */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
-                <th className="p-4 font-semibold">Projeto / Turma</th>
-                <th className="p-4 font-semibold">Período / Turno</th>
-                <th className="p-4 font-semibold">Dias</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {turmas.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">
-                    Nenhuma turma encontrada. Crie a primeira!
-                  </td>
-                </tr>
-              ) : (
-                turmas.map((turma) => (
-                  <tr key={turma.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4">
-                      <span className="text-xs font-bold text-blue-600 uppercase tracking-wide">
-                        {getNomeProjeto(turma.projeto_id)}
+      {/* GRID DE TURMAS */}
+      {loading ? (
+        <div className="text-center py-10 text-gray-500">Carregando turmas...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {turmas.map(turma => (
+            <div key={turma.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="font-bold text-lg text-gray-800">{turma.nome}</h3>
+                <span className={`px-2 py-1 rounded text-xs font-semibold ${turma.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  {turma.ativo ? 'Ativo' : 'Inativo'}
+                </span>
+              </div>
+              
+              <div className="space-y-2 text-sm text-gray-600 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-700">Período:</span> {turma.periodo}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-700">Turno:</span> {turma.turno}
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {turma.dias_aula && turma.dias_aula.length > 0 ? (
+                    turma.dias_aula.map(dia => (
+                      <span key={dia} className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs border border-gray-200">
+                        {dia}
                       </span>
-                      <p className="font-semibold text-gray-800">{turma.nome}</p>
-                    </td>
-                    <td className="p-4 text-gray-600">
-                      <p>{turma.periodo}</p>
-                      <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
-                        {turma.turno}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm text-gray-500">
-                      {Array.isArray(turma.dias_aula) ? turma.dias_aula.join(', ') : turma.dias_aula}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${turma.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                        {turma.ativo ? 'ATIVO' : 'INATIVO'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={() => navigate(`/app/turmas/${turma.id}`)} // <--- A MÁGICA É AQUI
-                        className="text-gray-400 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors"
-                        title="Ver Detalhes" // Dica visual pro usuário
-                      >
-                        <MoreVertical size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* --- MODAL --- */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in">
-            <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-800">Nova Turma</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-
-              {/* SELECT DE PROJETOS (Fundamental pro modelo híbrido) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Projeto Vinculado</label>
-                <select
-                  required
-                  name="projeto_id"
-                  value={formData.projeto_id}
-                  onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                >
-                  <option value="">Selecione um projeto...</option>
-                  {projetos.map(proj => (
-                    <option key={proj.id} value={proj.id}>
-                      {proj.titulo}
-                    </option>
-                  ))}
-                </select>
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">Dias não definidos</span>
+                  )}
+                </div>
               </div>
 
+              <button 
+                className="w-full mt-2 bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 py-2 rounded-lg text-sm font-medium transition-colors"
+                onClick={() => alert(`Em breve: Tela de detalhes da turma ${turma.id}`)}
+              >
+                Gerenciar Alunos & Chamada →
+              </button>
+            </div>
+          ))}
+
+          {turmas.length === 0 && (
+            <div className="col-span-full text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+              <p className="text-gray-500">Nenhuma turma cadastrada ainda.</p>
+              <button onClick={() => setShowModal(true)} className="text-blue-600 font-medium hover:underline mt-2">
+                Criar a primeira turma agora
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL (Tailwind puro) */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-gray-800">Nova Turma</h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Turma</label>
-                <input
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  placeholder="Ex: Informática Básica - Turma A"
+                  value={novaTurma.nome}
+                  onChange={e => setNovaTurma({...novaTurma, nome: e.target.value})}
                   required
-                  name="nome"
-                  value={formData.nome}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Téc. Enfermagem - Módulo 1"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Período Letivo</label>
-                  <input
-                    required
-                    name="periodo"
-                    value={formData.periodo}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Turno</label>
+                  <select 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    value={novaTurma.turno}
+                    onChange={e => setNovaTurma({...novaTurma, turno: e.target.value})}
+                  >
+                    <option>Manhã</option>
+                    <option>Tarde</option>
+                    <option>Noite</option>
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Turno</label>
-                  <select
-                    name="turno"
-                    value={formData.turno}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                  >
-                    <option value="Matutino">Matutino</option>
-                    <option value="Vespertino">Vespertino</option>
-                    <option value="Noturno">Noturno</option>
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={novaTurma.periodo}
+                    onChange={e => setNovaTurma({...novaTurma, periodo: e.target.value})}
+                  />
                 </div>
               </div>
 
-              {/* DATAS DE INÍCIO E FIM */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
-                  <input
-                    type="date"
+                  <input 
+                    type="date" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={novaTurma.data_inicio}
+                    onChange={e => setNovaTurma({...novaTurma, data_inicio: e.target.value})}
                     required
-                    name="data_inicio"
-                    value={formData.data_inicio}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
-                  <input
-                    type="date"
+                  <input 
+                    type="date" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={novaTurma.data_fim}
+                    onChange={e => setNovaTurma({...novaTurma, data_fim: e.target.value})}
                     required
-                    name="data_fim"
-                    value={formData.data_fim}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Dias de Aula</label>
-                <div className="flex gap-2 flex-wrap">
-                  {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'].map(dia => (
-                    <button
-                      key={dia}
-                      type="button"
-                      onClick={() => toggleDia(dia)}
-                      className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${formData.dias_aula.includes(dia)
-                          ? 'bg-blue-100 border-blue-200 text-blue-700'
-                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
-                        }`}
-                    >
-                      {dia}
-                    </button>
+                <div className="flex flex-wrap gap-3">
+                  {diasOpcoes.map(dia => (
+                    <label key={dia} className="inline-flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-1 rounded border border-gray-200 hover:bg-gray-100">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                        checked={novaTurma.dias_aula.includes(dia)}
+                        onChange={() => handleDiaChange(dia)}
+                      />
+                      <span className="text-sm text-gray-700">{dia}</span>
+                    </label>
                   ))}
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-4">
-                <button
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                <button 
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
                 >
                   Cancelar
                 </button>
-                <button
+                <button 
                   type="submit"
-                  disabled={isSaving}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-all flex items-center"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm"
                 >
-                  {isSaving ? <Loader2 className="animate-spin mr-2" size={20} /> : null}
-                  {isSaving ? 'Salvando...' : 'Criar Turma'}
+                  Salvar Turma
                 </button>
               </div>
             </form>
@@ -347,4 +245,6 @@ export default function GestaoTurmas() {
       )}
     </div>
   );
-}
+};
+
+export default GestaoTurmas;

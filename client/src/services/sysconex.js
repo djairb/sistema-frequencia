@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// Ajuste a URL se seu backend estiver em outra porta ou em produção
-const API_URL = 'http://localhost:10000/api/sysconex-freq'; 
+// URL apontando direto para a rota base do seu backend local
+const API_URL = 'http://localhost:10000/sysconex-freq';
 
-// Configuração básica do Axios
 const api = axios.create({
     baseURL: API_URL,
     headers: {
@@ -18,7 +17,7 @@ export const getTurmas = async () => {
 };
 
 export const criarTurma = async (dadosTurma) => {
-    // dadosTurma = { projeto_id, nome, turno, periodo, dias_aula, etc }
+    // O backend espera { projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim }
     const response = await api.post('/turmas', dadosTurma);
     return response.data;
 };
@@ -41,14 +40,19 @@ export const matricularAluno = async (turmaId, alunoId) => {
 
 // --- SERVIÇOS DE AULA/CHAMADA ---
 export const registrarAula = async (turmaId, dadosAula) => {
-    // dadosAula = { professor_id, data_aula, conteudo, lista_presenca }
     const response = await api.post(`/turmas/${turmaId}/aulas`, dadosAula);
     return response.data;
 };
 
-// --- INTEGRAÇÃO (Busca alunos disponíveis no banco para matricular) ---
-// Como a gente ainda não criou essa rota específica de busca no backend, 
-// vamos deixar preparado. A ideia é buscar na tabela 'Beneficiario'/'Pessoa'.
-// Por enquanto, vou deixar comentado ou fazer um mock depois.
+// --- LISTAGEM DE PROFESSORES ---
+export const getProfessoresTurma = async (turmaId) => {
+    const response = await api.get(`/turmas/${turmaId}/professores`);
+    return response.data;
+}
+
+export const vincularProfessor = async (turmaId, professorId) => {
+    const response = await api.post(`/turmas/${turmaId}/professores`, { professor_id: professorId });
+    return response.data;
+}
 
 export default api;

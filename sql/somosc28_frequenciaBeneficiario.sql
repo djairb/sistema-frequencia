@@ -1657,3 +1657,11 @@ INSERT INTO `cargo` (`id`, `descricao`, `setor_id`, `status`) VALUES
 (32, 'Equipe Multidisciplinar', 11, 1),
 (33, 'Voluntário(a)', 17, 1),
 (34, 'Estagiário(a)', 18, 1);
+
+INSERT INTO projeto (id, titulo, status) VALUES
+(5, 'Projeto Skate Livre', 'ativo'),
+(4, 'Projeto Comunidade Rural', 'ativo'),
+(3, 'Projeto Conecta Vidas - Letramento Digital e educação financeira para pessoas idosas', 'ativo'),
+(2, 'Projeto Oportunizar Comunidades', 'ativo'),
+(1, 'Projeto VamoSimbora?', 'ativo');
+
