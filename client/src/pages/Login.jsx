@@ -1,126 +1,87 @@
-import { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
 import { AuthContext } from '../contexts/auth';
-import { Lock, User, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Login() {
-  const [login, setLogin] = useState('');
-  const [senha, setSenha] = useState('');
-  const [error, setError] = useState('');
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+const Login = () => {
+    const { login } = useContext(AuthContext);
+    const navigate = useNavigate();
 
-  const { signIn } = useContext(AuthContext);
-  const navigate = useNavigate();
+    const [cpf, setCpf] = useState('');
+    const [senha, setSenha] = useState('');
+    const [erro, setErro] = useState('');
+    const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    setError('');
-    setIsLoggingIn(true);
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setErro('');
 
-    if (!login || !senha) {
-      setError('Preencha todos os campos.');
-      setIsLoggingIn(false);
-      return;
-    }
+        // Remove pontos e traços do CPF antes de enviar
+        const cpfLimpo = cpf.replace(/\D/g, '');
 
-    const result = await signIn(login, senha);
+        const result = await login(cpfLimpo, senha);
 
-    if (result.success) {
-      // REDIRECIONAMENTO INTELIGENTE
-      // ID 2 = Coordenador -> Vai pro painel de gestão
-      // ID 6 = Professor -> Vai pro diário de classe
-      if (result.perfil === 2) {
-        navigate('/app/gestao-turmas');
-      } else if (result.perfil === 6) {
-        navigate('/app/meu-diario');
-      } else {
-        // Se for admin ou outro, manda pra home genérica por enquanto
-        navigate('/app/home');
-      }
-    } else {
-      setError(result.message);
-      setIsLoggingIn(false);
-    }
-  }
+        if (result.success) {
+            alert("logou pai")
+            navigate('/app/gestao-turmas'); // Redireciona se der certo
+        } else {
+            setErro(result.message);
+            setLoading(false);
+        }
+    };
 
-  return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-        
-        {/* Cabeçalho do Card */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">SysConex</h1>
-          <p className="text-blue-100">Sistema de Frequência Escolar</p>
-        </div>
-
-        {/* Formulário */}
-        <div className="p-8">
-          <form onSubmit={handleLogin} className="space-y-6">
-            
-            {/* Input Login */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+                <div className="text-center mb-8">
+                    <h1 className="text-2xl font-bold text-gray-800">SysConex Frequência</h1>
+                    <p className="text-gray-500 text-sm">Faça login para gerenciar suas turmas</p>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Ex: prof.pedro"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
-              </div>
+
+                <form onSubmit={handleLogin} className="space-y-6">
+                    {erro && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm text-center">
+                            {erro}
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">CPF (Apenas números)</label>
+                        <input
+                            type="text"
+                            value={cpf}
+                            onChange={(e) => setCpf(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="000.000.000-00"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                        <input
+                            type="password"
+                            value={senha}
+                            onChange={(e) => setSenha(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="********"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full py-2.5 rounded-lg text-white font-semibold transition-all ${
+                            loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                    >
+                        {loading ? 'Entrando...' : 'Acessar Sistema'}
+                    </button>
+                </form>
             </div>
-
-            {/* Input Senha */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  placeholder="********"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Mensagem de Erro */}
-            {error && (
-              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
-                {error}
-              </div>
-            )}
-
-            {/* Botão de Entrar */}
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {isLoggingIn ? (
-                <div className="flex items-center">
-                  <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                  Entrando...
-                </div>
-              ) : (
-                'Acessar Sistema'
-              )}
-            </button>
-          </form>
-
-          {/* Dica de rodapé (só pra demo) */}
-          <div className="mt-6 text-center text-xs text-gray-400">
-            <p>Dica: Use <strong>coord.ana</strong> ou <strong>prof.pedro</strong></p>
-          </div>
         </div>
-      </div>
-    </div>
-  );
-}
+    );
+};
+
+export default Login;

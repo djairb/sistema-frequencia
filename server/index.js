@@ -12,7 +12,7 @@ app.use(express.json());
 const sysconexRoutes = require('./src/routes/sysconex');
 
 // Usa as rotas com o prefixo correto (IGUAL AO SERVER)
-app.use('/api/sysconex-freq', sysconexRoutes);
+app.use('/sysconex-freq', sysconexRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => res.send('API Local Rodando! 🚀'));

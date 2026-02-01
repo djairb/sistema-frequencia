@@ -10,6 +10,26 @@ const api = axios.create({
     }
 });
 
+
+export const loginSession = async (cpf, senha) => {
+    // O backend espera { login, senha }
+    const response = await api.post('/auth/login', { login: cpf, senha });
+    return response.data;
+};
+
+// Função para injetar o Token nas requisições futuras
+export const setAuthToken = (token) => {
+    if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+        delete api.defaults.headers.common['Authorization'];
+    }
+};
+
+
+
+
+
 // --- SERVIÇOS DE TURMA ---
 export const getTurmas = async () => {
     const response = await api.get('/turmas');

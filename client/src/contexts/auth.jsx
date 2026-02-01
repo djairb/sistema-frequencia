@@ -1,51 +1,54 @@
-import { createContext, useState, useEffect } from 'react';
-import { api } from '../services/api';
-import { mockUsuarios } from '../services/mocks/usuarios'; // Importamos pra simular o login
+import React, { createContext, useState, useEffect } from 'react';
+import { loginSession, setAuthToken } from '../services/sysconex';
 
 export const AuthContext = createContext({});
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Ao recarregar a página, verifica se já tem usuário salvo
-    const recoveredUser = localStorage.getItem('sysconex_user');
-    if (recoveredUser) {
-      setUser(JSON.parse(recoveredUser));
-    }
-    setLoading(false);
-  }, []);
+    useEffect(() => {
+        // 1. Ao abrir o site, verifica se já tem token salvo
+        const recoveredUser = localStorage.getItem('sys_user');
+        const recoveredToken = localStorage.getItem('sys_token');
 
-  async function signIn(login, senha) {
-    // --- LÓGICA DE MOCK ---
-    // Na vida real, aqui seria api.post('/login', { login, senha })
-    // Como estamos no modo demo, vamos procurar no array de mocks:
-    
-    // Simula delay de rede
-    await new Promise(resolve => setTimeout(resolve, 500));
+        if (recoveredUser && recoveredToken) {
+            setUser(JSON.parse(recoveredUser));
+            setAuthToken(recoveredToken); // Configura o axios
+        }
 
-    // Procura o usuário pelo login (ignorando senha por enquanto)
-    const usuarioEncontrado = mockUsuarios.find(u => u.login === login);
+        setLoading(false);
+    }, []);
 
-    if (usuarioEncontrado) {
-      // Salva no estado e no LocalStorage pra não deslogar no F5
-      setUser(usuarioEncontrado);
-      localStorage.setItem('sysconex_user', JSON.stringify(usuarioEncontrado));
-      return { success: true, perfil: usuarioEncontrado.perfil.id };
-    } else {
-      return { success: false, message: 'Usuário não encontrado!' };
-    }
-  }
+    const login = async (cpf, senha) => {
+        try {
+            const response = await loginSession(cpf, senha);
+            
+            // O Backend devolve { token, user }
+            const { token, user: loggedUser } = response;
 
-  function signOut() {
-    localStorage.removeItem('sysconex_user');
-    setUser(null);
-  }
+            localStorage.setItem('sys_user', JSON.stringify(loggedUser));
+            localStorage.setItem('sys_token', token);
 
-  return (
-    <AuthContext.Provider value={{ signed: !!user, user, signIn, signOut, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+            setAuthToken(token);
+            setUser(loggedUser);
+            
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.error || "Erro ao logar" };
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('sys_user');
+        localStorage.removeItem('sys_token');
+        setAuthToken(null);
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ signed: !!user, user, loading, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
