@@ -27,6 +27,26 @@ const verificarTokenIntegracao = (req, res, next) => {
     next(); // Se passar, segue para a função de salvar no banco
 };
 
+const verificarUsuario = (req, res, next) => {
+    // 1. Pega o cabeçalho "Authorization: Bearer <token>"
+    const authHeader = req.headers['authorization'];
+    
+    // 2. Separa o "Bearer" do Token em si
+    const token = authHeader && authHeader.split(' ')[1]; 
+
+    // 3. Se não tiver token, barra na porta
+    if (!token) return res.status(401).json({ error: "Acesso negado. Faça login." });
+
+    // 4. Verifica se o token é válido e não expirou
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: "Sessão inválida ou expirada." });
+        
+        // 5. Se tudo certo, guarda os dados do usuário na requisição e deixa passar
+        req.user = user; 
+        next();
+    });
+};
+
 router.post("/auth/login", async (req, res) => {
     const { login, senha } = req.body; // No front vamos mandar { login: 'CPF', senha: '...' }
 
@@ -206,6 +226,148 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
         }
     });
 });
+
+
+// ... imports e configs anteriores (bcrypt, jwt, dbSysConex) ...
+
+// ==========================================
+// 🎓 ÁREA DO COORDENADOR
+// ==========================================
+
+// 1. SELECT DE PROJETOS (Para o Dropdown)
+router.get("/projetos", verificarUsuario, async (req, res) => {
+    try {
+        const results = await querySys("SELECT id, titulo FROM projeto WHERE status = 'ativo' ORDER BY titulo ASC");
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao buscar projetos" });
+    }
+});
+
+// 2. CRUD DE TURMAS
+router.get("/turmas", verificarUsuario, async (req, res) => {
+    try {
+        // Traz as turmas com o nome do projeto junto
+        const sql = `
+            SELECT t.*, p.titulo as nome_projeto 
+            FROM turmas t
+            LEFT JOIN projeto p ON t.projeto_id = p.id
+            ORDER BY t.id DESC
+        `;
+        const results = await querySys(sql);
+        
+        const turmasFormatadas = results.map(t => ({
+            ...t,
+            dias_aula: JSON.parse(t.dias_aula || "[]"),
+            ativo: t.ativo === 1
+        }));
+        res.json(turmasFormatadas);
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao buscar turmas" });
+    }
+});
+
+router.post("/turmas", verificarUsuario, async (req, res) => {
+    const { projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim } = req.body;
+    try {
+        const sql = `INSERT INTO turmas (projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        const values = [projeto_id, nome, turno, periodo, JSON.stringify(dias_aula || []), data_inicio, data_fim];
+        const result = await querySys(sql, values);
+        res.status(201).json({ message: "Turma criada!", id: result.insertId });
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao criar turma: " + error.message });
+    }
+});
+
+router.get("/turmas/:id", verificarUsuario, async (req, res) => {
+    try {
+        const results = await querySys("SELECT * FROM turmas WHERE id = ?", [req.params.id]);
+        if (results.length === 0) return res.status(404).json({ error: "Turma não encontrada" });
+        
+        const turma = results[0];
+        turma.dias_aula = JSON.parse(turma.dias_aula || "[]");
+        turma.ativo = turma.ativo === 1;
+        res.json(turma); 
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 3. GESTÃO DE ALUNOS (MATRÍCULAS)
+router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
+    try {
+        const sql = `
+            SELECT m.id as matricula_id, m.beneficiario_id, p.nome_completo, p.cpf
+            FROM matriculas m
+            JOIN Beneficiario b ON m.beneficiario_id = b.id
+            JOIN pessoa p ON b.pessoa_id = p.id
+            WHERE m.turma_id = ?
+            ORDER BY p.nome_completo ASC
+        `;
+        const results = await querySys(sql, [req.params.id]);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
+    // Aqui usamos o ID do Beneficiário para matricular
+    try {
+        await querySys("INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES (?, ?, 'Ativo')", [req.params.id, req.body.aluno_id]);
+        res.status(201).json({ message: "Aluno matriculado!" });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: "Aluno já está nesta turma." });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
+    try {
+        await querySys("DELETE FROM matriculas WHERE id = ?", [req.params.id]);
+        res.json({ message: "Matrícula removida." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 4. GESTÃO DE PROFESSORES (VÍNCULOS)
+router.get("/turmas/:id/professores", verificarUsuario, async (req, res) => {
+    try {
+        const sql = `
+            SELECT tp.id as vinculo_id, tp.colaborador_id, p.nome_completo, c.email_institucional
+            FROM turma_professores tp
+            JOIN colaborador c ON tp.colaborador_id = c.id
+            JOIN pessoa p ON c.pessoa_id = p.id
+            WHERE tp.turma_id = ?
+        `;
+        const results = await querySys(sql, [req.params.id]);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post("/turmas/:id/professores", verificarUsuario, async (req, res) => {
+    try {
+        await querySys("INSERT INTO turma_professores (turma_id, colaborador_id) VALUES (?, ?)", [req.params.id, req.body.professor_id]);
+        res.status(201).json({ message: "Professor vinculado!" });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: "Professor já está vinculado." });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.delete("/turma-professores/:id", verificarUsuario, async (req, res) => {
+    try {
+        await querySys("DELETE FROM turma_professores WHERE id = ?", [req.params.id]);
+        res.json({ message: "Professor desvinculado." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 
 router.get("/integracao", (req, res) => {
     res.send("API DE INTEGRAÇÃO RODANDO 🚀");
