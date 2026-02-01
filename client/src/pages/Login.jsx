@@ -16,14 +16,26 @@ const Login = () => {
         setLoading(true);
         setErro('');
 
-        // Remove pontos e traços do CPF antes de enviar
         const cpfLimpo = cpf.replace(/\D/g, '');
 
+        // Pegamos o 'user' que veio do retorno do context
         const result = await login(cpfLimpo, senha);
 
         if (result.success) {
-            alert("logou pai")
-            navigate('/app/gestao-turmas'); // Redireciona se der certo
+            const perfil = result.user.perfil_id; // O ID que vem do Banco
+
+            // 1 = Admin, 2 = Coordenador
+            if (perfil === 1 || perfil === 2) {
+                navigate('/app/gestao-turmas');
+            } 
+            // 6 = Professor
+            else if (perfil === 6) {
+                navigate('/app/minhas-turmas');
+            } 
+            // Outros (Estagiário, etc) - Mandamos pra home genérica por enquanto
+            else {
+                navigate('/app/home');
+            }
         } else {
             setErro(result.message);
             setLoading(false);

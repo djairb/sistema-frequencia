@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await loginSession(cpf, senha);
             
-            // O Backend devolve { token, user }
             const { token, user: loggedUser } = response;
 
             localStorage.setItem('sys_user', JSON.stringify(loggedUser));
@@ -33,7 +32,8 @@ export const AuthProvider = ({ children }) => {
             setAuthToken(token);
             setUser(loggedUser);
             
-            return { success: true };
+            // 👇 MUDANÇA AQUI: Retornamos o usuário logado também
+            return { success: true, user: loggedUser }; 
         } catch (error) {
             return { success: false, message: error.response?.data?.error || "Erro ao logar" };
         }
