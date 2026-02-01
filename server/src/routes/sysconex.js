@@ -70,6 +70,7 @@ router.post("/auth/login", async (req, res) => {
         }
 
         const usuario = results[0];
+        
 
         // 3. Compara a senha enviada com o Hash do banco
         const senhaBate = await bcrypt.compare(senha, usuario.senha);
@@ -267,14 +268,46 @@ router.get("/turmas", verificarUsuario, async (req, res) => {
     }
 });
 
+// Crie/Substitua a rota POST /turmas por esta versão:
+
 router.post("/turmas", verificarUsuario, async (req, res) => {
+    // 1. Recebe os dados do Front
     const { projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim } = req.body;
+
     try {
-        const sql = `INSERT INTO turmas (projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-        const values = [projeto_id, nome, turno, periodo, JSON.stringify(dias_aula || []), data_inicio, data_fim];
+        // 2. TRATAMENTO DE DADOS (Sanitização)
+        // Se a data vier vazia (""), transformamos em NULL pro banco aceitar
+        const inicioFormatado = data_inicio ? data_inicio : null;
+        const fimFormatado = data_fim ? data_fim : null;
+        
+        // Garante que dias_aula seja sempre um JSON válido, mesmo se vier vazio
+        const diasJSON = JSON.stringify(dias_aula || []);
+
+        const sql = `
+            INSERT INTO turmas 
+            (projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+        
+        const values = [
+            projeto_id, 
+            nome, 
+            turno, 
+            periodo, 
+            diasJSON, 
+            inicioFormatado, // Usa a variável tratada
+            fimFormatado     // Usa a variável tratada
+        ];
+
         const result = await querySys(sql, values);
-        res.status(201).json({ message: "Turma criada!", id: result.insertId });
+        
+        res.status(201).json({ 
+            message: "Turma criada com sucesso!", 
+            id: result.insertId 
+        });
+
     } catch (error) {
+        console.error("Erro ao criar turma:", error);
         res.status(500).json({ error: "Erro ao criar turma: " + error.message });
     }
 });
@@ -294,6 +327,91 @@ router.get("/turmas/:id", verificarUsuario, async (req, res) => {
 });
 
 // 3. GESTÃO DE ALUNOS (MATRÍCULAS)
+// --- NOVO: BUSCA DE BENEFICIÁRIOS (Para o Modal) ---
+router.get("/beneficiarios/busca", verificarUsuario, async (req, res) => {
+    const { q } = req.query; // Termo de busca (nome ou cpf)
+    if (!q || q.length < 3) return res.json([]); // Só busca com 3+ caracteres
+
+    try {
+        const sql = `
+            SELECT b.id, p.nome_completo, p.cpf
+            FROM Beneficiario b
+            JOIN pessoa p ON b.pessoa_id = p.id
+            WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?
+            LIMIT 10
+        `;
+        const termo = `%${q}%`;
+        const results = await querySys(sql, [termo, termo]);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: "Erro na busca" });
+    }
+});
+
+// --- ATUALIZADO: MATRÍCULA COM TRAVA DE PROJETO ÚNICO ---
+router.post("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
+    const { id: turmaId } = req.params;
+    const { aluno_id } = req.body; // Pode vir um ID ou um ARRAY de IDs
+
+    // Função auxiliar para matricular UM aluno com as regras
+    const matricularUmAluno = async (beneficiarioId) => {
+        // 1. Descobrir qual é o projeto dessa turma
+        const [turma] = await querySys("SELECT projeto_id FROM turmas WHERE id = ?", [turmaId]);
+        if (!turma) throw new Error("Turma não encontrada.");
+
+        // 2. REGRA DE OURO: O aluno já está em outro projeto?
+        // Buscamos se existe alguma matrícula desse aluno em turmas de OUTROS projetos
+        const sqlVerifica = `
+            SELECT t.projeto_id, p.titulo
+            FROM matriculas m
+            JOIN turmas t ON m.turma_id = t.id
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE m.beneficiario_id = ? 
+            AND t.projeto_id != ? 
+            LIMIT 1
+        `;
+        const conflito = await querySys(sqlVerifica, [beneficiarioId, turma.projeto_id]);
+
+        if (conflito.length > 0) {
+            throw new Error(`Aluno já pertence ao projeto "${conflito[0].titulo}".`);
+        }
+
+        // 3. Se passou, insere (Ignora se já tiver na mesma turma com INSERT IGNORE ou try/catch)
+        await querySys("INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES (?, ?, 'Ativo')", [turmaId, beneficiarioId]);
+    };
+
+    try {
+        // Suporta tanto { aluno_id: 1 } quanto { aluno_id: [1, 2, 3] }
+        const listaIds = Array.isArray(aluno_id) ? aluno_id : [aluno_id];
+        
+        // Processa todos (Promise.all para ser rápido)
+        // Se um falhar (regra do projeto), a gente avisa
+        const erros = [];
+        for (const idAluno of listaIds) {
+            try {
+                await matricularUmAluno(idAluno);
+            } catch (err) {
+                // Se for erro de duplicidade na mesma turma, ignora. Se for regra de projeto, guarda o erro.
+                if (!err.message.includes('Duplicate entry')) {
+                    erros.push(`ID ${idAluno}: ${err.message}`);
+                }
+            }
+        }
+
+        if (erros.length > 0) {
+            // Retorna sucesso parcial ou erro
+            return res.status(400).json({ error: "Alguns alunos não foram matriculados.", detalhes: erros });
+        }
+
+        res.status(201).json({ message: "Alunos matriculados com sucesso!" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. LISTAR ALUNOS DA TURMA (⚠️ Essa é a que estava dando 404!)
 router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     try {
         const sql = `
@@ -307,17 +425,6 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
         const results = await querySys(sql, [req.params.id]);
         res.json(results);
     } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-router.post("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
-    // Aqui usamos o ID do Beneficiário para matricular
-    try {
-        await querySys("INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES (?, ?, 'Ativo')", [req.params.id, req.body.aluno_id]);
-        res.status(201).json({ message: "Aluno matriculado!" });
-    } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: "Aluno já está nesta turma." });
         res.status(500).json({ error: error.message });
     }
 });
