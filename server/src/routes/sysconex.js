@@ -329,97 +329,212 @@ router.get("/turmas/:id", verificarUsuario, async (req, res) => {
 // 3. GESTÃO DE ALUNOS (MATRÍCULAS)
 // --- NOVO: BUSCA DE BENEFICIÁRIOS (Para o Modal) ---
 router.get("/beneficiarios/busca", verificarUsuario, async (req, res) => {
-    const { q } = req.query; // Termo de busca (nome ou cpf)
-    if (!q || q.length < 3) return res.json([]); // Só busca com 3+ caracteres
-
+    // ... (Código da busca igual ao anterior) ...
+    const { q, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+    if (!q || q.length < 3) return res.json({ data: [], total: 0 }); 
     try {
-        const sql = `
-            SELECT b.id, p.nome_completo, p.cpf
-            FROM Beneficiario b
-            JOIN pessoa p ON b.pessoa_id = p.id
-            WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?
-            LIMIT 10
-        `;
         const termo = `%${q}%`;
-        const results = await querySys(sql, [termo, termo]);
-        res.json(results);
-    } catch (error) {
-        res.status(500).json({ error: "Erro na busca" });
-    }
+        const sqlDados = `SELECT b.id, p.nome_completo, p.cpf FROM Beneficiario b JOIN pessoa p ON b.pessoa_id = p.id WHERE p.nome_completo LIKE ? OR p.cpf LIKE ? ORDER BY p.nome_completo ASC LIMIT ${limit} OFFSET ${offset}`;
+        const sqlCount = `SELECT COUNT(*) as total FROM Beneficiario b JOIN pessoa p ON b.pessoa_id = p.id WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?`;
+        const [dados, countRes] = await Promise.all([querySys(sqlDados, [termo, termo]), querySys(sqlCount, [termo, termo])]);
+        res.json({ data: dados, pagination: { total: countRes[0].total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(countRes[0].total / limit) } });
+    } catch (error) { res.status(500).json({ error: "Erro busca" }); }
 });
 
+
+router.get("/colaboradores/busca", verificarUsuario, async (req, res) => {
+    const { q, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    if (!q || q.length < 3) return res.json({ data: [], total: 0 }); 
+
+    try {
+        const termo = `%${q}%`;
+        
+        // Buscamos apenas quem tem perfil de PROFESSOR (ID 6) ou pode ser qualquer colaborador?
+        // Vou deixar aberto para qualquer colaborador, mas você pode filtrar com "AND u.id_perfil_usuario = 6" se quiser
+        const sqlDados = `
+            SELECT c.id, p.nome_completo, p.cpf, c.email_institucional
+            FROM colaborador c
+            JOIN pessoa p ON c.pessoa_id = p.id
+            WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?
+            ORDER BY p.nome_completo ASC
+            LIMIT ? OFFSET ?
+        `;
+
+        const sqlCount = `
+            SELECT COUNT(*) as total
+            FROM colaborador c
+            JOIN pessoa p ON c.pessoa_id = p.id
+            WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?
+        `;
+
+        const [dados, countRes] = await Promise.all([
+            querySys(sqlDados, [termo, termo, parseInt(limit), parseInt(offset)]),
+            querySys(sqlCount, [termo, termo])
+        ]);
+
+        res.json({
+            data: dados,
+            pagination: {
+                total: countRes[0].total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(countRes[0].total / limit)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Erro na busca de professores" });
+    }
+});
 // --- ATUALIZADO: MATRÍCULA COM TRAVA DE PROJETO ÚNICO ---
 router.post("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     const { id: turmaId } = req.params;
-    const { aluno_id } = req.body; // Pode vir um ID ou um ARRAY de IDs
+    const { aluno_id } = req.body; 
 
-    // Função auxiliar para matricular UM aluno com as regras
     const matricularUmAluno = async (beneficiarioId) => {
-        // 1. Descobrir qual é o projeto dessa turma
         const [turma] = await querySys("SELECT projeto_id FROM turmas WHERE id = ?", [turmaId]);
         if (!turma) throw new Error("Turma não encontrada.");
 
-        // 2. REGRA DE OURO: O aluno já está em outro projeto?
-        // Buscamos se existe alguma matrícula desse aluno em turmas de OUTROS projetos
+        // Verifica conflito de projeto (Só para alunos ATIVOS em outros projetos)
         const sqlVerifica = `
             SELECT t.projeto_id, p.titulo
             FROM matriculas m
             JOIN turmas t ON m.turma_id = t.id
             JOIN projeto p ON t.projeto_id = p.id
-            WHERE m.beneficiario_id = ? 
-            AND t.projeto_id != ? 
+            WHERE m.beneficiario_id = ? AND t.projeto_id != ? AND m.status = 'Ativo'
             LIMIT 1
         `;
         const conflito = await querySys(sqlVerifica, [beneficiarioId, turma.projeto_id]);
+        if (conflito.length > 0) throw new Error(`Aluno ativo no projeto "${conflito[0].titulo}".`);
 
-        if (conflito.length > 0) {
-            throw new Error(`Aluno já pertence ao projeto "${conflito[0].titulo}".`);
+        // Verifica se já existe matrícula nesta turma (Ativa ou Inativa)
+        const [existente] = await querySys("SELECT id, status FROM matriculas WHERE turma_id = ? AND beneficiario_id = ?", [turmaId, beneficiarioId]);
+
+        if (existente) {
+            if (existente.status !== 'Ativo') {
+                // REATIVAR ALUNO ANTIGO
+                await querySys("UPDATE matriculas SET status = 'Ativo' WHERE id = ?", [existente.id]);
+            }
+        } else {
+            // CRIAR NOVO
+            await querySys("INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES (?, ?, 'Ativo')", [turmaId, beneficiarioId]);
         }
-
-        // 3. Se passou, insere (Ignora se já tiver na mesma turma com INSERT IGNORE ou try/catch)
-        await querySys("INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES (?, ?, 'Ativo')", [turmaId, beneficiarioId]);
     };
 
     try {
-        // Suporta tanto { aluno_id: 1 } quanto { aluno_id: [1, 2, 3] }
         const listaIds = Array.isArray(aluno_id) ? aluno_id : [aluno_id];
-        
-        // Processa todos (Promise.all para ser rápido)
-        // Se um falhar (regra do projeto), a gente avisa
         const erros = [];
         for (const idAluno of listaIds) {
-            try {
-                await matricularUmAluno(idAluno);
-            } catch (err) {
-                // Se for erro de duplicidade na mesma turma, ignora. Se for regra de projeto, guarda o erro.
-                if (!err.message.includes('Duplicate entry')) {
-                    erros.push(`ID ${idAluno}: ${err.message}`);
-                }
-            }
+            try { await matricularUmAluno(idAluno); } catch (err) { erros.push(`ID ${idAluno}: ${err.message}`); }
         }
-
-        if (erros.length > 0) {
-            // Retorna sucesso parcial ou erro
-            return res.status(400).json({ error: "Alguns alunos não foram matriculados.", detalhes: erros });
-        }
-
-        res.status(201).json({ message: "Alunos matriculados com sucesso!" });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: error.message });
-    }
+        if (erros.length > 0) return res.status(400).json({ error: "Alguns erros ocorreram.", detalhes: erros });
+        res.status(201).json({ message: "Processado com sucesso!" });
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 // 2. LISTAR ALUNOS DA TURMA (⚠️ Essa é a que estava dando 404!)
 router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     try {
-        const sql = `
+        const turmaId = req.params.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // FILTRO: AND m.status = 'Ativo'
+        const sqlDados = `
             SELECT m.id as matricula_id, m.beneficiario_id, p.nome_completo, p.cpf
             FROM matriculas m
             JOIN Beneficiario b ON m.beneficiario_id = b.id
             JOIN pessoa p ON b.pessoa_id = p.id
-            WHERE m.turma_id = ?
+            WHERE m.turma_id = ? AND m.status = 'Ativo'
+            ORDER BY p.nome_completo ASC
+            LIMIT ${limit} OFFSET ${offset}
+        `;
+        
+        const sqlCount = `SELECT COUNT(*) as total FROM matriculas WHERE turma_id = ? AND status = 'Ativo'`;
+
+        const [dados, countRes] = await Promise.all([querySys(sqlDados, [turmaId]), querySys(sqlCount, [turmaId])]);
+        const total = countRes[0].total;
+
+        res.json({ data: dados, pagination: { total, page, totalPages: Math.ceil(total / limit), limit } });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
+    try {
+        // UPDATE em vez de DELETE
+        await querySys("UPDATE matriculas SET status = 'Inativo' WHERE id = ?", [req.params.id]);
+        res.json({ message: "Aluno inativado. Histórico preservado." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
+    try {
+        const turmaId = req.params.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Traz a aula e o nome do professor que registrou
+        const sqlDados = `
+            SELECT a.id, a.data_aula, a.conteudo, a.created_at,
+                   p.nome_completo as professor_nome
+            FROM aulas a
+            JOIN colaborador c ON a.colaborador_id = c.id
+            JOIN pessoa p ON c.pessoa_id = p.id
+            WHERE a.turma_id = ?
+            ORDER BY a.data_aula DESC, a.created_at DESC
+            LIMIT ${limit} OFFSET ${offset}
+        `;
+
+        const sqlCount = `SELECT COUNT(*) as total FROM aulas WHERE turma_id = ?`;
+
+        const [dados, countRes] = await Promise.all([
+            querySys(sqlDados, [turmaId]),
+            querySys(sqlCount, [turmaId])
+        ]);
+
+        // Para cada aula, vamos contar quantos Presentes/Ausentes tiveram (Resumo)
+        // Isso evita ter que abrir a aula pra saber se veio gente
+        const aulasComResumo = await Promise.all(dados.map(async (aula) => {
+            const [resumo] = await querySys(`
+                SELECT 
+                    SUM(CASE WHEN status = 'Presente' THEN 1 ELSE 0 END) as presentes,
+                    SUM(CASE WHEN status = 'Ausente' THEN 1 ELSE 0 END) as ausentes
+                FROM frequencias WHERE aula_id = ?
+            `, [aula.id]);
+            return { ...aula, ...resumo[0] };
+        }));
+
+        res.json({
+            data: aulasComResumo,
+            pagination: {
+                total: countRes[0].total,
+                page,
+                totalPages: Math.ceil(countRes[0].total / limit),
+                limit
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. DETALHES DA FREQUÊNCIA DE UMA AULA (Quem veio neste dia?)
+router.get("/aulas/:id/frequencia", verificarUsuario, async (req, res) => {
+    try {
+        const sql = `
+            SELECT f.status, p.nome_completo, p.cpf
+            FROM frequencias f
+            JOIN matriculas m ON f.matricula_id = m.id
+            JOIN Beneficiario b ON m.beneficiario_id = b.id
+            JOIN pessoa p ON b.pessoa_id = p.id
+            WHERE f.aula_id = ?
             ORDER BY p.nome_completo ASC
         `;
         const results = await querySys(sql, [req.params.id]);
@@ -429,28 +544,43 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     }
 });
 
-router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
-    try {
-        await querySys("DELETE FROM matriculas WHERE id = ?", [req.params.id]);
-        res.json({ message: "Matrícula removida." });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // 4. GESTÃO DE PROFESSORES (VÍNCULOS)
 router.get("/turmas/:id/professores", verificarUsuario, async (req, res) => {
     try {
-        const sql = `
+        const turmaId = req.params.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        const sqlDados = `
             SELECT tp.id as vinculo_id, tp.colaborador_id, p.nome_completo, c.email_institucional
             FROM turma_professores tp
             JOIN colaborador c ON tp.colaborador_id = c.id
             JOIN pessoa p ON c.pessoa_id = p.id
             WHERE tp.turma_id = ?
+            LIMIT ${limit} OFFSET ${offset}
         `;
-        const results = await querySys(sql, [req.params.id]);
-        res.json(results);
+
+        const sqlCount = `SELECT COUNT(*) as total FROM turma_professores WHERE turma_id = ?`;
+
+        const [dados, countRes] = await Promise.all([
+            querySys(sqlDados, [turmaId]),
+            querySys(sqlCount, [turmaId])
+        ]);
+
+        const total = countRes[0].total;
+
+        res.json({
+            data: dados,
+            pagination: {
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+                limit
+            }
+        });
     } catch (error) {
+        console.error("Erro ao listar professores:", error);
         res.status(500).json({ error: error.message });
     }
 });
