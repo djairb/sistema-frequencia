@@ -658,6 +658,70 @@ router.delete("/turma-professores/:id", verificarUsuario, async (req, res) => {
     }
 });
 
+router.get("/dashboard/resumo", verificarUsuario, async (req, res) => {
+    try {
+        // 1. Contadores (O destructuring [variavel] já pega o primeiro item do array)
+        const [turmasAtivas] = await querySys("SELECT COUNT(*) as total FROM turmas WHERE ativo = 1");
+        const [turmasEncerradas] = await querySys("SELECT COUNT(*) as total FROM turmas WHERE ativo = 0");
+        const [alunosAtivos] = await querySys("SELECT COUNT(*) as total FROM matriculas WHERE status = 'Ativo'");
+        const [profsVinculados] = await querySys("SELECT COUNT(*) as total FROM turma_professores WHERE ativo = 1");
+
+        // 2. ALERTAS
+        const sqlSemProf = `
+            SELECT t.id, t.nome, p.titulo as projeto 
+            FROM turmas t
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE t.ativo = 1 
+            AND t.id NOT IN (SELECT turma_id FROM turma_professores WHERE ativo = 1)
+            LIMIT 5
+        `;
+        const turmasSemProfessor = await querySys(sqlSemProf);
+
+        // 3. RECENTES
+        const sqlRecentes = `
+            SELECT t.id, t.nome, t.periodo, p.titulo as projeto
+            FROM turmas t
+            JOIN projeto p ON t.projeto_id = p.id
+            ORDER BY t.created_at DESC
+            LIMIT 5
+        `;
+        const turmasRecentes = await querySys(sqlRecentes);
+
+        res.json({
+            counters: {
+                // CORREÇÃO AQUI: Removemos o [0] pois a variável já é o objeto
+                turmas_ativas: turmasAtivas?.total || 0,
+                turmas_encerradas: turmasEncerradas?.total || 0,
+                alunos_matriculados: alunosAtivos?.total || 0,
+                professores_alocados: profsVinculados?.total || 0
+            },
+            alertas: turmasSemProfessor,
+            recentes: turmasRecentes
+        });
+    } catch (error) {
+        console.error("Erro dashboard:", error);
+        res.status(500).json({ error: "Erro ao carregar dashboard" });
+    }
+});
+
+// 4. LISTAR TODOS OS PROFESSORES DO SISTEMA (Para a tela geral)
+router.get("/professores/geral", verificarUsuario, async (req, res) => {
+    try {
+        // Busca professor + Contagem de turmas ativas que ele tem
+        const sql = `
+            SELECT c.id, p.nome_completo, p.cpf, c.email_institucional,
+            (SELECT COUNT(*) FROM turma_professores tp 
+             WHERE tp.colaborador_id = c.id AND tp.ativo = 1) as total_turmas
+            FROM colaborador c
+            JOIN pessoa p ON c.pessoa_id = p.id
+            ORDER BY p.nome_completo ASC
+        `;
+        const results = await querySys(sql);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao listar professores." });
+    }
+});
 
 
 router.get("/integracao", (req, res) => {

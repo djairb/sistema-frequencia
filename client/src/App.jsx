@@ -6,6 +6,8 @@ import GestaoTurmas from './pages/GestaoTurmas';
 import DetalhesTurma from './pages/DetalhesTurma';
 import MinhasTurmas from './pages/MinhasTurmas';
 import DiarioClasse from './pages/DiarioClasse';
+import ListaTurmas from './pages/ListaTurmas';
+import ListaProfessores from './pages/ListaProfessores';
 
 // Componente temporário (Placeholder)
 const PaginaEmConstrucao = ({ titulo }) => (
@@ -30,8 +32,8 @@ export default function App() {
             
             {/* Rotas de Coordenador */}
             <Route path="gestao-turmas" element={<GestaoTurmas />} />
-            <Route path="turmas" element={<PaginaEmConstrucao titulo="Gerenciamento de Turmas" />} />
-            <Route path="professores" element={<PaginaEmConstrucao titulo="Gerenciamento de Professores" />} />
+            <Route path="turmas" element={<ListaTurmas />} />
+            <Route path="professores" element={<ListaProfessores />} />
 
             {/* Rotas de Professor */}
             <Route path="meu-diario" element={<PaginaEmConstrucao titulo="Meu Diário de Classe" />} />
@@ -43,6 +45,9 @@ export default function App() {
             <Route path="home" element={<PaginaEmConstrucao titulo="Bem-vindo ao SysConex" />} />
 
             <Route path="turmas/:id" element={<DetalhesTurma />} />
+
+            
+
 
             
           </Route>
