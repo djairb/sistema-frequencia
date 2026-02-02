@@ -704,21 +704,25 @@ router.get("/dashboard/resumo", verificarUsuario, async (req, res) => {
     }
 });
 
-// 4. LISTAR TODOS OS PROFESSORES DO SISTEMA (Para a tela geral)
+// 4. LISTAR SOMENTE PROFESSORES (Perfil 6) - AJUSTADO PARA SEU BANCO
 router.get("/professores/geral", verificarUsuario, async (req, res) => {
     try {
-        // Busca professor + Contagem de turmas ativas que ele tem
         const sql = `
             SELECT c.id, p.nome_completo, p.cpf, c.email_institucional,
+            -- Subquery para contar turmas ativas
             (SELECT COUNT(*) FROM turma_professores tp 
              WHERE tp.colaborador_id = c.id AND tp.ativo = 1) as total_turmas
+            
             FROM colaborador c
             JOIN pessoa p ON c.pessoa_id = p.id
+            JOIN usuario u ON u.id_colaborador = c.id  -- <--- AQUI ESTAVA O SEGREDO
+            WHERE u.id_perfil_usuario = 6             -- <--- FILTRA SÓ PROFESSOR
             ORDER BY p.nome_completo ASC
         `;
         const results = await querySys(sql);
         res.json(results);
     } catch (error) {
+        console.error("Erro ao listar professores:", error);
         res.status(500).json({ error: "Erro ao listar professores." });
     }
 });
