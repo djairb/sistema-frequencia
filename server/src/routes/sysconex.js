@@ -434,6 +434,43 @@ router.post("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
+// 5. ATUALIZAR TURMA (PUT)
+router.put("/turmas/:id", verificarUsuario, async (req, res) => {
+    const { id } = req.params;
+    const { nome, turno, periodo, dias_aula, data_inicio, data_fim, ativo } = req.body;
+
+    try {
+        // Garante formato JSON para os dias
+        const diasJSON = JSON.stringify(dias_aula || []);
+        
+        // Tratamento de datas nulas (pra não dar erro no banco)
+        const inicioFormatado = data_inicio ? data_inicio : null;
+        const fimFormatado = data_fim ? data_fim : null;
+
+        // O 'ativo' vem do front. Se vier true/false, o MySQL converte pra 1/0, 
+        // mas podemos forçar:
+        const ativoBit = (ativo === true || ativo === 1 || ativo === '1') ? 1 : 0;
+
+        const sql = `
+            UPDATE turmas 
+            SET nome = ?, turno = ?, periodo = ?, dias_aula = ?, 
+                data_inicio = ?, data_fim = ?, ativo = ?
+            WHERE id = ?
+        `;
+        
+        await querySys(sql, [
+            nome, turno, periodo, diasJSON, 
+            inicioFormatado, fimFormatado, ativoBit, 
+            id
+        ]);
+
+        res.json({ message: "Turma atualizada com sucesso!" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Erro ao atualizar turma." });
+    }
+});
+
 // 2. LISTAR ALUNOS DA TURMA (⚠️ Essa é a que estava dando 404!)
 router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     try {
@@ -552,52 +589,69 @@ router.get("/turmas/:id/professores", verificarUsuario, async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
+        // MUDANÇA: Usamos 'tp.ativo = 1'
         const sqlDados = `
-            SELECT tp.id as vinculo_id, tp.colaborador_id, p.nome_completo, c.email_institucional
-            FROM turma_professores tp
-            JOIN colaborador c ON tp.colaborador_id = c.id
-            JOIN pessoa p ON c.pessoa_id = p.id
-            WHERE tp.turma_id = ?
-            LIMIT ${limit} OFFSET ${offset}
-        `;
+    SELECT 
+        tp.id as vinculo_id, 
+        tp.colaborador_id, 
+        p.nome_completo, 
+        p.cpf,                     -- <--- ADICIONAR ESTA LINHA AQUI
+        c.email_institucional
+    FROM turma_professores tp
+    JOIN colaborador c ON tp.colaborador_id = c.id
+    JOIN pessoa p ON c.pessoa_id = p.id
+    WHERE tp.turma_id = ? AND tp.ativo = 1
+    LIMIT ${limit} OFFSET ${offset}
+`;
 
-        const sqlCount = `SELECT COUNT(*) as total FROM turma_professores WHERE turma_id = ?`;
+        const sqlCount = `SELECT COUNT(*) as total FROM turma_professores WHERE turma_id = ? AND ativo = 1`;
 
-        const [dados, countRes] = await Promise.all([
-            querySys(sqlDados, [turmaId]),
-            querySys(sqlCount, [turmaId])
-        ]);
-
+        const [dados, countRes] = await Promise.all([querySys(sqlDados, [turmaId]), querySys(sqlCount, [turmaId])]);
         const total = countRes[0].total;
 
-        res.json({
-            data: dados,
-            pagination: {
-                total,
-                page,
-                totalPages: Math.ceil(total / limit),
-                limit
-            }
-        });
-    } catch (error) {
-        console.error("Erro ao listar professores:", error);
-        res.status(500).json({ error: error.message });
-    }
+        res.json({ data: dados, pagination: { total, page, totalPages: Math.ceil(total / limit), limit } });
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 router.post("/turmas/:id/professores", verificarUsuario, async (req, res) => {
+    const { id: turmaId } = req.params;
+    const { professor_id } = req.body; 
+
+    const vincularUmProf = async (colaboradorId) => {
+        // Verifica se já existe (Ativo ou Inativo)
+        const [existente] = await querySys(
+            "SELECT id, ativo FROM turma_professores WHERE turma_id = ? AND colaborador_id = ?", 
+            [turmaId, colaboradorId]
+        );
+
+        if (existente) {
+            if (existente.ativo === 0) { // Se for 0 (Inativo), a gente reativa
+                await querySys("UPDATE turma_professores SET ativo = 1 WHERE id = ?", [existente.id]);
+            }
+        } else {
+            // Cria novo já com ativo = 1
+            await querySys(
+                "INSERT INTO turma_professores (turma_id, colaborador_id, ativo) VALUES (?, ?, 1)", 
+                [turmaId, colaboradorId]
+            );
+        }
+    };
+
     try {
-        await querySys("INSERT INTO turma_professores (turma_id, colaborador_id) VALUES (?, ?)", [req.params.id, req.body.professor_id]);
-        res.status(201).json({ message: "Professor vinculado!" });
+        const listaIds = Array.isArray(professor_id) ? professor_id : [professor_id];
+        for (const idProf of listaIds) {
+            try { await vincularUmProf(idProf); } catch (e) { }
+        }
+        res.status(201).json({ message: "Professores vinculados!" });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: "Professor já está vinculado." });
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Erro ao vincular." });
     }
 });
 
 router.delete("/turma-professores/:id", verificarUsuario, async (req, res) => {
     try {
-        await querySys("DELETE FROM turma_professores WHERE id = ?", [req.params.id]);
+        // UPDATE para ativo = 0
+        await querySys("UPDATE turma_professores SET ativo = 0 WHERE id = ?", [req.params.id]);
         res.json({ message: "Professor desvinculado." });
     } catch (error) {
         res.status(500).json({ error: error.message });
