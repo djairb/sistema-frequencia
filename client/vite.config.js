@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react-swc'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // <--- O PULO DO GATO: Caminho relativo
+  base: '/sysconex_mod_freq/'
 })

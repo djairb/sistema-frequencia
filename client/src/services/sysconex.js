@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// URL apontando direto para a rota base do seu backend local
-const API_URL = 'http://localhost:10000/sysconex-freq';
+// http://localhost:10000/sysconex-freq
+const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+
+
 
 const api = axios.create({
     baseURL: API_URL,

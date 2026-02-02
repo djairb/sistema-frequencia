@@ -2,8 +2,8 @@ import { mockBeneficiarios } from './mocks/beneficiarios';
 import { mockUsuarios } from './mocks/usuarios';
 import { mockProjetos } from './mocks/projetos';
 
-// Configurações
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+// Configurações - https://sra2.somosconexaosocial.org -- http://localhost:10000
+const API_URL = import.meta.env.VITE_API_URL || 'https://sra2.somosconexaosocial.org';
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const api = {
