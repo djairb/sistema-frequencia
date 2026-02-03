@@ -22,14 +22,14 @@ export default function App() {
     <AuthProvider>
       <HashRouter>
         <Routes>
-          
+
           {/* Rota Pública (Login) */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
 
           {/* Rotas Privadas (Protegidas pelo Layout) */}
           <Route path="/app" element={<DefaultLayout />}>
-            
+
             {/* Rotas de Coordenador */}
             <Route path="gestao-turmas" element={<GestaoTurmas />} />
             <Route path="turmas" element={<ListaTurmas />} />
@@ -40,16 +40,17 @@ export default function App() {
             <Route path="minhas-turmas" element={<MinhasTurmas />} />
 
             <Route path="turmas/:id/diario" element={<DiarioClasse />} />
-            
+            <Route path="diario/:id" element={<DiarioClasse />} />
+
             {/* Rota Padrão (Fallback) */}
             <Route path="home" element={<PaginaEmConstrucao titulo="Bem-vindo ao SysConex" />} />
 
             <Route path="turmas/:id" element={<DetalhesTurma />} />
 
-            
 
 
-            
+
+
           </Route>
 
         </Routes>

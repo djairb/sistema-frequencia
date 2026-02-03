@@ -19,6 +19,7 @@ export default function DiarioClasse() {
 
   // Agora o mapa guarda STRINGS: 'Presente' | 'Ausente' | 'Justificado'
   const [mapaPresenca, setMapaPresenca] = useState({});
+  const [observacoes, setObservacoes] = useState({}); // Novo estado para justificativas
 
   useEffect(() => {
     carregarDados();
@@ -70,7 +71,8 @@ export default function DiarioClasse() {
       // Monta a lista com o STATUS correto
       const listaFinal = Object.keys(mapaPresenca).map(matriculaId => ({
         matricula_id: Number(matriculaId),
-        status: mapaPresenca[matriculaId] // 'Presente', 'Ausente' ou 'Justificado'
+        status: mapaPresenca[matriculaId], // 'Presente', 'Ausente' ou 'Justificado'
+        observacao: observacoes[matriculaId] || null // Inclui a observação se houver
       }));
 
       const payload = {
@@ -181,42 +183,58 @@ export default function DiarioClasse() {
                   const status = mapaPresenca[aluno.id]; // 'Presente', 'Ausente', 'Justificado'
 
                   return (
-                    <div key={aluno.id} className="flex items-center justify-between p-3 rounded-lg border bg-white hover:border-blue-200 transition-colors">
-                      <div className="flex items-center gap-3">
-                        {/* Ícone Indicativo */}
-                        {status === 'Presente' && <CheckCircle size={20} className="text-green-500" />}
-                        {status === 'Ausente' && <XCircle size={20} className="text-red-500" />}
-                        {status === 'Justificado' && <AlertCircle size={20} className="text-yellow-500" />}
+                    <div key={aluno.id} className="flex flex-col border rounded-lg bg-white hover:border-blue-200 transition-colors mb-2">
+                      <div className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3">
+                          {/* Ícone Indicativo */}
+                          {status === 'Presente' && <CheckCircle size={20} className="text-green-500" />}
+                          {status === 'Ausente' && <XCircle size={20} className="text-red-500" />}
+                          {status === 'Justificado' && <AlertCircle size={20} className="text-yellow-500" />}
 
-                        <span className={`font-medium ${status === 'Ausente' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
-                          {aluno.nome}
-                        </span>
+                          <span className={`font-medium ${status === 'Ausente' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                            {aluno.nome}
+                          </span>
+                        </div>
+
+                        {/* BOTÕES DE AÇÃO */}
+                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                          <button
+                            onClick={() => setStatusAluno(aluno.id, 'Presente')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${status === 'Presente' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                          >
+                            P
+                          </button>
+                          <button
+                            onClick={() => setStatusAluno(aluno.id, 'Ausente')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${status === 'Ausente' ? 'bg-white text-red-500 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                          >
+                            F
+                          </button>
+                          <button
+                            onClick={() => setStatusAluno(aluno.id, 'Justificado')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${status === 'Justificado' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                          >
+                            J
+                          </button>
+                        </div>
                       </div>
 
-                      {/* BOTÕES DE AÇÃO */}
-                      <div className="flex bg-gray-100 p-1 rounded-lg">
-                        <button
-                          onClick={() => setStatusAluno(aluno.id, 'Presente')}
-                          className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${status === 'Presente' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                          P
-                        </button>
-                        <button
-                          onClick={() => setStatusAluno(aluno.id, 'Ausente')}
-                          className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${status === 'Ausente' ? 'bg-white text-red-500 shadow-sm' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                          F
-                        </button>
-                        <button
-                          onClick={() => setStatusAluno(aluno.id, 'Justificado')}
-                          className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${status === 'Justificado' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                          J
-                        </button>
-                      </div>
+                      {/* CAMPO DE JUSTIFICATIVA (Só aparece se for 'Justificado') */}
+                      {status === 'Justificado' && (
+                        <div className="px-3 pb-3 animate-fade-in pl-10">
+                          <input
+                            type="text"
+                            placeholder="Digite o motivo da justificativa (ex: Atestado Médico)..."
+                            className="w-full text-sm border-b border-gray-300 focus:border-yellow-500 outline-none py-1 bg-transparent text-gray-600 placeholder-gray-400"
+                            value={observacoes[aluno.id] || ''}
+                            onChange={(e) => setObservacoes(prev => ({ ...prev, [aluno.id]: e.target.value }))}
+                            autoFocus
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })

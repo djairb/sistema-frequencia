@@ -35,6 +35,11 @@ export const setAuthToken = (token) => {
 
 
 // --- SERVIÇOS DE TURMA ---
+export const getMinhasTurmas = async () => {
+    const response = await api.get('/professores/me/turmas');
+    return response.data;
+};
+
 export const getTurmas = async () => {
     const response = await api.get('/turmas');
     return response.data;

@@ -549,18 +549,20 @@ router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
             const colaboradorId = rowsUser[0].id_colaborador;
 
             // 2. Cria a Aula
+            // OBS: A tabela 'aulas' tem 'numero_aulas' (default 1). Vamos passar explicitamente.
             const resAula = await queryTx(
-                "INSERT INTO aulas (turma_id, colaborador_id, data_aula, conteudo) VALUES (?, ?, ?, ?)",
-                [turmaId, colaboradorId, data_aula, conteudo]
+                "INSERT INTO aulas (turma_id, colaborador_id, data_aula, conteudo, numero_aulas) VALUES (?, ?, ?, ?, ?)",
+                [turmaId, colaboradorId, data_aula, conteudo, 1]
             );
             const aulaId = resAula.insertId;
 
             // 3. Salva Frequências
+            // OBS: A tabela 'frequencias' tem 'observacao' (default NULL).vamos passar NULL.
             if (lista_presenca && Array.isArray(lista_presenca)) {
                 for (const reg of lista_presenca) {
                     await queryTx(
-                        "INSERT INTO frequencias (aula_id, matricula_id, status) VALUES (?, ?, ?)",
-                        [aulaId, reg.matricula_id, reg.status]
+                        "INSERT INTO frequencias (aula_id, matricula_id, status, observacao) VALUES (?, ?, ?, ?)",
+                        [aulaId, reg.matricula_id, reg.status, reg.observacao || null]
                     );
                 }
             }
@@ -802,6 +804,46 @@ router.get("/professores/geral", verificarUsuario, async (req, res) => {
     }
 });
 
+
+// 5. ÁREA DO PROFESSOR (Minhas Turmas)
+router.get("/professores/me/turmas", verificarUsuario, async (req, res) => {
+    try {
+        const userId = req.user.id; // ID do Usuário (Tabela usuario)
+
+        // 1. Descobrir qual é o colaborador_id deste usuário
+        const [user] = await querySys("SELECT id_colaborador FROM usuario WHERE id = ?", [userId]);
+
+        if (!user) return res.status(404).json({ error: "Usuário não encontrado." });
+        const colaboradorId = user.id_colaborador;
+
+        // 2. Buscar turmas onde ele é professor (ativo) e a turma/projeto também estão ativos
+        const sql = `
+            SELECT t.id, t.nome, t.turno, t.periodo, t.dias_aula, p.titulo as nome_projeto
+            FROM turmas t
+            JOIN turma_professores tp ON t.id = tp.turma_id
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE tp.colaborador_id = ? 
+            AND tp.ativo = 1 
+            AND t.ativo = 1 
+            AND p.status = 'ativo'
+            ORDER BY t.created_at DESC
+        `;
+
+        const turmas = await querySys(sql, [colaboradorId]);
+
+        // Formata os dias de aula (JSON -> Array)
+        const turmasFormatadas = turmas.map(t => ({
+            ...t,
+            dias_aula: JSON.parse(t.dias_aula || "[]")
+        }));
+
+        res.json(turmasFormatadas);
+
+    } catch (error) {
+        console.error("Erro ao buscar minhas turmas:", error);
+        res.status(500).json({ error: "Erro ao carregar suas turmas." });
+    }
+});
 
 router.get("/integracao", (req, res) => {
     res.send("API DE INTEGRAÇÃO RODANDO 🚀");
