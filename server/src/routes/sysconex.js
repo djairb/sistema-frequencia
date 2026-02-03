@@ -47,6 +47,36 @@ const verificarUsuario = (req, res, next) => {
     });
 };
 
+// HELPER DE SEGURANÇA: Verifica se o usuário (Professor) tem vínculo com a turma
+const verificarAcessoProfessorTurma = async (usuarioId, turmaId) => {
+    // 1. Busca perfil e colaborador_id
+    const [user] = await querySys("SELECT id_colaborador, id_perfil_usuario FROM usuario WHERE id = ?", [usuarioId]);
+
+    // Se não achar user, bloqueia
+    if (!user) return false;
+
+    // Se NÃO for professor (ex: Coordenador, Admin - Perfil != 6), permitimos acesso (regra de negócio a confirmar, mas seguro por enquanto)
+    // Vamos assumir que coordenador (perfil 1, 2 etc) pode tudo.
+    if (user.id_perfil_usuario !== 6) return true;
+
+    // Se for professor, TEM que ter vínculo ativo com a turma
+    const [vinculo] = await querySys(
+        "SELECT id FROM turma_professores WHERE turma_id = ? AND colaborador_id = ? AND ativo = 1",
+        [turmaId, user.id_colaborador]
+    );
+
+    return !!vinculo;
+};
+
+const verificarAcessoProfessorAula = async (usuarioId, aulaId) => {
+    // 1. Descobre a turma da aula
+    const [aula] = await querySys("SELECT turma_id FROM aulas WHERE id = ?", [aulaId]);
+    if (!aula) return false; // Aula não existe
+
+    // 2. Reutiliza a verificação de turma
+    return await verificarAcessoProfessorTurma(usuarioId, aula.turma_id);
+}
+
 router.post("/auth/login", async (req, res) => {
     const { login, senha } = req.body; // No front vamos mandar { login: 'CPF', senha: '...' }
 
@@ -494,6 +524,11 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
+        // VERIFICAÇÃO DE SEGURANÇA
+        if (!(await verificarAcessoProfessorTurma(req.user.id, turmaId))) {
+            return res.status(403).json({ error: "Acesso negado. Você não é professor desta turma." });
+        }
+
         // FILTRO: AND m.status = 'Ativo'
         const sqlDados = `
             SELECT m.id as matricula_id, m.beneficiario_id, p.nome_completo, p.cpf
@@ -528,6 +563,11 @@ router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
 router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
     const { id: turmaId } = req.params;
     const { professor_id, data_aula, conteudo, lista_presenca } = req.body;
+
+    // VERIFICAÇÃO DE SEGURANÇA
+    if (!(await verificarAcessoProfessorTurma(req.user.id, turmaId))) {
+        return res.status(403).json({ error: "Acesso negado. Você não tem permissão para registrar aula nesta turma." });
+    }
 
     dbSysConex.getConnection(async (err, connection) => {
         if (err) return res.status(500).json({ error: "Erro de conexão." });
@@ -638,6 +678,11 @@ router.put("/aulas/:id", verificarUsuario, async (req, res) => {
     const { id } = req.params;
     const { data_aula, conteudo, lista_presenca } = req.body;
 
+    // VERIFICAÇÃO DE SEGURANÇA
+    if (!(await verificarAcessoProfessorAula(req.user.id, id))) {
+        return res.status(403).json({ error: "Acesso negado. Você não pode editar esta aula." });
+    }
+
     dbSysConex.getConnection(async (err, connection) => {
         if (err) return res.status(500).json({ error: "Erro de conexão." });
 
@@ -694,6 +739,11 @@ router.put("/aulas/:id", verificarUsuario, async (req, res) => {
 router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
     const { id } = req.params;
 
+    // VERIFICAÇÃO DE SEGURANÇA
+    if (!(await verificarAcessoProfessorAula(req.user.id, id))) {
+        return res.status(403).json({ error: "Acesso negado. Você não pode excluir esta aula." });
+    }
+
     dbSysConex.getConnection(async (err, connection) => {
         if (err) return res.status(500).json({ error: "Erro de conexão." });
 
@@ -727,6 +777,11 @@ router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
 
 router.get("/aulas/:id/frequencia", verificarUsuario, async (req, res) => {
     try {
+        // VERIFICAÇÃO DE SEGURANÇA
+        if (!(await verificarAcessoProfessorAula(req.user.id, req.params.id))) {
+            return res.status(403).json({ error: "Acesso negado." });
+        }
+
         const sql = `
             SELECT f.status, f.observacao, f.matricula_id, p.nome_completo, p.cpf
             FROM frequencias f
@@ -938,6 +993,104 @@ router.get("/professores/me/turmas", verificarUsuario, async (req, res) => {
 
 router.get("/integracao", (req, res) => {
     res.send("API DE INTEGRAÇÃO RODANDO 🚀");
+});
+
+router.get("/turmas/:id/estatisticas", verificarUsuario, async (req, res) => {
+    const { id } = req.params;
+    try {
+        // VERIFICAÇÃO DE SEGURANÇA
+        if (!(await verificarAcessoProfessorTurma(req.user.id, id))) {
+            return res.status(403).json({ error: "Acesso negado." });
+        }
+
+        const sql = `
+            SELECT 
+                p.nome_completo,
+                p.cpf,
+                m.id as matricula_id,
+                COUNT(f.id) as total_aulas,
+                SUM(CASE WHEN f.status IN ('Presente', 'Justificado') THEN 1 ELSE 0 END) as presencas,
+                SUM(CASE WHEN f.status = 'Ausente' THEN 1 ELSE 0 END) as faltas
+            FROM frequencias f
+            JOIN matriculas m ON f.matricula_id = m.id
+            JOIN Beneficiario b ON m.beneficiario_id = b.id
+            JOIN pessoa p ON b.pessoa_id = p.id
+            JOIN aulas a ON f.aula_id = a.id
+            WHERE a.turma_id = ?
+            GROUP BY m.id
+            ORDER BY presencas DESC
+        `;
+
+        const stats = await querySys(sql, [id]);
+
+        // Calcular totais gerais da turma
+        const resumo = {
+            total_aulas_registradas: 0,
+            total_presencas: 0,
+            total_faltas: 0,
+            alunos: stats.map(s => {
+                const p = Number(s.presencas);
+                const f = Number(s.faltas);
+                const total = p + f;
+                const frequencia_percent = total > 0 ? ((p / total) * 100).toFixed(1) : 0;
+                return {
+                    ...s,
+                    presencas: p,
+                    faltas: f,
+                    frequencia_percent: parseFloat(frequencia_percent)
+                };
+            })
+        };
+
+        // Pegar total de aulas distintas dada na turma
+        const sqlTotalAulas = "SELECT COUNT(*) as total FROM aulas WHERE turma_id = ?";
+        const [rowsTotal] = await querySys(sqlTotalAulas, [id]);
+        resumo.total_aulas_registradas = rowsTotal ? rowsTotal.total : 0;
+
+        // Somar totais
+        if (stats.length > 0) {
+            stats.forEach(s => {
+                resumo.total_presencas += Number(s.presencas);
+                resumo.total_faltas += Number(s.faltas);
+            });
+        }
+
+        res.json(resumo);
+
+    } catch (error) {
+        console.error("Erro estatisticas:", error);
+        res.status(500).json({ error: "Erro ao calcular estatísticas" });
+    }
+});
+
+// GET /matriculas/:id/frequencia - Histórico individual do aluno
+router.get("/matriculas/:id/frequencia", verificarUsuario, async (req, res) => {
+    const { id } = req.params;
+    try {
+        // 1. Descobrir turma da matricula para validar segurança
+        const [mat] = await querySys("SELECT turma_id FROM matriculas WHERE id = ?", [id]);
+        if (!mat) return res.status(404).json({ error: "Matrícula não encontrada." });
+
+        // 2. Segurança (Professor da turma ou Coord)
+        if (!(await verificarAcessoProfessorTurma(req.user.id, mat.turma_id))) {
+            return res.status(403).json({ error: "Acesso negado." });
+        }
+
+        const sql = `
+            SELECT a.data_aula, a.conteudo, f.status, f.observacao, p.nome_completo as professor
+            FROM frequencias f
+            JOIN aulas a ON f.aula_id = a.id
+            JOIN colaborador c ON a.colaborador_id = c.id
+            JOIN pessoa p ON c.pessoa_id = p.id
+            WHERE f.matricula_id = ?
+            ORDER BY a.data_aula DESC
+        `;
+        const historico = await querySys(sql, [id]);
+        res.json(historico);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Erro ao buscar histórico do aluno." });
+    }
 });
 
 module.exports = router;

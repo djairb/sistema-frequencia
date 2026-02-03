@@ -88,6 +88,16 @@ export const getHistoricoAulas = async (turmaId) => {
     return response.data;
 };
 
+export const getTurmaEstatisticas = async (turmaId) => {
+    const response = await api.get(`/turmas/${turmaId}/estatisticas`);
+    return response.data;
+};
+
+export const getHistoricoFrequenciaAluno = async (matriculaId) => {
+    const response = await api.get(`/matriculas/${matriculaId}/frequencia`);
+    return response.data;
+};
+
 // --- SERVIÇOS DE AULA/CHAMADA ---
 export const registrarAula = async (turmaId, dadosAula) => {
     const response = await api.post(`/turmas/${turmaId}/aulas`, dadosAula);
