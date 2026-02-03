@@ -30,9 +30,9 @@ const verificarTokenIntegracao = (req, res, next) => {
 const verificarUsuario = (req, res, next) => {
     // 1. Pega o cabeçalho "Authorization: Bearer <token>"
     const authHeader = req.headers['authorization'];
-    
+
     // 2. Separa o "Bearer" do Token em si
-    const token = authHeader && authHeader.split(' ')[1]; 
+    const token = authHeader && authHeader.split(' ')[1];
 
     // 3. Se não tiver token, barra na porta
     if (!token) return res.status(401).json({ error: "Acesso negado. Faça login." });
@@ -40,9 +40,9 @@ const verificarUsuario = (req, res, next) => {
     // 4. Verifica se o token é válido e não expirou
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ error: "Sessão inválida ou expirada." });
-        
+
         // 5. Se tudo certo, guarda os dados do usuário na requisição e deixa passar
-        req.user = user; 
+        req.user = user;
         next();
     });
 };
@@ -61,7 +61,7 @@ router.post("/auth/login", async (req, res) => {
             JOIN pessoa pes ON c.pessoa_id = pes.id
             WHERE u.login = ? AND u.status = 1
         `;
-        
+
         const results = await querySys(sql, [login]);
 
         // 2. Verifica se usuário existe
@@ -70,21 +70,21 @@ router.post("/auth/login", async (req, res) => {
         }
 
         const usuario = results[0];
-        
+
 
         // 3. Compara a senha enviada com o Hash do banco
         const senhaBate = await bcrypt.compare(senha, usuario.senha);
-        
+
         if (!senhaBate) {
             return res.status(401).json({ error: "Senha incorreta." });
         }
 
         // 4. Gera o Token de Acesso (O "Crachá" digital)
         const token = jwt.sign(
-            { 
-                id: usuario.id, 
-                perfil: usuario.id_perfil_usuario, 
-                nome: usuario.nome_completo 
+            {
+                id: usuario.id,
+                perfil: usuario.id_perfil_usuario,
+                nome: usuario.nome_completo
             },
             JWT_SECRET,
             { expiresIn: '8h' } // Token expira em 8 horas
@@ -134,13 +134,13 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
             let atualizados = 0;
 
             for (const u of listaUsuarios) {
-                if (!u.cpf) continue; 
+                if (!u.cpf) continue;
                 const cpfLimpo = u.cpf.replace(/\D/g, '');
 
                 const rows = await queryTx("SELECT id FROM pessoa WHERE cpf = ?", [cpfLimpo]);
-                
+
                 let pessoaId;
-                
+
                 const defaults = {
                     mae: u.nome_mae || "NÃO INFORMADO",
                     gen: u.genero_id || 1,
@@ -151,7 +151,7 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                     // UPDATE (Sem email aqui, pois 'pessoa' não tem email)
                     pessoaId = rows[0].id;
                     await queryTx("UPDATE pessoa SET nome_completo = ? WHERE id = ?", [u.nome_completo, pessoaId]);
-                    
+
                     // Atualiza o contato (email) separadamente
                     const checkContato = await queryTx("SELECT id FROM contato WHERE pessoa_id = ?", [pessoaId]);
                     if (checkContato.length > 0) {
@@ -159,7 +159,7 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                     } else {
                         await queryTx("INSERT INTO contato (pessoa_id, email) VALUES (?, ?)", [pessoaId, u.email]);
                     }
-                    
+
                     atualizados++;
                 } else {
                     // INSERT (Sem email na tabela pessoa)
@@ -209,18 +209,18 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
             }
 
             await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
-            
-            res.status(200).json({ 
-                message: "Sincronização realizada com sucesso!", 
+
+            res.status(200).json({
+                message: "Sincronização realizada com sucesso!",
                 resumo: { criados, atualizados }
             });
 
         } catch (error) {
-            connection.rollback(() => {});
+            connection.rollback(() => { });
             console.error("Erro Webhook:", error);
-            res.status(500).json({ 
-                error: "Erro no processamento: " + error.message, 
-                sql_erro: error.sqlMessage || "Sem detalhe SQL" 
+            res.status(500).json({
+                error: "Erro no processamento: " + error.message,
+                sql_erro: error.sqlMessage || "Sem detalhe SQL"
             });
         } finally {
             connection.release();
@@ -256,7 +256,7 @@ router.get("/turmas", verificarUsuario, async (req, res) => {
             ORDER BY t.id DESC
         `;
         const results = await querySys(sql);
-        
+
         const turmasFormatadas = results.map(t => ({
             ...t,
             dias_aula: JSON.parse(t.dias_aula || "[]"),
@@ -279,7 +279,7 @@ router.post("/turmas", verificarUsuario, async (req, res) => {
         // Se a data vier vazia (""), transformamos em NULL pro banco aceitar
         const inicioFormatado = data_inicio ? data_inicio : null;
         const fimFormatado = data_fim ? data_fim : null;
-        
+
         // Garante que dias_aula seja sempre um JSON válido, mesmo se vier vazio
         const diasJSON = JSON.stringify(dias_aula || []);
 
@@ -288,22 +288,22 @@ router.post("/turmas", verificarUsuario, async (req, res) => {
             (projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim) 
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
-        
+
         const values = [
-            projeto_id, 
-            nome, 
-            turno, 
-            periodo, 
-            diasJSON, 
+            projeto_id,
+            nome,
+            turno,
+            periodo,
+            diasJSON,
             inicioFormatado, // Usa a variável tratada
             fimFormatado     // Usa a variável tratada
         ];
 
         const result = await querySys(sql, values);
-        
-        res.status(201).json({ 
-            message: "Turma criada com sucesso!", 
-            id: result.insertId 
+
+        res.status(201).json({
+            message: "Turma criada com sucesso!",
+            id: result.insertId
         });
 
     } catch (error) {
@@ -316,11 +316,11 @@ router.get("/turmas/:id", verificarUsuario, async (req, res) => {
     try {
         const results = await querySys("SELECT * FROM turmas WHERE id = ?", [req.params.id]);
         if (results.length === 0) return res.status(404).json({ error: "Turma não encontrada" });
-        
+
         const turma = results[0];
         turma.dias_aula = JSON.parse(turma.dias_aula || "[]");
         turma.ativo = turma.ativo === 1;
-        res.json(turma); 
+        res.json(turma);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -332,7 +332,7 @@ router.get("/beneficiarios/busca", verificarUsuario, async (req, res) => {
     // ... (Código da busca igual ao anterior) ...
     const { q, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
-    if (!q || q.length < 3) return res.json({ data: [], total: 0 }); 
+    if (!q || q.length < 3) return res.json({ data: [], total: 0 });
     try {
         const termo = `%${q}%`;
         const sqlDados = `SELECT b.id, p.nome_completo, p.cpf FROM Beneficiario b JOIN pessoa p ON b.pessoa_id = p.id WHERE p.nome_completo LIKE ? OR p.cpf LIKE ? ORDER BY p.nome_completo ASC LIMIT ${limit} OFFSET ${offset}`;
@@ -347,11 +347,11 @@ router.get("/colaboradores/busca", verificarUsuario, async (req, res) => {
     const { q, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
-    if (!q || q.length < 3) return res.json({ data: [], total: 0 }); 
+    if (!q || q.length < 3) return res.json({ data: [], total: 0 });
 
     try {
         const termo = `%${q}%`;
-        
+
         // Buscamos apenas quem tem perfil de PROFESSOR (ID 6) ou pode ser qualquer colaborador?
         // Vou deixar aberto para qualquer colaborador, mas você pode filtrar com "AND u.id_perfil_usuario = 6" se quiser
         const sqlDados = `
@@ -391,7 +391,7 @@ router.get("/colaboradores/busca", verificarUsuario, async (req, res) => {
 // --- ATUALIZADO: MATRÍCULA COM TRAVA DE PROJETO ÚNICO ---
 router.post("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     const { id: turmaId } = req.params;
-    const { aluno_id } = req.body; 
+    const { aluno_id } = req.body;
 
     const matricularUmAluno = async (beneficiarioId) => {
         const [turma] = await querySys("SELECT projeto_id FROM turmas WHERE id = ?", [turmaId]);
@@ -440,9 +440,24 @@ router.put("/turmas/:id", verificarUsuario, async (req, res) => {
     const { nome, turno, periodo, dias_aula, data_inicio, data_fim, ativo } = req.body;
 
     try {
+        // VERIFICAÇÃO: Se a turma estiver encerrada (ativo=0), bloqueia alteração
+        // EXCETO se a intenção for reativá-la (ativo=1 no body)
+        const [turmaAtual] = await querySys("SELECT ativo FROM turmas WHERE id = ?", [id]);
+
+        if (turmaAtual && turmaAtual.ativo === 0) {
+            // Verifica se o usuário está tentando reativar
+            // O front manda true/false ou 1/0, vamos padronizar
+            const tentandoReativar = (ativo === true || ativo === 1 || ativo === '1');
+
+            if (!tentandoReativar) {
+                return res.status(403).json({ error: "Não é permitido alterar dados de uma turma encerrada. Reative-a primeiro." });
+            }
+        }
+
+        // Garante formato JSON para os dias
         // Garante formato JSON para os dias
         const diasJSON = JSON.stringify(dias_aula || []);
-        
+
         // Tratamento de datas nulas (pra não dar erro no banco)
         const inicioFormatado = data_inicio ? data_inicio : null;
         const fimFormatado = data_fim ? data_fim : null;
@@ -457,10 +472,10 @@ router.put("/turmas/:id", verificarUsuario, async (req, res) => {
                 data_inicio = ?, data_fim = ?, ativo = ?
             WHERE id = ?
         `;
-        
+
         await querySys(sql, [
-            nome, turno, periodo, diasJSON, 
-            inicioFormatado, fimFormatado, ativoBit, 
+            nome, turno, periodo, diasJSON,
+            inicioFormatado, fimFormatado, ativoBit,
             id
         ]);
 
@@ -489,7 +504,7 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
             ORDER BY p.nome_completo ASC
             LIMIT ${limit} OFFSET ${offset}
         `;
-        
+
         const sqlCount = `SELECT COUNT(*) as total FROM matriculas WHERE turma_id = ? AND status = 'Ativo'`;
 
         const [dados, countRes] = await Promise.all([querySys(sqlDados, [turmaId]), querySys(sqlCount, [turmaId])]);
@@ -507,6 +522,60 @@ router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});
+
+// 1. REGISTRAR AULA E FREQUÊNCIA (Nova Rota)
+router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
+    const { id: turmaId } = req.params;
+    const { professor_id, data_aula, conteudo, lista_presenca } = req.body;
+
+    dbSysConex.getConnection(async (err, connection) => {
+        if (err) return res.status(500).json({ error: "Erro de conexão." });
+
+        const queryTx = (sql, params) => {
+            return new Promise((resolve, reject) => {
+                connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));
+            });
+        };
+
+        try {
+            await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
+
+            // 1. Resolve Colaborador ID pelo Usuario ID (professor_id ou token)
+            const idUsuario = professor_id || req.user.id;
+            const rowsUser = await queryTx("SELECT id_colaborador FROM usuario WHERE id = ?", [idUsuario]);
+
+            if (rowsUser.length === 0) throw new Error("Usuário/Professor não encontrado.");
+            const colaboradorId = rowsUser[0].id_colaborador;
+
+            // 2. Cria a Aula
+            const resAula = await queryTx(
+                "INSERT INTO aulas (turma_id, colaborador_id, data_aula, conteudo) VALUES (?, ?, ?, ?)",
+                [turmaId, colaboradorId, data_aula, conteudo]
+            );
+            const aulaId = resAula.insertId;
+
+            // 3. Salva Frequências
+            if (lista_presenca && Array.isArray(lista_presenca)) {
+                for (const reg of lista_presenca) {
+                    await queryTx(
+                        "INSERT INTO frequencias (aula_id, matricula_id, status) VALUES (?, ?, ?)",
+                        [aulaId, reg.matricula_id, reg.status]
+                    );
+                }
+            }
+
+            await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+            res.status(201).json({ message: "Aula e frequência registradas!", id: aulaId });
+
+        } catch (error) {
+            connection.rollback(() => { });
+            console.error("Erro ao salvar aula:", error);
+            res.status(500).json({ error: "Erro ao registrar aula: " + error.message });
+        } finally {
+            connection.release();
+        }
+    });
 });
 
 router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
@@ -615,12 +684,12 @@ router.get("/turmas/:id/professores", verificarUsuario, async (req, res) => {
 
 router.post("/turmas/:id/professores", verificarUsuario, async (req, res) => {
     const { id: turmaId } = req.params;
-    const { professor_id } = req.body; 
+    const { professor_id } = req.body;
 
     const vincularUmProf = async (colaboradorId) => {
         // Verifica se já existe (Ativo ou Inativo)
         const [existente] = await querySys(
-            "SELECT id, ativo FROM turma_professores WHERE turma_id = ? AND colaborador_id = ?", 
+            "SELECT id, ativo FROM turma_professores WHERE turma_id = ? AND colaborador_id = ?",
             [turmaId, colaboradorId]
         );
 
@@ -631,7 +700,7 @@ router.post("/turmas/:id/professores", verificarUsuario, async (req, res) => {
         } else {
             // Cria novo já com ativo = 1
             await querySys(
-                "INSERT INTO turma_professores (turma_id, colaborador_id, ativo) VALUES (?, ?, 1)", 
+                "INSERT INTO turma_professores (turma_id, colaborador_id, ativo) VALUES (?, ?, 1)",
                 [turmaId, colaboradorId]
             );
         }
@@ -664,7 +733,13 @@ router.get("/dashboard/resumo", verificarUsuario, async (req, res) => {
         const [turmasAtivas] = await querySys("SELECT COUNT(*) as total FROM turmas WHERE ativo = 1");
         const [turmasEncerradas] = await querySys("SELECT COUNT(*) as total FROM turmas WHERE ativo = 0");
         const [alunosAtivos] = await querySys("SELECT COUNT(*) as total FROM matriculas WHERE status = 'Ativo'");
-        const [profsVinculados] = await querySys("SELECT COUNT(*) as total FROM turma_professores WHERE ativo = 1");
+        const [profsVinculados] = await querySys(`
+            SELECT COUNT(*) as total 
+            FROM turma_professores tp
+            JOIN turmas t ON tp.turma_id = t.id
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE tp.ativo = 1 AND p.status = 'ativo' AND t.ativo = 1
+        `);
 
         // 2. ALERTAS
         const sqlSemProf = `
