@@ -67,6 +67,27 @@ export const matricularAluno = async (turmaId, alunoId) => {
     return response.data;
 };
 
+// --- SERVIÇOS DE AULAS ---
+export const updateAula = async (aulaId, payload) => {
+    const response = await api.put(`/aulas/${aulaId}`, payload);
+    return response.data;
+};
+
+export const deleteAula = async (aulaId) => {
+    const response = await api.delete(`/aulas/${aulaId}`);
+    return response.data;
+};
+
+export const getFrequenciaAula = async (aulaId) => {
+    const response = await api.get(`/aulas/${aulaId}/frequencia`);
+    return response.data;
+};
+
+export const getHistoricoAulas = async (turmaId) => {
+    const response = await api.get(`/turmas/${turmaId}/aulas`);
+    return response.data;
+};
+
 // --- SERVIÇOS DE AULA/CHAMADA ---
 export const registrarAula = async (turmaId, dadosAula) => {
     const response = await api.post(`/turmas/${turmaId}/aulas`, dadosAula);

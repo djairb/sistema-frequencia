@@ -633,11 +633,102 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
     }
 });
 
-// 2. DETALHES DA FREQUÊNCIA DE UMA AULA (Quem veio neste dia?)
+// 3. EDITAR AULA E FREQUÊNCIA
+router.put("/aulas/:id", verificarUsuario, async (req, res) => {
+    const { id } = req.params;
+    const { data_aula, conteudo, lista_presenca } = req.body;
+
+    dbSysConex.getConnection(async (err, connection) => {
+        if (err) return res.status(500).json({ error: "Erro de conexão." });
+
+        const queryTx = (sql, params) => {
+            return new Promise((resolve, reject) => {
+                connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));
+            });
+        };
+
+        try {
+            await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
+
+            // 1. Atualizar dados básicos da aula
+            await queryTx(
+                "UPDATE aulas SET data_aula = ?, conteudo = ? WHERE id = ?",
+                [data_aula, conteudo, id]
+            );
+
+            // 2. Atualizar frequências
+            // Estratégia: Iterar e fazer UPDATE individual. Se não existir, faz INSERT (caso aluno novo tenha entrado na turma, por exemplo)
+            // Para simplificar, vamos assumir que a lista vem completa.
+            if (lista_presenca && Array.isArray(lista_presenca)) {
+                for (const reg of lista_presenca) {
+                    // Tenta atualizar
+                    const resultUpdate = await queryTx(
+                        "UPDATE frequencias SET status = ?, observacao = ? WHERE aula_id = ? AND matricula_id = ?",
+                        [reg.status, reg.observacao || null, id, reg.matricula_id]
+                    );
+
+                    // Se não afetou nenhuma linha (aluno não tinha frequência lançada pra essa aula), INSERE
+                    if (resultUpdate.affectedRows === 0) {
+                        await queryTx(
+                            "INSERT INTO frequencias (aula_id, matricula_id, status, observacao) VALUES (?, ?, ?, ?)",
+                            [id, reg.matricula_id, reg.status, reg.observacao || null]
+                        );
+                    }
+                }
+            }
+
+            await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+            res.json({ message: "Aula atualizada com sucesso!" });
+
+        } catch (error) {
+            connection.rollback(() => { });
+            console.error("Erro ao atualizar aula:", error);
+            res.status(500).json({ error: "Erro ao atualizar aula." });
+        } finally {
+            connection.release();
+        }
+    });
+});
+
+// 4. EXCLUIR AULA
+router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
+    const { id } = req.params;
+
+    dbSysConex.getConnection(async (err, connection) => {
+        if (err) return res.status(500).json({ error: "Erro de conexão." });
+
+        const queryTx = (sql, params) => {
+            return new Promise((resolve, reject) => {
+                connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));
+            });
+        };
+
+        try {
+            await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
+
+            // 1. Excluir Frequências Primeiro (Constraint FK)
+            await queryTx("DELETE FROM frequencias WHERE aula_id = ?", [id]);
+
+            // 2. Excluir Aula
+            await queryTx("DELETE FROM aulas WHERE id = ?", [id]);
+
+            await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+            res.json({ message: "Aula excluída com sucesso!" });
+
+        } catch (error) {
+            connection.rollback(() => { });
+            console.error("Erro ao excluir aula:", error);
+            res.status(500).json({ error: "Erro ao excluir aula." });
+        } finally {
+            connection.release();
+        }
+    });
+});
+
 router.get("/aulas/:id/frequencia", verificarUsuario, async (req, res) => {
     try {
         const sql = `
-            SELECT f.status, p.nome_completo, p.cpf
+            SELECT f.status, f.observacao, f.matricula_id, p.nome_completo, p.cpf
             FROM frequencias f
             JOIN matriculas m ON f.matricula_id = m.id
             JOIN Beneficiario b ON m.beneficiario_id = b.id

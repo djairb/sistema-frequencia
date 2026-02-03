@@ -1,14 +1,14 @@
 import { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/auth';
-import { 
-  LayoutDashboard, Users, BookOpen, CalendarCheck, LogOut, X 
+import {
+  LayoutDashboard, Users, BookOpen, CalendarCheck, LogOut, X
 } from 'lucide-react';
 import clsx from 'clsx';
 
 export function Sidebar({ isOpen, onClose }) {
   // CORREÇÃO 1: O nome da função no contexto é 'logout', não 'signOut'
-  const { user, logout } = useContext(AuthContext); 
+  const { user, logout } = useContext(AuthContext);
   const location = useLocation();
 
   const menus = {
@@ -18,7 +18,6 @@ export function Sidebar({ isOpen, onClose }) {
       { label: 'Professores', path: '/app/professores', icon: Users },
     ],
     6: [ // Professor
-      { label: 'Meu Diário', path: '/app/meu-diario', icon: CalendarCheck },
       { label: 'Minhas Turmas', path: '/app/minhas-turmas', icon: BookOpen },
     ]
   };
@@ -31,7 +30,7 @@ export function Sidebar({ isOpen, onClose }) {
   return (
     <>
       {/* OVERLAY */}
-      <div 
+      <div
         className={clsx(
           "fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity",
           isOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
@@ -40,7 +39,7 @@ export function Sidebar({ isOpen, onClose }) {
       />
 
       {/* ASIDE */}
-      <aside 
+      <aside
         className={clsx(
           "fixed left-0 top-0 bottom-0 z-50 w-64 bg-slate-900 text-white border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -60,7 +59,7 @@ export function Sidebar({ isOpen, onClose }) {
         <div className="p-6 border-b border-slate-800 bg-slate-800/50">
           <p className="text-sm text-gray-400">Bem-vindo(a),</p>
           <p className="font-semibold truncate text-white">
-              {user?.nome?.split(' ')[0] || "Usuário"}
+            {user?.nome?.split(' ')[0] || "Usuário"}
           </p>
           <p className="text-xs text-blue-400 mt-1 uppercase tracking-wider font-bold">
             {user?.perfil || "Visitante"}
@@ -79,8 +78,8 @@ export function Sidebar({ isOpen, onClose }) {
                 onClick={onClose}
                 className={clsx(
                   "flex items-center gap-3 px-3 py-3 rounded-lg transition-all text-sm font-medium",
-                  isActive 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" 
+                  isActive
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20"
                     : "text-gray-400 hover:bg-slate-800 hover:text-white"
                 )}
               >
@@ -93,8 +92,8 @@ export function Sidebar({ isOpen, onClose }) {
 
         {/* Botão Sair (Agora chama logout) */}
         <div className="p-4 border-t border-slate-800">
-          <button 
-            onClick={logout} 
+          <button
+            onClick={logout}
             className="flex items-center gap-3 w-full px-3 py-3 text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors text-sm font-medium"
           >
             <LogOut size={20} />
