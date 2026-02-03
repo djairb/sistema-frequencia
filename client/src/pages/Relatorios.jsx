@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
-import { getTurmaEstatisticas, getHistoricoAulas } from '../services/sysconex';
+import { api, getTurmaEstatisticas, getHistoricoAulas } from '../services/sysconex';
 import {
     BarChart2, AlertCircle, Search, Filter, Folder, Users,
     ArrowRight, PieChart, ChevronDown, CheckCircle

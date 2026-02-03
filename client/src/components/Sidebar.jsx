@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../contexts/auth';
 import {
-  LayoutDashboard, Users, BookOpen, CalendarCheck, LogOut, X
+  LayoutDashboard, Users, BookOpen, CalendarCheck, LogOut, X, BarChart2
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -16,6 +16,7 @@ export function Sidebar({ isOpen, onClose }) {
       { label: 'Visão Geral', path: '/app/gestao-turmas', icon: LayoutDashboard },
       { label: 'Turmas & Projetos', path: '/app/turmas', icon: BookOpen },
       { label: 'Professores', path: '/app/professores', icon: Users },
+      { label: 'Relatórios', path: '/app/relatorios', icon: BarChart2 },
     ],
     6: [ // Professor
       { label: 'Minhas Turmas', path: '/app/minhas-turmas', icon: BookOpen },

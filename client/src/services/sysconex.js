@@ -7,7 +7,7 @@ const API_URL = 'http://localhost:10000/sysconex-freq';
 
 
 
-const api = axios.create({
+export const api = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json'
