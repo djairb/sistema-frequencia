@@ -62,7 +62,7 @@ export default function Relatorios() {
     });
 
     const alunosOrdenados = estatisticas?.alunos
-        ? [...estatisticas.alunos].sort((a, b) => a.frequencia_percent - b.frequencia_percent)
+        ? [...estatisticas.alunos].sort((a, b) => a.nome_completo.localeCompare(b.nome_completo))
         : [];
 
     const totalRegistros = estatisticas ? (estatisticas.total_presencas + estatisticas.total_faltas) : 0;

@@ -224,7 +224,7 @@ const DetalhesTurma = () => {
             </div>
 
             {/* Abas */}
-            <div className="flex gap-2 bg-gray-100 p-1 rounded-lg w-fit overflow-x-auto">
+            <div className="flex flex-wrap justify-center gap-2 bg-gray-100 p-1 rounded-lg w-full md:w-fit">
                 {[
                     { id: 'alunos', icon: GraduationCap, count: alunosData.total },
                     { id: 'professores', icon: Users, count: profsData.total },
@@ -276,9 +276,12 @@ const DetalhesTurma = () => {
                                             <div>
                                                 <h4 className="font-bold text-gray-800 line-clamp-1">{aula.conteudo}</h4>
                                                 <div className="flex gap-3 text-xs text-gray-500 mt-1">
-                                                    <span className="flex items-center gap-1"><Users size={12} /> Prof. {aula.professor_nome?.split(' ')[0]}</span>
+                                                    <span className="flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">
+                                                        <Users size={10} /> {aula.professor_nome}
+                                                    </span>
                                                     <span className="text-green-600 font-medium">P: {aula.presentes}</span>
                                                     <span className="text-red-500 font-medium">A: {aula.ausentes}</span>
+                                                    <span className="text-yellow-600 font-medium">J: {aula.justificados}</span>
                                                 </div>
                                             </div>
                                         </div>

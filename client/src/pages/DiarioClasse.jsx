@@ -50,9 +50,9 @@ export default function DiarioClasse() {
     }
   }
 
-  // Ordenar alunos por risco (menor frequencia primeiro)
+  // Ordenar alunos por NOME (Alfabética)
   const alunosOrdenados = estatisticas?.alunos
-    ? [...estatisticas.alunos].sort((a, b) => a.frequencia_percent - b.frequencia_percent)
+    ? [...estatisticas.alunos].sort((a, b) => a.nome_completo.localeCompare(b.nome_completo))
     : [];
 
   const totalRegistros = estatisticas ? (estatisticas.total_presencas + estatisticas.total_faltas) : 0;
@@ -174,50 +174,54 @@ export default function DiarioClasse() {
     }
   }
 
+  // Estado para lista combinada (ativos + históricos)
+  const [alunosParaEdicao, setAlunosParaEdicao] = useState([]);
+
   async function handleOpenModal(aula, mode) {
     setAulaEditando(aula.id);
     setModalMode(mode);
-    setEditDataAula(aula.data_aula.split('T')[0]); // Ajusta data
+    setEditDataAula(aula.data_aula.split('T')[0]);
     setEditConteudo(aula.conteudo);
     setModalOpen(true);
+    setAlunosParaEdicao([]); // Reset
 
     // Carrega frequência dessa aula
     try {
       const frequencia = await getFrequenciaAula(aula.id);
-      // frequencia é array [{ status, nome_completo, cpf }]...
-      // Mas precisamos mapear para matricula_id -> status.
-      // O endpoint getFrequenciaAula NÃO RETORNA matricula_id no SELECT atual (linha 640 do server).
-      // PRECISAREMOS AJUSTAR O BACKEND OU o frontend service.
-      // VAMOS SUPOR QUE JÁ VEM 'matricula_id' (Vou verificar e ajustar se precisar, mas vamos assumir que farei map pelo cpf ou nome se falhar, ou melhor, corrigir backend depois).
-      // CORREÇÃO IMEDIATA: O endpoint getFrequenciaAula precisa retornar matricula_id.
-
-      // Mapeando com o que temos (alunos da turma atual x nome/cpf da frequencia)
-      // Isso é frágil se houver homônimos, mas vamos tentar. 
-      // O ideal é a query retornar matricula_id. O endpoint server linha 640 traz: f.status, p.nome_completo, p.cpf. Faltou m.id as matricula_id.
-
-      // Vou assumir que vou corrigir o backend rapidinho ou usar o que tem. 
-      // Vamos fazer o match por CPF com a lista de alunos 'alunos'.
 
       const novoMapa = {};
-      const novaObs = {}; // Endpoint tbm nao traz observacao linha 640.
+      const novaObs = {};
 
-      // Como o backend atual não devolve matricula_id nem observacao na rota de detalhes frequencia, 
-      // a edição vai ficar capenga se eu não corrigir a rota GET /aulas/:id/frequencia.
-      // VOU INCLUIR NO PLANO CORRIGIR ISSO AGORA.
+      // 1. Identificar alunos extras (que têm registro mas não estão na lista de ativos 'alunos')
+      const idsAtivos = new Set(alunos.map(a => a.id));
+      const alunosExtras = [];
 
-      // Mas para não travar, vou montar a lógica esperando os campos certos.
       frequencia.forEach(f => {
-        // Encontra aluno pelo CPF
-        const alunoEncontrado = alunos.find(a => a.cpf === f.cpf);
-        if (alunoEncontrado) {
-          novoMapa[alunoEncontrado.id] = f.status;
-          novaObs[alunoEncontrado.id] = f.observacao; // Precisa vir do back
+        // O endpoint retorna: { matricula_id, nome_completo, cpf, status, observacao }
+        // Se não estiver na lista de ativos, é um aluno histórico
+        if (!idsAtivos.has(f.matricula_id)) {
+          alunosExtras.push({
+            id: f.matricula_id,
+            nome: f.nome_completo || "Aluno Histórico", // ListaChamada usa .nome
+            nome_completo: f.nome_completo,
+            cpf: f.cpf,
+            status_matricula: 'Inativo' // Flag visual
+          });
         }
+
+        novoMapa[f.matricula_id] = f.status;
+        novaObs[f.matricula_id] = f.observacao;
       });
 
-      // Quem não estava na lista da aula (ex: entrou depois), defino como presente ou ausente? 
-      // Melhor deixar null ou presente padrão.
-      alunos.forEach(a => {
+      // 2. Mesclar listas: Alunos Ativos + Alunos Extras
+      // Ordenar por nome para ficar bonitinho
+      const listaCompleta = [...alunos.map(a => ({ ...a, status_matricula: 'Ativo' })), ...alunosExtras]
+        .sort((a, b) => (a.nome || a.nome_completo || "").localeCompare(b.nome || b.nome_completo || ""));
+
+      setAlunosParaEdicao(listaCompleta);
+
+      // 3. Garantir defaults para quem não tinha registro (ativos novos)
+      listaCompleta.forEach(a => {
         if (!novoMapa[a.id]) novoMapa[a.id] = 'Presente';
       });
 
@@ -373,7 +377,7 @@ export default function DiarioClasse() {
                       {new Date(aula.data_aula).toLocaleDateString('pt-BR')}
                     </span>
                     <span className="text-gray-400 text-xs flex items-center gap-1">
-                      <UserCheck size={12} /> {aula.presentes} Presentes / {aula.ausentes} Ausentes
+                      <UserCheck size={12} /> {aula.presentes} Presentes / {aula.ausentes} Ausentes / {aula.justificados} Justificados
                     </span>
                   </div>
                   <p className="text-gray-800 font-medium line-clamp-2 md:line-clamp-1">{aula.conteudo}</p>
@@ -553,7 +557,7 @@ export default function DiarioClasse() {
                 </div>
                 <div className="lg:col-span-2">
                   <ListaChamada
-                    alunos={alunos}
+                    alunos={alunosParaEdicao.length > 0 ? alunosParaEdicao : alunos}
                     mapaPresenca={editMapaPresenca}
                     setMapaPresenca={setEditMapaPresenca}
                     observacoes={editObservacoes}
@@ -627,7 +631,12 @@ function ListaChamada({ alunos, mapaPresenca, setMapaPresenca, observacoes, setO
 
                     <div className="flex flex-col">
                       <span className={`font-medium text-sm md:text-base ${status === 'Ausente' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
-                        {aluno.nome}
+                        {aluno.nome || aluno.nome_completo}
+                        {aluno.status_matricula === 'Inativo' && (
+                          <span className="ml-2 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                            Histórico
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -638,12 +647,12 @@ function ListaChamada({ alunos, mapaPresenca, setMapaPresenca, observacoes, setO
                     <button onClick={() => setStatus(aluno.id, 'Justificado')} className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${status === 'Justificado' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>J</button>
                   </div>
                 </div>
-                {status === 'Justificado' && (
+                {(status === 'Justificado' || (observacoes[aluno.id] && observacoes[aluno.id].length > 0)) && (
                   <div className="px-3 pb-3 pl-10">
                     <input
                       type="text"
-                      placeholder="Motivo..."
-                      className="w-full text-sm border-b border-gray-300 focus:border-yellow-500 outline-none py-1 bg-transparent text-gray-600 placeholder-gray-400 disabled:text-gray-500"
+                      placeholder={readOnly ? "Sem motivo informado" : (status === 'Justificado' ? "Informe o motivo..." : "Observação...")}
+                      className="w-full text-sm border-b border-gray-300 focus:border-yellow-500 outline-none py-1 bg-transparent text-gray-700 placeholder-gray-400 disabled:text-gray-600 disabled:border-transparent"
                       value={observacoes[aluno.id] || ''}
                       onChange={(e) => setObservacoes(prev => ({ ...prev, [aluno.id]: e.target.value }))}
                       disabled={readOnly}

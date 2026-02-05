@@ -69,12 +69,21 @@ const verificarAcessoProfessorTurma = async (usuarioId, turmaId) => {
 };
 
 const verificarAcessoProfessorAula = async (usuarioId, aulaId) => {
-    // 1. Descobre a turma da aula
-    const [aula] = await querySys("SELECT turma_id FROM aulas WHERE id = ?", [aulaId]);
-    if (!aula) return false; // Aula não existe
+    // 1. Busca dados do user (colaborador e perfil)
+    const [user] = await querySys("SELECT id_colaborador, id_perfil_usuario FROM usuario WHERE id = ?", [usuarioId]);
+    if (!user) return false;
 
-    // 2. Reutiliza a verificação de turma
-    return await verificarAcessoProfessorTurma(usuarioId, aula.turma_id);
+    // 2. Descobre dados da aula (turma e autor)
+    const [aula] = await querySys("SELECT turma_id, colaborador_id FROM aulas WHERE id = ?", [aulaId]);
+    if (!aula) return false;
+
+    // 3. Regra: Coordenador (não-6) pode tudo. Professor (6) só se for o autor.
+    if (user.id_perfil_usuario !== 6) return true;
+
+    // Se for professor, tem que ser o DONO da aula
+    if (aula.colaborador_id !== user.id_colaborador) return false;
+
+    return true;
 }
 
 router.post("/auth/login", async (req, res) => {
@@ -280,7 +289,9 @@ router.get("/turmas", verificarUsuario, async (req, res) => {
     try {
         // Traz as turmas com o nome do projeto junto
         const sql = `
-            SELECT t.*, p.titulo as nome_projeto 
+            SELECT t.*, p.titulo as nome_projeto,
+            (SELECT COUNT(*) FROM matriculas m WHERE m.turma_id = t.id AND m.status = 'Ativo') as total_alunos,
+            (SELECT COUNT(*) FROM turma_professores tp WHERE tp.turma_id = t.id AND tp.ativo = 1) as total_professores
             FROM turmas t
             LEFT JOIN projeto p ON t.projeto_id = p.id
             ORDER BY t.id DESC
@@ -703,11 +714,12 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
         const aulasComResumo = await Promise.all(dados.map(async (aula) => {
             const [resumo] = await querySys(`
                 SELECT 
-                    SUM(CASE WHEN status = 'Presente' THEN 1 ELSE 0 END) as presentes,
-                    SUM(CASE WHEN status = 'Ausente' THEN 1 ELSE 0 END) as ausentes
+                    COALESCE(SUM(CASE WHEN status = 'Presente' THEN 1 ELSE 0 END), 0) as presentes,
+                    COALESCE(SUM(CASE WHEN status = 'Ausente' THEN 1 ELSE 0 END), 0) as ausentes,
+                    COALESCE(SUM(CASE WHEN status = 'Justificado' THEN 1 ELSE 0 END), 0) as justificados
                 FROM frequencias WHERE aula_id = ?
             `, [aula.id]);
-            return { ...aula, ...resumo[0] };
+            return { ...aula, ...resumo };
         }));
 
         res.json({
@@ -759,13 +771,20 @@ router.put("/aulas/:id", verificarUsuario, async (req, res) => {
             if (lista_presenca && Array.isArray(lista_presenca)) {
                 for (const reg of lista_presenca) {
                     // Tenta atualizar
-                    const resultUpdate = await queryTx(
-                        "UPDATE frequencias SET status = ?, observacao = ? WHERE aula_id = ? AND matricula_id = ?",
-                        [reg.status, reg.observacao || null, id, reg.matricula_id]
+                    // 1. Verifica se já existe
+                    const [exists] = await queryTx(
+                        "SELECT id FROM frequencias WHERE aula_id = ? AND matricula_id = ?",
+                        [id, reg.matricula_id]
                     );
 
-                    // Se não afetou nenhuma linha (aluno não tinha frequência lançada pra essa aula), INSERE
-                    if (resultUpdate.affectedRows === 0) {
+                    if (exists) {
+                        // UPDATE
+                        await queryTx(
+                            "UPDATE frequencias SET status = ?, observacao = ? WHERE id = ?",
+                            [reg.status, reg.observacao || null, exists.id]
+                        );
+                    } else {
+                        // INSERT
                         await queryTx(
                             "INSERT INTO frequencias (aula_id, matricula_id, status, observacao) VALUES (?, ?, ?, ?)",
                             [id, reg.matricula_id, reg.status, reg.observacao || null]
@@ -1070,7 +1089,7 @@ router.get("/turmas/:id/estatisticas", verificarUsuario, async (req, res) => {
             JOIN aulas a ON f.aula_id = a.id
             WHERE a.turma_id = ?
             GROUP BY m.id
-            ORDER BY presencas DESC
+            ORDER BY p.nome_completo ASC
         `;
 
         const stats = await querySys(sql, [id]);
@@ -1142,6 +1161,51 @@ router.get("/matriculas/:id/frequencia", verificarUsuario, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Erro ao buscar histórico do aluno." });
+    }
+});
+
+// ROTA TEMPORÁRIA DE LIMPEZA
+router.get("/debug/clean-duplicates", async (req, res) => {
+    try {
+        // 1. Duplicatas de Frequencia
+        const sqlFreq = `
+            SELECT aula_id, matricula_id, COUNT(*) as qtd 
+            FROM frequencias 
+            GROUP BY aula_id, matricula_id 
+            HAVING qtd > 1
+        `;
+        const duplicatesFreq = await querySys(sqlFreq);
+
+        // 2. Duplicatas de Matricula (Aluno duplicado na turma)
+        // Isso causaria "2 alunos com mesmo nome" na chamada, explicaria contagem dobrada se ambos tiverem presença
+        const sqlMat = `
+            SELECT turma_id, beneficiario_id, COUNT(*) as qtd
+            FROM matriculas
+            WHERE status = 'Ativo'
+            GROUP BY turma_id, beneficiario_id
+            HAVING qtd > 1
+        `;
+        const duplicatesMat = await querySys(sqlMat);
+
+        // 3. Frequencias de fantasmas (Alunos Desistentes/Inativos que ainda constam na chamada)
+        const sqlGhosts = `
+            SELECT f.aula_id, f.matricula_id, f.status as status_frequencia, m.status as status_matricula, p.nome_completo
+            FROM frequencias f
+            JOIN matriculas m ON f.matricula_id = m.id
+            JOIN Beneficiario b ON m.beneficiario_id = b.id
+            JOIN pessoa p ON b.pessoa_id = p.id
+            WHERE m.status != 'Ativo'
+        `;
+        const ghosts = await querySys(sqlGhosts);
+
+        res.json({
+            message: "Diagnóstico Completo",
+            freq_duplicates: duplicatesFreq,
+            matricula_duplicates: duplicatesMat,
+            ghost_records: ghosts
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
