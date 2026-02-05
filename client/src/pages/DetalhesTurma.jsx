@@ -124,7 +124,14 @@ const DetalhesTurma = () => {
     const realizarBusca = async (termo, page = 1) => {
         setLoadingBusca(true);
         try {
-            let url = abaAtiva === 'alunos' ? `/beneficiarios/busca?q=${termo}&page=${page}&limit=10` : `/colaboradores/busca?q=${termo}&page=${page}&limit=10`;
+            let url = "";
+            if (abaAtiva === 'alunos') {
+                // Passa o ID do projeto da turma para filtrar
+                url = `/beneficiarios/busca?q=${termo}&projeto_id=${turma.projeto_id}&page=${page}&limit=10`;
+            } else {
+                url = `/colaboradores/busca?q=${termo}&page=${page}&limit=10`;
+            }
+
             const res = await api.get(url);
             setModalBuscaData({ list: res.data.data, total: res.data.pagination?.total, page: res.data.pagination?.page, totalPages: res.data.pagination?.totalPages });
         } catch (error) { } finally { setLoadingBusca(false); }
@@ -241,7 +248,13 @@ const DetalhesTurma = () => {
                         {abaAtiva === 'aulas' ? 'Histórico de Aulas' : `Gerenciar ${abaAtiva}`}
                     </h2>
                     {abaAtiva !== 'aulas' && (
-                        <button onClick={() => { setModalOpen(true); setTermoBusca(''); setSelecionados([]); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex gap-2">
+                        <button onClick={() => {
+                            setModalOpen(true);
+                            setTermoBusca('');
+                            setSelecionados([]);
+                            // Se for Aluno, já carrega a lista do projeto
+                            if (abaAtiva === 'alunos') realizarBusca('', 1);
+                        }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex gap-2">
                             <UserPlus size={18} /> Adicionar
                         </button>
                     )}

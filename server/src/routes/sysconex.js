@@ -359,17 +359,69 @@ router.get("/turmas/:id", verificarUsuario, async (req, res) => {
 // 3. GESTÃO DE ALUNOS (MATRÍCULAS)
 // --- NOVO: BUSCA DE BENEFICIÁRIOS (Para o Modal) ---
 router.get("/beneficiarios/busca", verificarUsuario, async (req, res) => {
-    // ... (Código da busca igual ao anterior) ...
-    const { q, page = 1, limit = 10 } = req.query;
+    const { q, page = 1, limit = 10, projeto_id } = req.query;
     const offset = (page - 1) * limit;
-    if (!q || q.length < 3) return res.json({ data: [], total: 0 });
+
+    // Se não tiver busca nem projeto, retorna vazio (evita listar base toda)
+    if ((!q || q.length < 3) && !projeto_id) {
+        return res.json({ data: [], total: 0 });
+    }
+
     try {
-        const termo = `%${q}%`;
-        const sqlDados = `SELECT b.id, p.nome_completo, p.cpf FROM Beneficiario b JOIN pessoa p ON b.pessoa_id = p.id WHERE p.nome_completo LIKE ? OR p.cpf LIKE ? ORDER BY p.nome_completo ASC LIMIT ${limit} OFFSET ${offset}`;
-        const sqlCount = `SELECT COUNT(*) as total FROM Beneficiario b JOIN pessoa p ON b.pessoa_id = p.id WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?`;
-        const [dados, countRes] = await Promise.all([querySys(sqlDados, [termo, termo]), querySys(sqlCount, [termo, termo])]);
-        res.json({ data: dados, pagination: { total: countRes[0].total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(countRes[0].total / limit) } });
-    } catch (error) { res.status(500).json({ error: "Erro busca" }); }
+        const paramsDados = [];
+        const paramsCount = [];
+        let whereClause = "WHERE 1=1";
+
+        // Filtro de Texto (Nome/CPF)
+        if (q && q.length >= 3) {
+            const termo = `%${q}%`;
+            whereClause += " AND (p.nome_completo LIKE ? OR p.cpf LIKE ?)";
+            paramsDados.push(termo, termo);
+            paramsCount.push(termo, termo);
+        }
+
+        // Filtro de Projeto (Rigorous)
+        if (projeto_id) {
+            whereClause += " AND b.id_projeto = ?";
+            paramsDados.push(projeto_id);
+            paramsCount.push(projeto_id);
+        }
+
+        const sqlDados = `
+            SELECT b.id, p.nome_completo, p.cpf, pr.titulo as nome_projeto
+            FROM Beneficiario b 
+            JOIN pessoa p ON b.pessoa_id = p.id 
+            JOIN projeto pr ON b.id_projeto = pr.id
+            ${whereClause} 
+            ORDER BY p.nome_completo ASC 
+            LIMIT ${limit} OFFSET ${offset}
+        `;
+
+        const sqlCount = `
+            SELECT COUNT(*) as total 
+            FROM Beneficiario b 
+            JOIN pessoa p ON b.pessoa_id = p.id 
+            ${whereClause}
+        `;
+
+        const [dados, countRes] = await Promise.all([
+            querySys(sqlDados, paramsDados),
+            querySys(sqlCount, paramsCount)
+        ]);
+
+        res.json({
+            data: dados,
+            pagination: {
+                total: countRes[0].total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(countRes[0].total / limit)
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Erro busca" });
+    }
 });
 
 
@@ -552,8 +604,8 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
 router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
     try {
         // UPDATE em vez de DELETE
-        await querySys("UPDATE matriculas SET status = 'Inativo' WHERE id = ?", [req.params.id]);
-        res.json({ message: "Aluno inativado. Histórico preservado." });
+        await querySys("UPDATE matriculas SET status = 'Desistente' WHERE id = ?", [req.params.id]);
+        res.json({ message: "Aluno marcado como desistente. Histórico preservado." });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
