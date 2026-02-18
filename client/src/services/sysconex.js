@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 
-// const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
 
-const API_URL = 'http://localhost:10000/sysconex-freq';
+// const API_URL = 'http://localhost:10000/sysconex-freq';
 
 
 
@@ -114,5 +114,16 @@ export const vincularProfessor = async (turmaId, professorId) => {
     const response = await api.post(`/turmas/${turmaId}/professores`, { professor_id: professorId });
     return response.data;
 }
+
+// --- RELATÓRIOS E BUSCA ---
+export const searchBeneficiarios = async (q) => {
+    const response = await api.get(`/beneficiarios/search?q=${q}`);
+    return response.data;
+};
+
+export const getHistoricoGeral = async (beneficiarioId) => {
+    const response = await api.get(`/beneficiarios/${beneficiarioId}/historico`);
+    return response.data;
+};
 
 export default api;

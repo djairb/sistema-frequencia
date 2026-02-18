@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: meu_phpmyadmin
+    environment:
+      # Se seu MySQL também for Docker, coloque o nome do container aqui (ex: mysql_container)
+      # Se seu MySQL estiver instalado no Windows direto, use: host.docker.internal
+      PMA_HOST: host.docker.internal
+      PMA_PORT: 3306
+      # Opcional: Para permitir login sem senha (não recomendado, mas útil em dev)
+      PMA_ARBITRARY: 1 
+    ports:
+      - "8080:80"
+    restart: always

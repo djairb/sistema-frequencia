@@ -1209,4 +1209,101 @@ router.get("/debug/clean-duplicates", async (req, res) => {
     }
 });
 
+// 6. RELATÓRIOS E BUSCA (COORDENAÇÃO)
+
+// Busca de Beneficiários (Ativos ou Inativos)
+router.get("/beneficiarios/search", verificarUsuario, async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 3) return res.json([]);
+
+        const term = `%${q}%`;
+        const sql = `
+            SELECT b.id, p.nome_completo, p.cpf
+            FROM Beneficiario b
+            JOIN pessoa p ON b.pessoa_id = p.id
+            WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?
+            LIMIT 20
+        `;
+        const results = await querySys(sql, [term, term]);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Histórico Completo do Beneficiário
+router.get("/beneficiarios/:id/historico", verificarUsuario, async (req, res) => {
+    const { id } = req.params; // ID do Beneficiario
+    try {
+        // 1. Dados Pessoais
+        const sqlBenef = `
+            SELECT b.id, p.nome_completo, p.cpf, p.data_nasc as data_nascimento, 
+                   ct.email, ct.celular as telefone_celular
+            FROM Beneficiario b
+            JOIN pessoa p ON b.pessoa_id = p.id
+            LEFT JOIN contato ct ON ct.pessoa_id = p.id
+            WHERE b.id = ?
+        `;
+        const [beneficiario] = await querySys(sqlBenef, [id]);
+        if (!beneficiario) return res.status(404).json({ error: "Beneficiário não encontrado" });
+
+        // 2. Histórico de Matrículas (Turmas que participou)
+        const sqlMatriculas = `
+            SELECT m.id as matricula_id, m.data_matricula, m.status as status_matricula,
+                   t.nome as turma_nome, t.periodo, t.turno, p.titulo as projeto_nome
+            FROM matriculas m
+            JOIN turmas t ON m.turma_id = t.id
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE m.beneficiario_id = ?
+            ORDER BY m.data_matricula DESC
+        `;
+        const matriculas = await querySys(sqlMatriculas, [id]);
+
+        // 3. Histórico de Frequência (Unificado)
+        // Precisamos pegar de TODAS as matrículas desse beneficiário
+        const sqlFreq = `
+            SELECT 
+                f.status, f.observacao, 
+                a.data_aula, a.conteudo,
+                t.nome as turma_nome,
+                p.titulo as projeto_nome
+            FROM frequencias f
+            JOIN matriculas m ON f.matricula_id = m.id
+            JOIN aulas a ON f.aula_id = a.id
+            JOIN turmas t ON a.turma_id = t.id
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE m.beneficiario_id = ?
+            ORDER BY a.data_aula DESC
+        `;
+        const frequencia = await querySys(sqlFreq, [id]);
+
+        // Resumo estatístico geral
+        const totalAulas = frequencia.length;
+        const totalPresencas = frequencia.filter(f => f.status === 'Presente').length;
+        const totalFaltas = frequencia.filter(f => f.status === 'Ausente').length;
+        const totalJustificadas = frequencia.filter(f => f.status === 'Justificado').length;
+
+        // Formatar %
+        const percentual = totalAulas > 0 ? ((totalPresencas / totalAulas) * 100).toFixed(1) : 0;
+
+        res.json({
+            beneficiario,
+            matriculas,
+            frequencia,
+            resumo: {
+                total_aulas: totalAulas,
+                total_presencas: totalPresencas,
+                total_faltas: totalFaltas,
+                total_justificadas: totalJustificadas,
+                percentual_geral: percentual
+            }
+        });
+
+    } catch (error) {
+        console.error("Erro historico geral:", error);
+        res.status(500).json({ error: "Erro ao buscar histórico." });
+    }
+});
+
 module.exports = router;
