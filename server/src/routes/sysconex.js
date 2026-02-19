@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { dbSysConex, querySys } = require('../config/database');
 
+
+
+
+
 const bcrypt = require('bcryptjs'); // Para comparar a senha criptografada
 const jwt = require('jsonwebtoken');
 
@@ -87,7 +91,11 @@ const verificarAcessoProfessorAula = async (usuarioId, aulaId) => {
 }
 
 router.post("/auth/login", async (req, res) => {
-    const { login, senha } = req.body; // No front vamos mandar { login: 'CPF', senha: '...' }
+    
+    const { login, senha } = req.body;
+    
+
+    // No front vamos mandar { login: 'CPF', senha: '...' }
 
     try {
         // 1. Busca o usuário no banco pelo Login (CPF)

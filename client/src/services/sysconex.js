@@ -16,6 +16,7 @@ export const api = axios.create({
 
 
 export const loginSession = async (cpf, senha) => {
+    
     // O backend espera { login, senha }
     const response = await api.post('/auth/login', { login: cpf, senha });
     return response.data;

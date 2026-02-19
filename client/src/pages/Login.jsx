@@ -16,10 +16,10 @@ const Login = () => {
         setLoading(true);
         setErro('');
 
-        const cpfLimpo = cpf.replace(/\D/g, '');
+        
 
         // Pegamos o 'user' que veio do retorno do context
-        const result = await login(cpfLimpo, senha);
+        const result = await login(cpf, senha);
 
         if (result.success) {
             const perfil = result.user.perfil_id; // O ID que vem do Banco
