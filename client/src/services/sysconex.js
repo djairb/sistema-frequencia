@@ -16,7 +16,7 @@ export const api = axios.create({
 
 
 export const loginSession = async (cpf, senha) => {
-    
+
     // O backend espera { login, senha }
     const response = await api.post('/auth/login', { login: cpf, senha });
     return response.data;
@@ -102,6 +102,27 @@ export const getHistoricoFrequenciaAluno = async (matriculaId) => {
 // --- SERVIÇOS DE AULA/CHAMADA ---
 export const registrarAula = async (turmaId, dadosAula) => {
     const response = await api.post(`/turmas/${turmaId}/aulas`, dadosAula);
+    return response.data;
+};
+
+// --- SERVIÇOS DE FOTOS DA AULA ---
+export const uploadFotosAula = async (aulaId, formData) => {
+    // formData deve conter o campo 'foto' e ser enviado como multipart/form-data
+    const response = await api.post(`/aulas/${aulaId}/fotos`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
+export const getFotosAula = async (aulaId) => {
+    const response = await api.get(`/aulas/${aulaId}/fotos`);
+    return response.data;
+};
+
+export const deleteFotoAula = async (fotoId) => {
+    const response = await api.delete(`/fotos/${fotoId}`);
     return response.data;
 };
 

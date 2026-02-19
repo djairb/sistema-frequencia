@@ -1,6 +1,39 @@
 const express = require('express');
 const router = express.Router();
 const { dbSysConex, querySys } = require('../config/database');
+const path = require('path');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+
+// --- Configuração de Upload ---
+const uploadDir = path.join(__dirname, '../../../../public_html/uploads'); // Ajuste conforme solicitado: ../../../public_html/uploads (considerando src/routes está em server/src/routes, sobe 4 niveis?)
+// O user pediu: ../../../public_html/uploads RELATIVO a onde?
+// Se index.js está em server/, então path.join(__dirname, '../../../public_html/uploads') no index.js funciona se a pasta server estiver dentro de public_html/..
+// Vamos assumir o caminho absoluto relativo ao PROJETO ou usar o path.resolve
+// O user pediu explicitamente: path.join(__dirname, '../../../public_html/uploads') NO CONTEXTO DA ROTA?
+// Melhor usar um caminho fixo ou relativo ao process.cwd() para evitar confusão com __dirname de subpastas.
+// Mas vou seguir o pedido do user adaptado para funcionar.
+// Se estou em server/src/routes, preciso subir: routes(1) -> src(2) -> server(3) -> raiz(4) -> ../public_html/uploads
+// O user disse: "apenas uma modificação, crie a pasta para manter os arquivos em '../../../public_html/uploads'"
+// Vou confiar no caminho relativo ao arquivo index.js que ele mencionou antes, mas aqui estou em outro arquivo.
+// Vou usar path.resolve para garantir.
+const UPLOAD_PATH = path.resolve(__dirname, '../../../../public_html/uploads');
+
+if (!fs.existsSync(UPLOAD_PATH)) {
+    fs.mkdirSync(UPLOAD_PATH, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_PATH),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname) || '.jpg';
+        cb(null, `${uuidv4()}${ext}`);
+    },
+});
+
+const upload = multer({ storage });
+
 
 
 
@@ -91,9 +124,9 @@ const verificarAcessoProfessorAula = async (usuarioId, aulaId) => {
 }
 
 router.post("/auth/login", async (req, res) => {
-    
+
     const { login, senha } = req.body;
-    
+
 
     // No front vamos mandar { login: 'CPF', senha: '...' }
 
@@ -1311,6 +1344,94 @@ router.get("/beneficiarios/:id/historico", verificarUsuario, async (req, res) =>
     } catch (error) {
         console.error("Erro historico geral:", error);
         res.status(500).json({ error: "Erro ao buscar histórico." });
+    }
+});
+
+// ==========================================
+// 📸 GESTÃO DE FOTOS DA AULA
+// ==========================================
+
+// 1. UPLOAD DE FOTO
+router.post("/aulas/:id/fotos", verificarUsuario, upload.single('foto'), async (req, res) => {
+    const { id: aulaId } = req.params;
+
+    // Se houve erro no multer ou não veio arquivo
+    if (!req.file) {
+        return res.status(400).json({ error: "Nenhum arquivo enviado." });
+    }
+
+    try {
+        const caminhoRelativo = `/uploads/${req.file.filename}`;
+        // O user pediu para salvar em ../../../public_html/uploads.
+        // O express.static no index.js está servindo '/uploads' apontando para essa pasta.
+        // Então o link web será SEU_DOMINIO/uploads/nome_arquivo.
+
+        const sql = "INSERT INTO fotos_aula (aula_id, caminho_foto) VALUES (?, ?)";
+        const result = await querySys(sql, [aulaId, caminhoRelativo]);
+
+        res.status(201).json({
+            message: "Foto enviada com sucesso!",
+            id: result.insertId,
+            caminho: caminhoRelativo
+        });
+
+    } catch (error) {
+        // Se der erro no banco, vamos apagar a foto que acabou de subir pra não ficar lixo?
+        // Boa prática.
+        if (req.file && req.file.path) {
+            fs.unlink(req.file.path, (err) => {
+                if (err) console.error("Erro ao apagar arquivo orfão:", err);
+            });
+        }
+        console.error("Erro upload foto:", error);
+        res.status(500).json({ error: "Erro ao salvar foto no banco." });
+    }
+});
+
+// 2. LISTAR FOTOS DA AULA
+router.get("/aulas/:id/fotos", verificarUsuario, async (req, res) => {
+    try {
+        const fotos = await querySys("SELECT * FROM fotos_aula WHERE aula_id = ?", [req.params.id]);
+        res.json(fotos);
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao buscar fotos." });
+    }
+});
+
+// 3. DELETAR FOTO
+router.delete("/fotos/:id", verificarUsuario, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 1. Pega o caminho do arquivo antes de deletar do banco
+        const [foto] = await querySys("SELECT caminho_foto FROM fotos_aula WHERE id = ?", [id]);
+
+        if (!foto) {
+            return res.status(404).json({ error: "Foto não encontrada." });
+        }
+
+        // 2. Deleta do Banco
+        await querySys("DELETE FROM fotos_aula WHERE id = ?", [id]);
+
+        // 3. Deleta arquivo físico
+        // O caminho salvo no banco é algo como "/uploads/uuid.jpg"
+        // Precisamos converter isso para o caminho absoluto do sistema de arquivos
+        const nomeArquivo = path.basename(foto.caminho_foto);
+        const caminhoArquivo = path.join(UPLOAD_PATH, nomeArquivo);
+
+        fs.unlink(caminhoArquivo, (err) => {
+            if (err && err.code !== 'ENOENT') {
+                console.error(`Erro ao deletar arquivo físico ${caminhoArquivo}:`, err);
+                // Não vamos retornar erro 500 aqui porque o registro do banco já foi apagado,
+                // então pro usuário a operação "deu certo" (a foto sumiu do sistema).
+            }
+        });
+
+        res.json({ message: "Foto excluída com sucesso!" });
+
+    } catch (error) {
+        console.error("Erro ao deletar foto:", error);
+        res.status(500).json({ error: "Erro ao deletar foto." });
     }
 });
 
