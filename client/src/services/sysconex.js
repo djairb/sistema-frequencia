@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 
-const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+// const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
 
-// const API_URL = 'http://localhost:10000/sysconex-freq';
+const API_URL = 'http://localhost:10000/sysconex-freq';
 
 
 
