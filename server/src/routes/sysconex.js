@@ -7,18 +7,13 @@ const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 
 // --- Configuração de Upload ---
-const uploadDir = path.join(__dirname, '../../../../public_html/uploads'); // Ajuste conforme solicitado: ../../../public_html/uploads (considerando src/routes está em server/src/routes, sobe 4 niveis?)
-// O user pediu: ../../../public_html/uploads RELATIVO a onde?
-// Se index.js está em server/, então path.join(__dirname, '../../../public_html/uploads') no index.js funciona se a pasta server estiver dentro de public_html/..
-// Vamos assumir o caminho absoluto relativo ao PROJETO ou usar o path.resolve
-// O user pediu explicitamente: path.join(__dirname, '../../../public_html/uploads') NO CONTEXTO DA ROTA?
-// Melhor usar um caminho fixo ou relativo ao process.cwd() para evitar confusão com __dirname de subpastas.
-// Mas vou seguir o pedido do user adaptado para funcionar.
-// Se estou em server/src/routes, preciso subir: routes(1) -> src(2) -> server(3) -> raiz(4) -> ../public_html/uploads
-// O user disse: "apenas uma modificação, crie a pasta para manter os arquivos em '../../../public_html/uploads'"
-// Vou confiar no caminho relativo ao arquivo index.js que ele mencionou antes, mas aqui estou em outro arquivo.
-// Vou usar path.resolve para garantir.
-const UPLOAD_PATH = path.resolve(__dirname, '../../../../public_html/uploads');
+// Ajuste do caminho:
+// __dirname = server/src/routes
+// .. = server/src
+// ../.. = server
+// ../../.. = sistema-frequencia
+// logo: path.resolve(__dirname, '../../../public_html/uploads') aponta para sistema-frequencia/public_html/uploads
+const UPLOAD_PATH = path.resolve(__dirname, '../../../public_html/uploads/fotos_frequencia');
 
 if (!fs.existsSync(UPLOAD_PATH)) {
     fs.mkdirSync(UPLOAD_PATH, { recursive: true });
@@ -1361,7 +1356,7 @@ router.post("/aulas/:id/fotos", verificarUsuario, upload.single('foto'), async (
     }
 
     try {
-        const caminhoRelativo = `/uploads/${req.file.filename}`;
+        const caminhoRelativo = `/uploads/fotos_frequencia/${req.file.filename}`;
         // O user pediu para salvar em ../../../public_html/uploads.
         // O express.static no index.js está servindo '/uploads' apontando para essa pasta.
         // Então o link web será SEU_DOMINIO/uploads/nome_arquivo.
