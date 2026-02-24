@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 
-// const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
 
-const API_URL = 'http://localhost:10000/sysconex-freq';
-
+// const API_URL = 'http://localhost:10000/sysconex-freq';
+// tem que mudar o link para a visualização em diario de classe
 
 
 export const api = axios.create({

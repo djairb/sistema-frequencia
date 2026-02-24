@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ModalHistoricoAluno from '../components/ModalHistoricoAluno';
 import { AuthContext } from '../contexts/auth';
-import {
+import api, {
   getTurmaById, getAlunosMatriculados, registrarAula,
   getHistoricoAulas, deleteAula, updateAula, getFrequenciaAula, getTurmaEstatisticas
 } from '../services/sysconex';
@@ -710,10 +710,10 @@ export default function DiarioClasse() {
                         {galeria.map(foto => (
                           <div key={foto.id} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden border">
                             <img
-                              src={`http://localhost:10000${foto.caminho_foto}`}
+                              src={`https://somosconexaosocial.org${foto.caminho_foto}`}
                               alt="Evidência"
                               className="w-full h-full object-cover cursor-pointer"
-                              onClick={() => window.open(`http://localhost:10000${foto.caminho_foto}`, '_blank')}
+                              onClick={() => window.open(`https://somosconexaosocial.org${foto.caminho_foto}`, '_blank')}
                             />
                             {modalMode === 'edit' && (
                               <button onClick={() => handleDeleteFoto(foto.id)} className="absolute top-1 right-1 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
