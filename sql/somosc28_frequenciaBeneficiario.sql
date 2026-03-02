@@ -32,6 +32,7 @@ CREATE TABLE `aulas` (
   `id` int(11) NOT NULL,
   `turma_id` int(11) NOT NULL,
   `colaborador_id` int(11) NOT NULL,
+  `titulo_aula` varchar(255) NOT NULL,
   `data_aula` date NOT NULL,
   `conteudo` text,
   `numero_aulas` int(11) DEFAULT '1',

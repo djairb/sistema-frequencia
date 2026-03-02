@@ -28,6 +28,7 @@ export default function DiarioClasse() {
   const [abaAtiva, setAbaAtiva] = useState('novo');
 
   // --- ESTADOS DE NOVO REGISTRO ---
+  const [tituloAula, setTituloAula] = useState("");
   const [conteudo, setConteudo] = useState("");
   const [dataAula, setDataAula] = useState(new Date().toISOString().split('T')[0]);
   const [mapaPresenca, setMapaPresenca] = useState({});
@@ -145,6 +146,7 @@ export default function DiarioClasse() {
 
   const [alunoHistorico, setAlunoHistorico] = useState(null); // Para modal de histórico individual
 
+  const [editTituloAula, setEditTituloAula] = useState("");
   const [editConteudo, setEditConteudo] = useState("");
   const [editDataAula, setEditDataAula] = useState("");
   const [editMapaPresenca, setEditMapaPresenca] = useState({});
@@ -216,6 +218,7 @@ export default function DiarioClasse() {
 
       const payload = {
         professor_id: user.id || user.user?.id,
+        titulo_aula: tituloAula,
         data_aula: dataAula,
         conteudo: conteudo,
         lista_presenca: listaFinal
@@ -242,6 +245,7 @@ export default function DiarioClasse() {
 
       alert("✅ Aula registrada com sucesso!");
       // Limpa form ou redireciona pro histórico
+      setTituloAula("");
       setConteudo("");
       setFotosNovas([]); // Limpa fotos
       setMapaPresenca(prev => {
@@ -275,6 +279,7 @@ export default function DiarioClasse() {
   async function handleOpenModal(aula, mode) {
     setAulaEditando(aula.id);
     setModalMode(mode);
+    setEditTituloAula(aula.titulo_aula || "");
     setEditDataAula(aula.data_aula.split('T')[0]);
     setEditConteudo(aula.conteudo);
     setModalOpen(true);
@@ -345,6 +350,7 @@ export default function DiarioClasse() {
       }));
 
       const payload = {
+        titulo_aula: editTituloAula,
         data_aula: editDataAula,
         conteudo: editConteudo,
         lista_presenca: listaFinal
@@ -427,6 +433,16 @@ export default function DiarioClasse() {
                     className="w-full border p-2 rounded focus:ring-2 ring-blue-500 outline-none text-gray-700"
                     value={dataAula}
                     onChange={e => setDataAula(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Título da Aula</label>
+                  <input
+                    type="text"
+                    className="w-full border p-2 rounded focus:ring-2 ring-blue-500 outline-none text-gray-700"
+                    placeholder="De acordo com o plano de trabalho mensal"
+                    value={tituloAula}
+                    onChange={e => setTituloAula(e.target.value)}
                   />
                 </div>
                 <div>
@@ -513,6 +529,7 @@ export default function DiarioClasse() {
                         <UserCheck size={12} /> {aula.presentes} Presentes / {aula.ausentes} Ausentes / {aula.justificados} Justificados
                       </span>
                     </div>
+                    {aula.titulo_aula && <p className="text-gray-800 font-bold mb-1">{aula.titulo_aula}</p>}
                     <p className="text-gray-800 font-medium line-clamp-2 md:line-clamp-1">{aula.conteudo}</p>
                     <p className="text-xs text-gray-500 mt-1">Registrado por: {aula.professor_nome}</p>
                   </div>
@@ -680,6 +697,15 @@ export default function DiarioClasse() {
                         className="w-full border p-2 rounded mb-4 disabled:bg-gray-100 disabled:text-gray-500"
                         value={editDataAula}
                         onChange={e => setEditDataAula(e.target.value)}
+                        disabled={modalMode === 'view'}
+                      />
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Título da Aula</label>
+                      <input
+                        type="text"
+                        className="w-full border p-2 rounded mb-4 disabled:bg-gray-100 disabled:text-gray-500"
+                        placeholder="De acordo com o plano de trabalho mensal"
+                        value={editTituloAula}
+                        onChange={e => setEditTituloAula(e.target.value)}
                         disabled={modalMode === 'view'}
                       />
                       <label className="block text-sm font-medium text-gray-600 mb-1">Conteúdo</label>

@@ -687,7 +687,7 @@ router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
 // 1. REGISTRAR AULA E FREQUÊNCIA (Nova Rota)
 router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
     const { id: turmaId } = req.params;
-    const { professor_id, data_aula, conteudo, lista_presenca } = req.body;
+    const { professor_id, titulo_aula, data_aula, conteudo, lista_presenca } = req.body;
 
     // VERIFICAÇÃO DE SEGURANÇA
     if (!(await verificarAcessoProfessorTurma(req.user.id, turmaId))) {
@@ -716,8 +716,8 @@ router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
             // 2. Cria a Aula
             // OBS: A tabela 'aulas' tem 'numero_aulas' (default 1). Vamos passar explicitamente.
             const resAula = await queryTx(
-                "INSERT INTO aulas (turma_id, colaborador_id, data_aula, conteudo, numero_aulas) VALUES (?, ?, ?, ?, ?)",
-                [turmaId, colaboradorId, data_aula, conteudo, 1]
+                "INSERT INTO aulas (turma_id, colaborador_id, titulo_aula, data_aula, conteudo, numero_aulas) VALUES (?, ?, ?, ?, ?, ?)",
+                [turmaId, colaboradorId, titulo_aula || '', data_aula, conteudo, 1]
             );
             const aulaId = resAula.insertId;
 
@@ -754,7 +754,7 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
 
         // Traz a aula e o nome do professor que registrou
         const sqlDados = `
-            SELECT a.id, a.data_aula, a.conteudo, a.created_at,
+            SELECT a.id, a.titulo_aula, a.data_aula, a.conteudo, a.created_at,
                    p.nome_completo as professor_nome
             FROM aulas a
             JOIN colaborador c ON a.colaborador_id = c.id
@@ -802,7 +802,7 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
 // 3. EDITAR AULA E FREQUÊNCIA
 router.put("/aulas/:id", verificarUsuario, async (req, res) => {
     const { id } = req.params;
-    const { data_aula, conteudo, lista_presenca } = req.body;
+    const { titulo_aula, data_aula, conteudo, lista_presenca } = req.body;
 
     // VERIFICAÇÃO DE SEGURANÇA
     if (!(await verificarAcessoProfessorAula(req.user.id, id))) {
@@ -823,8 +823,8 @@ router.put("/aulas/:id", verificarUsuario, async (req, res) => {
 
             // 1. Atualizar dados básicos da aula
             await queryTx(
-                "UPDATE aulas SET data_aula = ?, conteudo = ? WHERE id = ?",
-                [data_aula, conteudo, id]
+                "UPDATE aulas SET titulo_aula = ?, data_aula = ?, conteudo = ? WHERE id = ?",
+                [titulo_aula || '', data_aula, conteudo, id]
             );
 
             // 2. Atualizar frequências
@@ -1327,7 +1327,7 @@ router.get("/beneficiarios/:id/historico", verificarUsuario, async (req, res) =>
         const sqlFreq = `
             SELECT 
                 f.status, f.observacao, 
-                a.data_aula, a.conteudo,
+                a.titulo_aula, a.data_aula, a.conteudo,
                 t.nome as turma_nome,
                 p.titulo as projeto_nome
             FROM frequencias f
