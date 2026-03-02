@@ -121,6 +121,7 @@ const MinhasTurmas = () => {
           </div>
         )}
       </div>
+
     </div>
   );
 };

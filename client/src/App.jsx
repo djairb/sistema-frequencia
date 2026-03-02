@@ -9,6 +9,7 @@ import DiarioClasse from './pages/DiarioClasse';
 import ListaTurmas from './pages/ListaTurmas';
 import ListaProfessores from './pages/ListaProfessores';
 import Relatorios from './pages/Relatorios';
+import PlanosTrabalho from './pages/PlanosTrabalho';
 
 // Componente temporário (Placeholder)
 const PaginaEmConstrucao = ({ titulo }) => (
@@ -40,6 +41,7 @@ export default function App() {
             {/* Rotas de Professor */}
             <Route path="meu-diario" element={<PaginaEmConstrucao titulo="Meu Diário de Classe" />} />
             <Route path="minhas-turmas" element={<MinhasTurmas />} />
+            <Route path="planos-trabalho" element={<PlanosTrabalho />} />
 
             <Route path="turmas/:id/diario" element={<DiarioClasse />} />
             <Route path="diario/:id" element={<DiarioClasse />} />

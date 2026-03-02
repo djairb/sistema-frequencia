@@ -29,6 +29,32 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// --- Configuração de Upload Planos de Trabalho ---
+const PLANOS_UPLOAD_PATH = path.resolve(__dirname, '../../../public_html/uploads/planos_trabalho');
+
+if (!fs.existsSync(PLANOS_UPLOAD_PATH)) {
+    fs.mkdirSync(PLANOS_UPLOAD_PATH, { recursive: true });
+}
+
+const storagePlanos = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, PLANOS_UPLOAD_PATH),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname) || '.pdf';
+        cb(null, `plano_${uuidv4()}${ext}`);
+    },
+});
+
+const uploadPlanos = multer({
+    storage: storagePlanos,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === "application/pdf") {
+            cb(null, true);
+        } else {
+            cb(new Error("Apenas arquivos PDF são permitidos."));
+        }
+    }
+});
 
 
 
@@ -989,7 +1015,7 @@ router.get("/dashboard/resumo", verificarUsuario, async (req, res) => {
         const [turmasEncerradas] = await querySys("SELECT COUNT(*) as total FROM turmas WHERE ativo = 0");
         const [alunosAtivos] = await querySys("SELECT COUNT(*) as total FROM matriculas WHERE status = 'Ativo'");
         const [profsVinculados] = await querySys(`
-            SELECT COUNT(*) as total 
+            SELECT COUNT(DISTINCT tp.colaborador_id) as total 
             FROM turma_professores tp
             JOIN turmas t ON tp.turma_id = t.id
             JOIN projeto p ON t.projeto_id = p.id
@@ -1427,6 +1453,109 @@ router.delete("/fotos/:id", verificarUsuario, async (req, res) => {
     } catch (error) {
         console.error("Erro ao deletar foto:", error);
         res.status(500).json({ error: "Erro ao deletar foto." });
+    }
+});
+
+// ==========================================
+// 📝 GESTÃO DE PLANO DE TRABALHO
+// ==========================================
+
+// 1. UPLOAD DE PLANO DE TRABALHO E RELATÓRIO MENSAL
+router.post("/plano-trabalho", verificarUsuario, (req, res, next) => {
+    uploadPlanos.fields([
+        { name: 'planejamento', maxCount: 1 },
+        { name: 'relatorio', maxCount: 1 }
+    ])(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            // Um erro do Multer ocorreu durante o upload.
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ error: "O arquivo excede o limite máximo permitido de 2MB." });
+            }
+            return res.status(400).json({ error: `Erro no upload: ${err.message}` });
+        } else if (err) {
+            // Um erro desconhecido ocorreu, ou erro customizado do fileFilter
+            return res.status(400).json({ error: err.message });
+        }
+        // Deu tudo certo, passa pro próximo middleware
+        next();
+    });
+}, async (req, res) => {
+    try {
+        const { ano, mes } = req.body;
+        const usuarioId = req.user.id;
+
+        if (!ano || !mes) {
+            return res.status(400).json({ error: "Ano e mês são obrigatórios." });
+        }
+
+        // Pega os caminhos dos arquivos se existirem
+        let caminhoPlanejamento = null;
+        let caminhoRelatorio = null;
+
+        if (req.files['planejamento'] && req.files['planejamento'].length > 0) {
+            caminhoPlanejamento = `/uploads/planos_trabalho/${req.files['planejamento'][0].filename}`;
+        }
+
+        if (req.files['relatorio'] && req.files['relatorio'].length > 0) {
+            caminhoRelatorio = `/uploads/planos_trabalho/${req.files['relatorio'][0].filename}`;
+        }
+
+        if (!caminhoPlanejamento && !caminhoRelatorio) {
+            return res.status(400).json({ error: "Nenhum arquivo enviado." });
+        }
+
+        // Verifica se já existe registro para esse usuário, ano e mês
+        const [existe] = await querySys(
+            "SELECT id, caminho_planejamento, caminho_relatorio FROM plano_trabalho WHERE usuario_id = ? AND ano = ? AND mes = ?",
+            [usuarioId, ano, mes]
+        );
+
+        if (existe) {
+            // Update
+            const novoPlanejamento = caminhoPlanejamento || existe.caminho_planejamento;
+            const novoRelatorio = caminhoRelatorio || existe.caminho_relatorio;
+
+            await querySys(
+                "UPDATE plano_trabalho SET caminho_planejamento = ?, caminho_relatorio = ? WHERE id = ?",
+                [novoPlanejamento, novoRelatorio, existe.id]
+            );
+
+            // Deleta arquivos físicos antigos se foram substituídos
+            if (caminhoPlanejamento && existe.caminho_planejamento) {
+                const velhoPlan = path.join(PLANOS_UPLOAD_PATH, path.basename(existe.caminho_planejamento));
+                fs.unlink(velhoPlan, () => { });
+            }
+            if (caminhoRelatorio && existe.caminho_relatorio) {
+                const velhoRel = path.join(PLANOS_UPLOAD_PATH, path.basename(existe.caminho_relatorio));
+                fs.unlink(velhoRel, () => { });
+            }
+
+            return res.json({ message: "Plano de trabalho atualizado com sucesso!" });
+        } else {
+            // Insert
+            await querySys(
+                "INSERT INTO plano_trabalho (usuario_id, ano, mes, caminho_planejamento, caminho_relatorio) VALUES (?, ?, ?, ?, ?)",
+                [usuarioId, ano, mes, caminhoPlanejamento, caminhoRelatorio]
+            );
+            return res.status(201).json({ message: "Plano de trabalho salvo com sucesso!" });
+        }
+    } catch (error) {
+        console.error("Erro upload plano de trabalho:", error);
+        res.status(500).json({ error: "Erro ao salvar o plano de trabalho no banco." });
+    }
+});
+
+// 2. LISTAR PLANOS DE TRABALHO DO PROFESSOR
+router.get("/plano-trabalho", verificarUsuario, async (req, res) => {
+    try {
+        const usuarioId = req.user.id;
+        const planos = await querySys(
+            "SELECT * FROM plano_trabalho WHERE usuario_id = ? ORDER BY ano DESC, mes DESC",
+            [usuarioId]
+        );
+        res.json(planos);
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao buscar os planos de trabalho." });
     }
 });
 

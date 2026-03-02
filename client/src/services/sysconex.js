@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 
-const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+// const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
 
-// const API_URL = 'http://localhost:10000/sysconex-freq';
+const API_URL = 'http://localhost:10000/sysconex-freq';
 // tem que mudar o link para a visualização em diario de classe
 
 
@@ -145,6 +145,21 @@ export const searchBeneficiarios = async (q) => {
 
 export const getHistoricoGeral = async (beneficiarioId) => {
     const response = await api.get(`/beneficiarios/${beneficiarioId}/historico`);
+    return response.data;
+};
+
+// --- PLANOS DE TRABALHO ---
+export const uploadPlanoTrabalho = async (formData) => {
+    const response = await api.post('/plano-trabalho', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
+export const getPlanosTrabalho = async () => {
+    const response = await api.get('/plano-trabalho');
     return response.data;
 };
 
