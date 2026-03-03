@@ -1064,7 +1064,7 @@ router.get("/dashboard/resumo", verificarUsuario, async (req, res) => {
 router.get("/professores/geral", verificarUsuario, async (req, res) => {
     try {
         const sql = `
-            SELECT c.id, p.nome_completo, p.cpf, c.email_institucional,
+            SELECT c.id, p.nome_completo, p.cpf, c.email_institucional, u.id as usuario_id,
             -- Subquery para contar turmas ativas
             (SELECT COUNT(*) FROM turma_professores tp 
              WHERE tp.colaborador_id = c.id AND tp.ativo = 1) as total_turmas
@@ -1556,6 +1556,74 @@ router.get("/plano-trabalho", verificarUsuario, async (req, res) => {
         res.json(planos);
     } catch (error) {
         res.status(500).json({ error: "Erro ao buscar os planos de trabalho." });
+    }
+});
+
+// ==========================================
+// 🔍 MONITORAMENTO DE PROFESSORES (COORDENAÇÃO)
+// ==========================================
+
+// 1. Obter Planos de Trabalho de um Professor no Mês
+router.get("/monitoramento/planos/:usuarioId/:ano/:mes", verificarUsuario, async (req, res) => {
+    try {
+        const { usuarioId, ano, mes } = req.params;
+        const sql = `
+            SELECT id, caminho_planejamento, caminho_relatorio, feedback_coordenador
+            FROM plano_trabalho
+            WHERE usuario_id = ? AND ano = ? AND mes = ?
+        `;
+        const results = await querySys(sql, [usuarioId, ano, mes]);
+        // Retorna o primeiro já que é unique key, ou null se não houver
+        res.json(results.length > 0 ? results[0] : null);
+    } catch (error) {
+        console.error("Erro ao buscar planos no monitoramento:", error);
+        res.status(500).json({ error: "Erro ao buscar planos de trabalho." });
+    }
+});
+
+// 2. Salvar Feedback do Coordenador no Plano de Trabalho
+router.put("/monitoramento/planos/:id/feedback", verificarUsuario, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { feedback } = req.body;
+
+        const sql = `UPDATE plano_trabalho SET feedback_coordenador = ? WHERE id = ?`;
+        await querySys(sql, [feedback, id]);
+
+        res.json({ message: "Feedback salvo com sucesso." });
+    } catch (error) {
+        console.error("Erro ao salvar feedback:", error);
+        res.status(500).json({ error: "Erro ao salvar feedback." });
+    }
+});
+
+// 3. Obter Relatório de Aulas e Fotos de um Professor no Mês
+router.get("/monitoramento/aulas/:colaboradorId/:ano/:mes", verificarUsuario, async (req, res) => {
+    try {
+        const { colaboradorId, ano, mes } = req.params;
+
+        // 1. Buscar todas as aulas do colaborador no mês/ano
+        const sqlAulas = `
+            SELECT a.id, a.titulo_aula, a.data_aula, a.conteudo, t.nome as turma_nome
+            FROM aulas a
+            JOIN turmas t ON a.turma_id = t.id
+            WHERE a.colaborador_id = ? 
+              AND YEAR(a.data_aula) = ? 
+              AND MONTH(a.data_aula) = ?
+            ORDER BY a.data_aula ASC
+        `;
+        const aulas = await querySys(sqlAulas, [colaboradorId, ano, mes]);
+
+        // 2. Para cada aula, buscar as fotos anexadas (como em getFotosAula)
+        for (let aula of aulas) {
+            const fotos = await querySys(`SELECT * FROM fotos_aula WHERE aula_id = ? ORDER BY created_at ASC`, [aula.id]);
+            aula.fotos = fotos || [];
+        }
+
+        res.json(aulas);
+    } catch (error) {
+        console.error("Erro ao buscar aulas no monitoramento:", error);
+        res.status(500).json({ error: "Erro ao buscar histórico de aulas do professor." });
     }
 });
 

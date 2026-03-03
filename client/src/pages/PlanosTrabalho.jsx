@@ -104,6 +104,7 @@ const PlanosTrabalho = () => {
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Planejamento</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Relatório</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Enviado em</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Feedback da Coordenação</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -114,20 +115,30 @@ const PlanosTrabalho = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {plano.caminho_planejamento ? (
-                                                    <a href={`http://localhost:10000${plano.caminho_planejamento}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-3 py-1.5 rounded-lg w-max border border-blue-100 transition-colors">
+                                                    <a href={`https://somosconexaosocial.org${plano.caminho_planejamento}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-3 py-1.5 rounded-lg w-max border border-blue-100 transition-colors">
                                                         <FileCheck size={16} /> Ver PDF
                                                     </a>
                                                 ) : <span className="text-gray-400 text-[10px] uppercase tracking-wider font-bold bg-gray-100 px-2 py-1 rounded">Pendente</span>}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {plano.caminho_relatorio ? (
-                                                    <a href={`http://localhost:10000${plano.caminho_relatorio}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-green-600 hover:text-green-800 font-medium bg-green-50 px-3 py-1.5 rounded-lg w-max border border-green-100 transition-colors">
+                                                    <a href={`https://somosconexaosocial.org${plano.caminho_relatorio}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-green-600 hover:text-green-800 font-medium bg-green-50 px-3 py-1.5 rounded-lg w-max border border-green-100 transition-colors">
                                                         <FileCheck size={16} /> Ver PDF
                                                     </a>
                                                 ) : <span className="text-gray-400 text-[10px] uppercase tracking-wider font-bold bg-gray-100 px-2 py-1 rounded">Pendente</span>}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
                                                 {new Date(plano.created_at).toLocaleDateString('pt-BR')}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                                                {plano.feedback_coordenador ? (
+                                                    <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg text-indigo-800 shadow-sm text-xs leading-relaxed">
+                                                        <span className="font-bold flex items-center gap-1 mb-1"><FileText size={12} /> Observação:</span>
+                                                        {plano.feedback_coordenador}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400 italic text-xs">Aguardando Avaliação</span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

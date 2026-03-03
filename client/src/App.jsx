@@ -10,6 +10,7 @@ import ListaTurmas from './pages/ListaTurmas';
 import ListaProfessores from './pages/ListaProfessores';
 import Relatorios from './pages/Relatorios';
 import PlanosTrabalho from './pages/PlanosTrabalho';
+import MonitoramentoProfessores from './pages/MonitoramentoProfessores';
 
 // Componente temporário (Placeholder)
 const PaginaEmConstrucao = ({ titulo }) => (
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="turmas" element={<ListaTurmas />} />
             <Route path="professores" element={<ListaProfessores />} />
             <Route path="relatorios" element={<Relatorios />} />
+            <Route path="monitoramento-professores" element={<MonitoramentoProfessores />} />
 
             {/* Rotas de Professor */}
             <Route path="meu-diario" element={<PaginaEmConstrucao titulo="Meu Diário de Classe" />} />

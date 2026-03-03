@@ -163,4 +163,25 @@ export const getPlanosTrabalho = async () => {
     return response.data;
 };
 
+// --- MONITORAMENTO (COORDENAÇÃO) ---
+export const getProfessoresGeral = async () => {
+    const response = await api.get('/professores/geral');
+    return response.data;
+};
+
+export const getMonitoramentoPlanos = async (usuarioId, ano, mes) => {
+    const response = await api.get(`/monitoramento/planos/${usuarioId}/${ano}/${mes}`);
+    return response.data;
+};
+
+export const salvarFeedbackPlano = async (planoId, feedback) => {
+    const response = await api.put(`/monitoramento/planos/${planoId}/feedback`, { feedback });
+    return response.data;
+};
+
+export const getMonitoramentoAulas = async (colaboradorId, ano, mes) => {
+    const response = await api.get(`/monitoramento/aulas/${colaboradorId}/${ano}/${mes}`);
+    return response.data;
+};
+
 export default api;
