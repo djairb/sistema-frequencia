@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useParams } from 'react-router-dom';
 import { AuthContext } from '../contexts/auth';
-import { uploadPlanoTrabalho, getPlanosTrabalho } from '../services/sysconex';
+import { uploadPlanoTrabalho, getPlanosTrabalho, getPlanosTrabalhoUsuario, salvarFeedbackPlano, deletePlanoTrabalho } from '../services/sysconex';
 import {
-    FileText, Upload, Plus, X, AlertCircle, FileCheck, CheckCircle, Loader2
+    FileText, Upload, Plus, X, AlertCircle, FileCheck, CheckCircle, Loader2, Trash2, Edit
 } from 'lucide-react';
 
 const PlanosTrabalho = () => {
     const { user } = useContext(AuthContext);
+    const { id: professorId } = useParams(); // Para coordenador
 
     const [isPlanoModalOpen, setIsPlanoModalOpen] = useState(false);
     const [pdfModalOpen, setPdfModalOpen] = useState(false);
@@ -17,6 +19,11 @@ const PlanosTrabalho = () => {
     const [relatorioFile, setRelatorioFile] = useState(null);
     const [planosList, setPlanosList] = useState([]);
     const [loadingPlanos, setLoadingPlanos] = useState(true);
+    const [professorNome, setProfessorNome] = useState('');
+    const [editFeedbackId, setEditFeedbackId] = useState(null);
+    const [tempFeedback, setTempFeedback] = useState('');
+    const [isEditingPlano, setIsEditingPlano] = useState(false);
+
 
     useEffect(() => {
         carregarPlanos();
@@ -25,16 +32,41 @@ const PlanosTrabalho = () => {
     const carregarPlanos = async () => {
         try {
             setLoadingPlanos(true);
-            const data = await getPlanosTrabalho();
+            let data = [];
+            if (professorId) {
+                const response = await getPlanosTrabalhoUsuario(professorId);
+                data = response.planos || [];
+                setProfessorNome(response.professorNome || 'Professor');
+            } else {
+                data = await getPlanosTrabalho();
+            }
+
             const sortedData = data.sort((a, b) => {
-                if (a.ano !== b.ano) return a.ano - b.ano;
-                return a.mes - b.mes;
+                if (a.ano !== b.ano) return b.ano - a.ano; // descendente
+                return b.mes - a.mes; // descendente
             });
             setPlanosList(sortedData);
         } catch (error) {
             console.error("Erro ao carregar planos", error);
         } finally {
             setLoadingPlanos(false);
+        }
+    };
+
+    const handleEditFeedback = (plano) => {
+        setEditFeedbackId(plano.id);
+        setTempFeedback(plano.feedback_coordenador || '');
+    };
+
+    const handleSaveFeedback = async (planoId) => {
+        try {
+            await salvarFeedbackPlano(planoId, tempFeedback);
+            setEditFeedbackId(null);
+            carregarPlanos();
+            alert("Feedback salvo com sucesso!");
+        } catch (error) {
+            console.error("Erro ao salvar feedback", error);
+            alert("Erro ao salvar feedback.");
         }
     };
 
@@ -65,6 +97,28 @@ const PlanosTrabalho = () => {
         }
     };
 
+    const handleDeletePlano = async (planoId) => {
+        if (window.confirm("Certeza que deseja excluir este plano de trabalho e seus anexos? Esta ação não pode ser desfeita.")) {
+            try {
+                await deletePlanoTrabalho(planoId);
+                carregarPlanos();
+                alert("Plano excluído com sucesso!");
+            } catch (error) {
+                console.error("Erro ao excluir plano", error);
+                alert(error.response?.data?.error || "Erro ao excluir o plano de trabalho.");
+            }
+        }
+    };
+
+    const handleOpenEdit = (plano) => {
+        setSelectedAno(plano.ano);
+        setSelectedMes(plano.mes);
+        setPlanejamentoFile(null);
+        setRelatorioFile(null);
+        setIsEditingPlano(true);
+        setIsPlanoModalOpen(true);
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto animate-fade-in space-y-8">
             {/* HEADER */}
@@ -73,9 +127,13 @@ const PlanosTrabalho = () => {
                     <FileText size={150} />
                 </div>
                 <div className="relative z-10">
-                    <h1 className="text-3xl font-bold mb-2">Planos de Trabalho</h1>
+                    <h1 className="text-3xl font-bold mb-2">
+                        {professorId ? `Planos de Trabalho: ${professorNome}` : "Planos de Trabalho"}
+                    </h1>
                     <p className="text-indigo-100 max-w-xl">
-                        Gerencie e envie seus planejamentos e relatórios mensais de forma centralizada.
+                        {professorId
+                            ? "Visualize os planejamentos e relatórios mensais enviados por este professor."
+                            : "Gerencie e envie seus planejamentos e relatórios mensais de forma centralizada."}
                     </p>
                 </div>
             </div>
@@ -84,14 +142,23 @@ const PlanosTrabalho = () => {
             <div>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <FileText className="text-indigo-600" /> Meus Planos de Trabalho
+                        <FileText className="text-indigo-600" /> {professorId ? `Planos de ${professorNome}` : "Meus Planos de Trabalho"}
                     </h2>
-                    <button
-                        onClick={() => setIsPlanoModalOpen(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
-                    >
-                        <Plus size={20} /> Adicionar Plano
-                    </button>
+                    {!professorId && (
+                        <button
+                            onClick={() => {
+                                setSelectedAno(2026);
+                                setSelectedMes(new Date().getMonth() + 1);
+                                setPlanejamentoFile(null);
+                                setRelatorioFile(null);
+                                setIsEditingPlano(false);
+                                setIsPlanoModalOpen(true);
+                            }}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
+                        >
+                            <Plus size={20} /> Adicionar Plano
+                        </button>
+                    )}
                 </div>
 
                 {loadingPlanos ? (
@@ -111,6 +178,7 @@ const PlanosTrabalho = () => {
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Relatório</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Enviado em</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Feedback da Coordenação</th>
+                                        {!professorId && <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Ações</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -137,15 +205,83 @@ const PlanosTrabalho = () => {
                                                 {new Date(plano.created_at).toLocaleDateString('pt-BR')}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
-                                                {plano.feedback_coordenador ? (
-                                                    <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg text-indigo-800 shadow-sm text-xs leading-relaxed">
-                                                        <span className="font-bold flex items-center gap-1 mb-1"><FileText size={12} /> Observação:</span>
-                                                        {plano.feedback_coordenador}
+                                                {editFeedbackId === plano.id ? (
+                                                    <div className="flex flex-col gap-2">
+                                                        <textarea
+                                                            className="w-full border border-indigo-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            rows="3"
+                                                            value={tempFeedback}
+                                                            onChange={(e) => setTempFeedback(e.target.value)}
+                                                            placeholder="Adicione o feedback aqui..."
+                                                        />
+                                                        <div className="flex justify-end gap-2">
+                                                            <button
+                                                                onClick={() => setEditFeedbackId(null)}
+                                                                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                                                            >
+                                                                Cancelar
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleSaveFeedback(plano.id)}
+                                                                className="text-xs bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1 rounded-md"
+                                                            >
+                                                                Salvar
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-400 italic text-xs">Aguardando Avaliação</span>
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div className="flex-1">
+                                                            {plano.feedback_coordenador ? (
+                                                                <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg text-indigo-800 shadow-sm text-xs leading-relaxed">
+                                                                    <span className="font-bold flex items-center gap-1 mb-1"><FileText size={12} /> Observação:</span>
+                                                                    {plano.feedback_coordenador}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-gray-400 italic text-xs">Aguardando Avaliação</span>
+                                                            )}
+                                                        </div>
+                                                        {professorId && (
+                                                            <button
+                                                                onClick={() => handleEditFeedback(plano)}
+                                                                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium underline shrink-0 cursor-pointer"
+                                                            >
+                                                                {plano.feedback_coordenador ? "Editar" : "Avaliar"}
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </td>
+                                            {!professorId && (
+                                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                                    <div className="flex justify-center gap-2">
+                                                        <button
+                                                            onClick={() => handleOpenEdit(plano)}
+                                                            className="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded-lg transition-colors border border-blue-100"
+                                                            title="Substituir Arquivos"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        {!plano.feedback_coordenador ? (
+                                                            <button
+                                                                onClick={() => handleDeletePlano(plano.id)}
+                                                                className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-lg transition-colors border border-red-100"
+                                                                title="Excluir Plano"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                disabled
+                                                                className="text-gray-400 bg-gray-50 p-2 rounded-lg cursor-not-allowed border border-gray-100"
+                                                                title="Não é possível excluir plano com feedback"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -161,7 +297,7 @@ const PlanosTrabalho = () => {
                     <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-slide-up">
                         <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
                             <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800">
-                                <Upload className="text-indigo-600" /> Upload de Plano de Trabalho
+                                <Upload className="text-indigo-600" /> {isEditingPlano ? "Substituir" : "Upload de"} Plano de Trabalho
                             </h2>
                             <button onClick={() => setIsPlanoModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors bg-white p-1 rounded-full shadow-sm">
                                 <X size={24} />
@@ -176,7 +312,8 @@ const PlanosTrabalho = () => {
                                     <select
                                         value={selectedAno}
                                         onChange={e => setSelectedAno(Number(e.target.value))}
-                                        className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium text-gray-700"
+                                        disabled={isEditingPlano}
+                                        className={`w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium ${isEditingPlano ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'text-gray-700'}`}
                                     >
                                         <option value={2025}>2025</option>
                                         <option value={2026}>2026</option>
@@ -188,7 +325,8 @@ const PlanosTrabalho = () => {
                                     <select
                                         value={selectedMes}
                                         onChange={e => setSelectedMes(Number(e.target.value))}
-                                        className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium text-gray-700"
+                                        disabled={isEditingPlano}
+                                        className={`w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium ${isEditingPlano ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'text-gray-700'}`}
                                     >
                                         <option value={1}>Janeiro</option>
                                         <option value={2}>Fevereiro</option>

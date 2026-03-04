@@ -278,7 +278,7 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                     const checkBenef = await queryTx("SELECT id FROM Beneficiario WHERE pessoa_id = ?", [pessoaId]);
                     if (checkBenef.length === 0) {
                         await queryTx(
-                            "INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)", 
+                            "INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)",
                             [pessoaId, u.projeto_id || 1]
                         );
                         criados++;
@@ -289,19 +289,19 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                 } else {
                     let colabId;
                     const checkColab = await queryTx("SELECT id FROM colaborador WHERE pessoa_id = ?", [pessoaId]);
-                    
+
                     const cargoId = u.cargo_id || 6;
                     const emailInst = u.email || 'sem_email@inst.com';
 
                     if (checkColab.length > 0) {
                         colabId = checkColab[0].id;
                         await queryTx(
-                            "UPDATE colaborador SET cargo_id = ?, email_institucional = ?, status = 1 WHERE id = ?", 
+                            "UPDATE colaborador SET cargo_id = ?, email_institucional = ?, status = 1 WHERE id = ?",
                             [cargoId, emailInst, colabId]
                         );
                     } else {
                         const resColab = await queryTx(
-                            "INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional, status) VALUES (?, ?, ?, 1)", 
+                            "INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional, status) VALUES (?, ?, ?, 1)",
                             [pessoaId, cargoId, emailInst]
                         );
                         colabId = resColab.insertId;
@@ -1570,6 +1570,73 @@ router.get("/plano-trabalho", verificarUsuario, async (req, res) => {
         res.json(planos);
     } catch (error) {
         res.status(500).json({ error: "Erro ao buscar os planos de trabalho." });
+    }
+});
+
+// 3. LISTAR PLANOS DE TRABALHO DE UM USUÁRIO (COORDENADOR)
+router.get("/plano-trabalho/usuario/:usuarioId/detalhes", verificarUsuario, async (req, res) => {
+    try {
+        const { usuarioId } = req.params;
+        const planos = await querySys(
+            "SELECT * FROM plano_trabalho WHERE usuario_id = ? ORDER BY ano DESC, mes DESC",
+            [usuarioId]
+        );
+
+        const [user] = await querySys(`
+            SELECT p.nome_completo
+            FROM usuario u
+            JOIN colaborador c ON u.id_colaborador = c.id
+            JOIN pessoa p ON c.pessoa_id = p.id
+            WHERE u.id = ?
+        `, [usuarioId]);
+
+        res.json({
+            planos,
+            professorNome: user ? user.nome_completo : "Professor"
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Erro ao buscar os planos de trabalho." });
+    }
+});
+
+// 4. DELETAR PLANO DE TRABALHO (PROFESSOR)
+router.delete("/plano-trabalho/:id", verificarUsuario, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const usuarioId = req.user.id;
+
+        // 1. Verifica se o plano existe e pertence ao professor
+        const [plano] = await querySys(
+            "SELECT id, caminho_planejamento, caminho_relatorio, feedback_coordenador FROM plano_trabalho WHERE id = ? AND usuario_id = ?",
+            [id, usuarioId]
+        );
+
+        if (!plano) {
+            return res.status(404).json({ error: "Plano de trabalho não encontrado." });
+        }
+
+        // 2. Verifica se já existe feedback
+        if (plano.feedback_coordenador && plano.feedback_coordenador.trim() !== "") {
+            return res.status(403).json({ error: "Não é possível excluir um plano que já possui feedback da coordenação." });
+        }
+
+        // 3. Deleta os arquivos físicos
+        if (plano.caminho_planejamento) {
+            const planPath = path.join(PLANOS_UPLOAD_PATH, path.basename(plano.caminho_planejamento));
+            fs.unlink(planPath, () => { });
+        }
+        if (plano.caminho_relatorio) {
+            const relPath = path.join(PLANOS_UPLOAD_PATH, path.basename(plano.caminho_relatorio));
+            fs.unlink(relPath, () => { });
+        }
+
+        // 4. Deleta do banco
+        await querySys("DELETE FROM plano_trabalho WHERE id = ?", [id]);
+
+        res.json({ message: "Plano de trabalho excluído com sucesso." });
+    } catch (error) {
+        console.error("Erro ao excluir plano de trabalho:", error);
+        res.status(500).json({ error: "Erro ao excluir o plano de trabalho." });
     }
 });
 

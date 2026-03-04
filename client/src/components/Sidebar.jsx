@@ -16,7 +16,6 @@ export function Sidebar({ isOpen, onClose }) {
       { label: 'Visão Geral', path: '/app/gestao-turmas', icon: LayoutDashboard },
       { label: 'Turmas & Projetos', path: '/app/turmas', icon: BookOpen },
       { label: 'Professores', path: '/app/professores', icon: Users },
-      { label: 'Monitoramento', path: '/app/monitoramento-professores', icon: MonitorPlay },
       { label: 'Relatórios', path: '/app/relatorios', icon: BarChart2 },
     ],
     6: [ // Professor

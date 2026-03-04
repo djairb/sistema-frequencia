@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 
-// const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
 
-const API_URL = 'http://localhost:10000/sysconex-freq';
+// const API_URL = 'http://localhost:10000/sysconex-freq';
 // tem que mudar o link para a visualização em diario de classe
 
 
@@ -160,6 +160,16 @@ export const uploadPlanoTrabalho = async (formData) => {
 
 export const getPlanosTrabalho = async () => {
     const response = await api.get('/plano-trabalho');
+    return response.data;
+};
+
+export const getPlanosTrabalhoUsuario = async (usuarioId) => {
+    const response = await api.get(`/plano-trabalho/usuario/${usuarioId}/detalhes`);
+    return response.data;
+};
+
+export const deletePlanoTrabalho = async (planoId) => {
+    const response = await api.delete(`/plano-trabalho/${planoId}`);
     return response.data;
 };
 

@@ -37,6 +37,7 @@ export default function App() {
             <Route path="gestao-turmas" element={<GestaoTurmas />} />
             <Route path="turmas" element={<ListaTurmas />} />
             <Route path="professores" element={<ListaProfessores />} />
+            <Route path="professores/:id/planos" element={<PlanosTrabalho />} />
             <Route path="relatorios" element={<Relatorios />} />
             <Route path="monitoramento-professores" element={<MonitoramentoProfessores />} />
 
