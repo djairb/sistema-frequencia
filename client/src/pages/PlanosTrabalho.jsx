@@ -9,6 +9,8 @@ const PlanosTrabalho = () => {
     const { user } = useContext(AuthContext);
 
     const [isPlanoModalOpen, setIsPlanoModalOpen] = useState(false);
+    const [pdfModalOpen, setPdfModalOpen] = useState(false);
+    const [currentPdfUrl, setCurrentPdfUrl] = useState('');
     const [selectedAno, setSelectedAno] = useState(2026);
     const [selectedMes, setSelectedMes] = useState(new Date().getMonth() + 1);
     const [planejamentoFile, setPlanejamentoFile] = useState(null);
@@ -24,7 +26,11 @@ const PlanosTrabalho = () => {
         try {
             setLoadingPlanos(true);
             const data = await getPlanosTrabalho();
-            setPlanosList(data);
+            const sortedData = data.sort((a, b) => {
+                if (a.ano !== b.ano) return a.ano - b.ano;
+                return a.mes - b.mes;
+            });
+            setPlanosList(sortedData);
         } catch (error) {
             console.error("Erro ao carregar planos", error);
         } finally {
@@ -115,16 +121,16 @@ const PlanosTrabalho = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {plano.caminho_planejamento ? (
-                                                    <a href={`https://somosconexaosocial.org${plano.caminho_planejamento}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-3 py-1.5 rounded-lg w-max border border-blue-100 transition-colors">
+                                                    <button onClick={() => { setCurrentPdfUrl(`https://somosconexaosocial.org${plano.caminho_planejamento}`); setPdfModalOpen(true); }} className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-3 py-1.5 rounded-lg w-max border border-blue-100 transition-colors">
                                                         <FileCheck size={16} /> Ver PDF
-                                                    </a>
+                                                    </button>
                                                 ) : <span className="text-gray-400 text-[10px] uppercase tracking-wider font-bold bg-gray-100 px-2 py-1 rounded">Pendente</span>}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {plano.caminho_relatorio ? (
-                                                    <a href={`https://somosconexaosocial.org${plano.caminho_relatorio}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-green-600 hover:text-green-800 font-medium bg-green-50 px-3 py-1.5 rounded-lg w-max border border-green-100 transition-colors">
+                                                    <button onClick={() => { setCurrentPdfUrl(`https://somosconexaosocial.org${plano.caminho_relatorio}`); setPdfModalOpen(true); }} className="flex items-center gap-1 text-green-600 hover:text-green-800 font-medium bg-green-50 px-3 py-1.5 rounded-lg w-max border border-green-100 transition-colors">
                                                         <FileCheck size={16} /> Ver PDF
-                                                    </a>
+                                                    </button>
                                                 ) : <span className="text-gray-400 text-[10px] uppercase tracking-wider font-bold bg-gray-100 px-2 py-1 rounded">Pendente</span>}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
@@ -256,6 +262,30 @@ const PlanosTrabalho = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL DE VISUALIZAÇÃO DE PDF */}
+            {pdfModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+                    <div className="bg-white rounded-2xl w-full max-w-4xl h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+                        <div className="flex justify-between items-center p-4 border-b bg-gray-50/50">
+                            <h2 className="text-xl font-bold flex items-center gap-2 text-gray-800">
+                                <FileText className="text-indigo-600" /> Visualizar Documento
+                            </h2>
+                            <div className="flex items-center gap-3">
+                                <a href={currentPdfUrl} download target="_blank" rel="noreferrer" className="text-sm font-bold bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors flex items-center gap-2 shadow-sm">
+                                    Baixar
+                                </a>
+                                <button onClick={() => setPdfModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors bg-white p-1.5 rounded-full shadow-sm">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex-1 bg-gray-100 p-2">
+                            <iframe src={currentPdfUrl} className="w-full h-full rounded-xl border border-gray-200 shadow-inner" title="Visualizador de PDF" />
+                        </div>
                     </div>
                 </div>
             )}

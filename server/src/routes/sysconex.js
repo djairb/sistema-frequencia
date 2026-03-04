@@ -239,7 +239,6 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                 const cpfLimpo = u.cpf.replace(/\D/g, '');
 
                 const rows = await queryTx("SELECT id FROM pessoa WHERE cpf = ?", [cpfLimpo]);
-
                 let pessoaId;
 
                 const defaults = {
@@ -249,62 +248,81 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                 };
 
                 if (rows.length > 0) {
-                    // UPDATE (Sem email aqui, pois 'pessoa' não tem email)
                     pessoaId = rows[0].id;
-                    await queryTx("UPDATE pessoa SET nome_completo = ? WHERE id = ?", [u.nome_completo, pessoaId]);
+                    await queryTx("UPDATE pessoa SET nome_completo = ?, status = 1 WHERE id = ?", [u.nome_completo, pessoaId]);
 
-                    // Atualiza o contato (email) separadamente
-                    const checkContato = await queryTx("SELECT id FROM contato WHERE pessoa_id = ?", [pessoaId]);
-                    if (checkContato.length > 0) {
-                        await queryTx("UPDATE contato SET email = ? WHERE id = ?", [u.email, checkContato[0].id]);
-                    } else {
-                        await queryTx("INSERT INTO contato (pessoa_id, email) VALUES (?, ?)", [pessoaId, u.email]);
+                    if (u.email) {
+                        const checkContato = await queryTx("SELECT id FROM contato WHERE pessoa_id = ?", [pessoaId]);
+                        if (checkContato.length > 0) {
+                            await queryTx("UPDATE contato SET email = ? WHERE id = ?", [u.email, checkContato[0].id]);
+                        } else {
+                            await queryTx("INSERT INTO contato (pessoa_id, email) VALUES (?, ?)", [pessoaId, u.email]);
+                        }
                     }
-
-                    atualizados++;
                 } else {
-                    // INSERT (Sem email na tabela pessoa)
                     const sqlInsert = `
-                        INSERT INTO pessoa (nome_completo, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id) 
-                        VALUES (?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1)
+                        INSERT INTO pessoa (nome_completo, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status) 
+                        VALUES (?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)
                     `;
                     const resPessoa = await queryTx(sqlInsert, [
                         u.nome_completo, cpfLimpo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn
                     ]);
                     pessoaId = resPessoa.insertId;
 
-                    // Salva o email na tabela contato
                     if (u.email) {
                         await queryTx("INSERT INTO contato (pessoa_id, email) VALUES (?, ?)", [pessoaId, u.email]);
                     }
-
-                    criados++;
                 }
 
-                // Lógica ALUNO vs PROFESSOR
                 if (u.tipo === "ALUNO") {
                     const checkBenef = await queryTx("SELECT id FROM Beneficiario WHERE pessoa_id = ?", [pessoaId]);
                     if (checkBenef.length === 0) {
-                        await queryTx("INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)", [pessoaId, u.projeto_id || 1]);
-                    }
-                } else if (u.tipo === "PROFESSOR") {
-                    // Cria Colaborador
-                    const checkColab = await queryTx("SELECT id FROM colaborador WHERE pessoa_id = ?", [pessoaId]);
-                    let colabId;
-                    if (checkColab.length === 0) {
-                        // Colaborador tem 'email_institucional'
-                        const resColab = await queryTx("INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional) VALUES (?, ?, ?)", [pessoaId, u.cargo_id || 6, u.email || 'sem_email@inst.com']);
-                        colabId = resColab.insertId;
-                    } else {
-                        colabId = checkColab[0].id;
-                    }
-                    // Cria Usuário
-                    const checkUser = await queryTx("SELECT id FROM usuario WHERE id_colaborador = ?", [colabId]);
-                    if (checkUser.length === 0) {
                         await queryTx(
-                            "INSERT INTO usuario (id_colaborador, id_perfil_usuario, login, senha, status) VALUES (?, 6, ?, '$2b$10$naDMvm5M7NVIxt6sDtpAi.0uwmVpvvJKLGdcwzUDTunu/flYK8d82', 1)",
-                            [colabId, cpfLimpo]
+                            "INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)", 
+                            [pessoaId, u.projeto_id || 1]
                         );
+                        criados++;
+                    } else {
+                        atualizados++;
+                    }
+
+                } else {
+                    let colabId;
+                    const checkColab = await queryTx("SELECT id FROM colaborador WHERE pessoa_id = ?", [pessoaId]);
+                    
+                    const cargoId = u.cargo_id || 6;
+                    const emailInst = u.email || 'sem_email@inst.com';
+
+                    if (checkColab.length > 0) {
+                        colabId = checkColab[0].id;
+                        await queryTx(
+                            "UPDATE colaborador SET cargo_id = ?, email_institucional = ?, status = 1 WHERE id = ?", 
+                            [cargoId, emailInst, colabId]
+                        );
+                    } else {
+                        const resColab = await queryTx(
+                            "INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional, status) VALUES (?, ?, ?, 1)", 
+                            [pessoaId, cargoId, emailInst]
+                        );
+                        colabId = resColab.insertId;
+                    }
+
+                    if (u.login && u.senha && u.id_perfil_usuario) {
+                        const checkUser = await queryTx("SELECT id FROM usuario WHERE id_colaborador = ?", [colabId]);
+
+                        if (checkUser.length > 0) {
+                            await queryTx(
+                                "UPDATE usuario SET login = ?, senha = ?, id_perfil_usuario = ?, status = 1 WHERE id = ?",
+                                [u.login, u.senha, u.id_perfil_usuario, checkUser[0].id]
+                            );
+                            atualizados++;
+                        } else {
+                            await queryTx(
+                                "INSERT INTO usuario (id_colaborador, id_perfil_usuario, login, senha, status) VALUES (?, ?, ?, ?, 1)",
+                                [colabId, u.id_perfil_usuario, u.login, u.senha]
+                            );
+                            criados++;
+                        }
                     }
                 }
             }
@@ -318,16 +336,12 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
 
         } catch (error) {
             connection.rollback(() => { });
-            console.error("Erro Webhook:", error);
-            res.status(500).json({
-                error: "Erro no processamento: " + error.message,
-                sql_erro: error.sqlMessage || "Sem detalhe SQL"
-            });
+            res.status(500).json({ error: "Erro no processamento: " + error.message });
         } finally {
             connection.release();
         }
     });
-});
+})
 
 
 // ... imports e configs anteriores (bcrypt, jwt, dbSysConex) ...
