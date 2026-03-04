@@ -4,7 +4,7 @@ import api from '../services/sysconex';
 import {
     Trash2, UserPlus, Users, GraduationCap, ArrowLeft,
     Search, CheckSquare, Square, X, ChevronLeft, ChevronRight, Loader2,
-    CalendarCheck, Eye, Edit2, AlertTriangle // <--- Adicionamos o Edit2 aqui
+    CalendarCheck, Eye, Edit2, AlertTriangle, Copy
 } from 'lucide-react';
 
 const DetalhesTurma = () => {
@@ -36,6 +36,11 @@ const DetalhesTurma = () => {
     // --- NOVOS ESTADOS PARA EDIÇÃO DA TURMA ---
     const [modalEditarOpen, setModalEditarOpen] = useState(false);
     const [dadosEdicao, setDadosEdicao] = useState({});
+
+    // --- NOVOS ESTADOS PARA DUPLICAÇÃO DA TURMA ---
+    const [modalDuplicarOpen, setModalDuplicarOpen] = useState(false);
+    const [novoNomeDaTurma, setNovoNomeDaTurma] = useState('');
+    const [loadingDuplicacao, setLoadingDuplicacao] = useState(false);
 
 
     // --- INICIALIZAÇÃO ---
@@ -107,6 +112,22 @@ const DetalhesTurma = () => {
                 ? { ...prev, dias_aula: dias.filter(d => d !== dia) }
                 : { ...prev, dias_aula: [...dias, dia] };
         });
+    };
+
+    // --- FUNÇÃO PARA DUPLICAR TURMA ---
+    const handleDuplicarTurma = async (e) => {
+        e.preventDefault();
+        setLoadingDuplicacao(true);
+        try {
+            const res = await api.post(`/turmas/${id}/duplicar`, { novoNome: novoNomeDaTurma });
+            alert(`✅ Turma duplicada com sucesso!\n${res.data.totalAlunosCopiados} alunos foram copiados.`);
+            setModalDuplicarOpen(false);
+            navigate(`/app/turmas/${res.data.novaTurmaId}`);
+        } catch (error) {
+            alert("Erro ao duplicar turma: " + (error.response?.data?.error || error.message));
+        } finally {
+            setLoadingDuplicacao(false);
+        }
     };
 
     // --- AUDITORIA DE AULA ---
@@ -209,6 +230,16 @@ const DetalhesTurma = () => {
                                 title="Editar Turma"
                             >
                                 <Edit2 size={20} />
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setNovoNomeDaTurma(`${turma.nome} (Cópia)`);
+                                    setModalDuplicarOpen(true);
+                                }}
+                                className="text-gray-400 hover:text-green-600 transition-colors p-1.5 rounded-full hover:bg-green-50"
+                                title="Duplicar Turma"
+                            >
+                                <Copy size={20} />
                             </button>
                         </div>
 
@@ -462,6 +493,38 @@ const DetalhesTurma = () => {
                             <div className="flex justify-end gap-3 mt-6">
                                 <button type="button" onClick={() => setModalEditarOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
                                 <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* --- MODAL PARA DUPLICAR TURMA --- */}
+            {modalDuplicarOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+                        <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-gray-800">Duplicar Turma</h3>
+                            <button onClick={() => setModalDuplicarOpen(false)}><X className="text-gray-400 hover:text-red-500" /></button>
+                        </div>
+                        <form onSubmit={handleDuplicarTurma} className="p-6">
+                            <p className="text-sm text-gray-600 mb-4">
+                                Essa ação criará uma nova turma idêntica a atual e copiará todos os alunos com status de <strong>Ativos</strong>.
+                                O projeto vinculado não será alterado de acordo com a regra de negócio.
+                            </p>
+                            <label className="block text-sm font-bold text-gray-700 mb-1">Novo nome da Turma</label>
+                            <input
+                                type="text"
+                                className="w-full border p-2 rounded"
+                                value={novoNomeDaTurma}
+                                onChange={e => setNovoNomeDaTurma(e.target.value)}
+                                required
+                            />
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button type="button" onClick={() => setModalDuplicarOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded text-sm font-medium">Cancelar</button>
+                                <button type="submit" disabled={loadingDuplicacao} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-bold shadow-lg disabled:opacity-50 flex items-center gap-2">
+                                    {loadingDuplicacao ? <Loader2 className="animate-spin" size={18} /> : <Copy size={18} />} Duplicar Turma
+                                </button>
                             </div>
                         </form>
                     </div>

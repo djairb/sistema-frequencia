@@ -603,6 +603,83 @@ router.post("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
+// --- NOVO: DUPLICAR TURMA COM ALUNOS ---
+router.post("/turmas/:id/duplicar", verificarUsuario, async (req, res) => {
+    const { id: turmaOriginalId } = req.params;
+    const { novoNome } = req.body;
+
+    dbSysConex.getConnection(async (err, connection) => {
+        if (err) return res.status(500).json({ error: "Erro de conexão." });
+
+        const queryTx = (sql, params) => {
+            return new Promise((resolve, reject) => {
+                connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));
+            });
+        };
+
+        try {
+            await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
+
+            // 1. Busca os dados da turma original
+            const rowsTurma = await queryTx("SELECT * FROM turmas WHERE id = ?", [turmaOriginalId]);
+            if (rowsTurma.length === 0) throw new Error("Turma original não encontrada.");
+
+            const turmaOriginal = rowsTurma[0];
+            const nomeNovaTurma = novoNome || `${turmaOriginal.nome} (Cópia)`;
+
+            // 2. Cria a nova turma com os mesmos dados, mas com status Ativo(1)
+            const sqlInsertTurma = `
+                INSERT INTO turmas (projeto_id, nome, turno, periodo, dias_aula, data_inicio, data_fim, ativo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            `;
+            const paramsNovaTurma = [
+                turmaOriginal.projeto_id,
+                nomeNovaTurma,
+                turmaOriginal.turno,
+                turmaOriginal.periodo,
+                turmaOriginal.dias_aula, // O banco já guarda em JSON
+                turmaOriginal.data_inicio,
+                turmaOriginal.data_fim
+            ];
+
+            const resNovaTurma = await queryTx(sqlInsertTurma, paramsNovaTurma);
+            const novaTurmaId = resNovaTurma.insertId;
+
+            // 3. Busca alunos ATIVOS da turma original
+            const alunosAtivos = await queryTx(
+                "SELECT beneficiario_id FROM matriculas WHERE turma_id = ? AND status = 'Ativo'",
+                [turmaOriginalId]
+            );
+
+            // 4. Copia as matrículas para a nova turma
+            let totalCopiados = 0;
+            if (alunosAtivos.length > 0) {
+                // Monta o INSERT múltiplo: INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES (?, ?, 'Ativo'), (?, ?, 'Ativo')...
+                const values = alunosAtivos.map(a => [novaTurmaId, a.beneficiario_id, 'Ativo']);
+                const sqlInsertMatriculas = "INSERT INTO matriculas (turma_id, beneficiario_id, status) VALUES ?";
+
+                await queryTx(sqlInsertMatriculas, [values]);
+                totalCopiados = alunosAtivos.length;
+            }
+
+            await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+
+            res.status(201).json({
+                message: "Turma duplicada com sucesso!",
+                novaTurmaId,
+                totalAlunosCopiados: totalCopiados
+            });
+
+        } catch (error) {
+            connection.rollback(() => { });
+            console.error("Erro ao duplicar turma:", error);
+            res.status(500).json({ error: "Erro ao duplicar turma: " + error.message });
+        } finally {
+            connection.release();
+        }
+    });
+});
+
 // 5. ATUALIZAR TURMA (PUT)
 router.put("/turmas/:id", verificarUsuario, async (req, res) => {
     const { id } = req.params;

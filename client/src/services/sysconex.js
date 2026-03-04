@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 
-const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+// const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
 
-// const API_URL = 'http://localhost:10000/sysconex-freq';
+const API_URL = 'http://localhost:10000/sysconex-freq';
 // tem que mudar o link para a visualização em diario de classe
 
 
@@ -54,6 +54,11 @@ export const criarTurma = async (dadosTurma) => {
 
 export const getTurmaById = async (id) => {
     const response = await api.get(`/turmas/${id}`);
+    return response.data;
+};
+
+export const duplicarTurma = async (turmaId, novoNome) => {
+    const response = await api.post(`/turmas/${turmaId}/duplicar`, { novoNome });
     return response.data;
 };
 
