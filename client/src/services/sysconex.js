@@ -62,7 +62,6 @@ export const duplicarTurma = async (turmaId, novoNome) => {
     return response.data;
 };
 
-// --- SERVIÇOS DE MATRÍCULA ---
 export const getAlunosMatriculados = async (turmaId) => {
     const response = await api.get(`/turmas/${turmaId}/matriculas`);
     return response.data;

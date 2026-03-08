@@ -208,11 +208,549 @@ router.post("/auth/login", async (req, res) => {
     }
 });
 
-
-
-
-
 router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, res) => {
+const listaUsuarios = req.body;
+
+if (!Array.isArray(listaUsuarios)) {  
+    return res.status(400).json({ error: "O corpo deve ser uma lista JSON." });  
+}  
+
+dbSysConex.getConnection(async (err, connection) => {  
+    if (err) return res.status(500).json({ error: "Erro de conexão com banco." });  
+
+    const queryTx = (sql, params) => {  
+        return new Promise((resolve, reject) => {  
+            connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));  
+        });  
+    };  
+
+    try {  
+        await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));  
+
+        let totalCriados = 0;  
+        let totalAtualizadosReais = 0;  
+
+        for (const u of listaUsuarios) {  
+            if (!u.cpf) continue;  
+
+            const cpfLimpo = u.cpf.replace(/\D/g, '');  
+            let pessoaId;  
+              
+            // Flags de controle  
+            let ehNovaPessoa = false;  
+            let houveAlteracaoReal = false;  
+
+            const defaults = {  
+                mae: u.nome_mae || "NÃO INFORMADO",  
+                gen: u.genero_id || 1,  
+                etn: u.etnia_id || 1  
+            };  
+
+            // =================================  
+            // 1. PESSOA  
+            // =================================  
+            const rows = await queryTx("SELECT id FROM pessoa WHERE cpf = ?", [cpfLimpo]);  
+
+            if (rows.length > 0) {  
+                pessoaId = rows[0].id;  
+                const resPessoa = await queryTx(`  
+                    UPDATE pessoa   
+                    SET nome_completo = ?, data_nasc = ?, nome_mae = ?, genero_id = ?, etnia_id = ?, status = 1  
+                    WHERE id = ?  
+                `, [u.nome_completo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn, pessoaId]);  
+                  
+                // Se o MySQL alterou alguma coluna, mudou de fato  
+                if (resPessoa.changedRows > 0) houveAlteracaoReal = true;  
+
+            } else {  
+                const resPessoa = await queryTx(`  
+                    INSERT INTO pessoa   
+                    (nome_completo, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status)   
+                    VALUES (?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)  
+                `, [u.nome_completo, cpfLimpo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn]);  
+
+                pessoaId = resPessoa.insertId;  
+                ehNovaPessoa = true;  
+            }  
+
+            // =================================  
+            // 2. CONTATO  
+            // =================================  
+            if (u.email) {  
+                const checkContato = await queryTx("SELECT id FROM contato WHERE pessoa_id = ?", [pessoaId]);  
+                if (checkContato.length > 0) {  
+                    const resC = await queryTx("UPDATE contato SET email = ? WHERE id = ?", [u.email, checkContato[0].id]);  
+                    if (resC.changedRows > 0) houveAlteracaoReal = true;  
+                } else {  
+                    await queryTx("INSERT INTO contato (pessoa_id, email) VALUES (?, ?)", [pessoaId, u.email]);  
+                    if (!ehNovaPessoa) houveAlteracaoReal = true; // Inserir novo dado em pessoa antiga é uma alteração  
+                }  
+            }  
+
+            // =================================  
+            // 3. BENEFICIARIO OU COLABORADOR  
+            // =================================  
+            if (u.tipo === "ALUNO") {  
+                const checkBenef = await queryTx("SELECT id FROM Beneficiario WHERE pessoa_id = ?", [pessoaId]);  
+                if (checkBenef.length > 0) {  
+                    const resB = await queryTx("UPDATE Beneficiario SET id_projeto = ?, id_processo_inscricao = 1 WHERE id = ?", [u.projeto_id || 1, checkBenef[0].id]);  
+                    if (resB.changedRows > 0) houveAlteracaoReal = true;  
+                } else {  
+                    await queryTx("INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)", [pessoaId, u.projeto_id || 1]);  
+                    if (!ehNovaPessoa) houveAlteracaoReal = true;  
+                }  
+            } else {  
+                // COLABORADOR  
+                const checkColab = await queryTx("SELECT id FROM colaborador WHERE pessoa_id = ?", [pessoaId]);  
+                const cargoId = u.cargo_id || 6;  
+                const emailInst = u.email || 'sem_email@inst.com';  
+                let colabId;  
+
+                if (checkColab.length > 0) {  
+                    colabId = checkColab[0].id;  
+                    const resCol = await queryTx("UPDATE colaborador SET cargo_id = ?, email_institucional = ?, status = 1 WHERE id = ?", [cargoId, emailInst, colabId]);  
+                    if (resCol.changedRows > 0) houveAlteracaoReal = true;  
+                } else {  
+                    const resColab = await queryTx("INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional, status) VALUES (?, ?, ?, 1)", [pessoaId, cargoId, emailInst]);  
+                    colabId = resColab.insertId;  
+                    if (!ehNovaPessoa) houveAlteracaoReal = true;  
+                }  
+
+                // USUARIO  
+                if (u.login && u.senha && u.id_perfil_usuario) {  
+                    const checkUser = await queryTx("SELECT id FROM usuario WHERE id_colaborador = ?", [colabId]);  
+                    if (checkUser.length > 0) {  
+                        const resU = await queryTx("UPDATE usuario SET login = ?, senha = ?, id_perfil_usuario = ?, status = 1 WHERE id = ?", [u.login, u.senha, u.id_perfil_usuario, checkUser[0].id]);  
+                        if (resU.changedRows > 0) houveAlteracaoReal = true;  
+                    } else {  
+                        await queryTx("INSERT INTO usuario (id_colaborador, id_perfil_usuario, login, senha, status) VALUES (?, ?, ?, ?, 1)", [colabId, u.id_perfil_usuario, u.login, u.senha]);  
+                        if (!ehNovaPessoa) houveAlteracaoReal = true;  
+                    }  
+                }  
+            }  
+
+            // Contabilidade final por pessoa  
+            if (ehNovaPessoa) {  
+                totalCriados++;  
+            } else if (houveAlteracaoReal) {  
+                totalAtualizadosReais++;  
+            }  
+        }  
+
+        await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));  
+
+        res.status(200).json({  
+            message: "Sincronização concluída!",  
+            resumo: {   
+                novos: totalCriados,   
+                atualizados_com_mudanca: totalAtualizadosReais,  
+                total_processados: listaUsuarios.length  
+            }  
+        });  
+
+    } catch (error) {  
+        connection.rollback(() => { });  
+        res.status(500).json({ error: "Erro no processamento: " + error.message });  
+    } finally {  
+        connection.release();  
+    }  
+});
+
+});
+
+
+router.get("/integracajo/receber-dados", verificarTokenIntegracao, async (req, res) => {
+    const listaUsuarios = req.body;
+
+    if (!Array.isArray(listaUsuarios)) {
+        return res.status(400).json({ error: "O corpo deve ser uma lista JSON." });
+    }
+
+    dbSysConex.getConnection(async (err, connection) => {
+        if (err) return res.status(500).json({ error: "Erro de conexão com banco." });
+
+        const queryTx = (sql, params) => {
+            return new Promise((resolve, reject) => {
+                connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));
+            });
+        };
+
+        try {
+            await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
+
+            let criados = 0;
+            let atualizados = 0;
+
+            for (const u of listaUsuarios) {
+                if (!u.cpf) continue;
+                const cpfLimpo = u.cpf.replace(/\D/g, '');
+                
+                // Variável para controlar se a pessoa já existia no banco
+                let jaExistia = false; 
+
+                const defaults = {
+                    mae: u.nome_mae || "NÃO INFORMADO",
+                    gen: u.genero_id || 1,
+                    etn: u.etnia_id || 1
+                };
+
+                // 1. PROCESSAMENTO DA TABELA PESSOA
+                const rows = await queryTx("SELECT id FROM pessoa WHERE cpf = ?", [cpfLimpo]);
+                let pessoaId;
+
+                if (rows.length > 0) {
+                    pessoaId = rows[0].id;
+                    jaExistia = true; // Marca que o registro já existia
+                    await queryTx(`
+                        UPDATE pessoa SET nome_completo = ?, data_nasc = ?, nome_mae = ?, 
+                        genero_id = ?, etnia_id = ?, status = 1 WHERE id = ?
+                    `, [u.nome_completo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn, pessoaId]);
+                } else {
+                    const resPessoa = await queryTx(`
+                        INSERT INTO pessoa (nome_completo, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status) 
+                        VALUES (?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)
+                    `, [u.nome_completo, cpfLimpo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn]);
+                    pessoaId = resPessoa.insertId;
+                }
+
+                // 2. PROCESSAMENTO DE CONTATO
+                if (u.email) {
+                    const checkContato = await queryTx("SELECT id FROM contato WHERE pessoa_id = ?", [pessoaId]);
+                    if (checkContato.length > 0) {
+                        await queryTx("UPDATE contato SET email = ? WHERE id = ?", [u.email, checkContato[0].id]);
+                    } else {
+                        await queryTx("INSERT INTO contato (pessoa_id, email) VALUES (?, ?)", [pessoaId, u.email]);
+                    }
+                }
+
+                // 3. PROCESSAMENTO ESPECÍFICO POR TIPO
+                if (u.tipo === "ALUNO") {
+                    const checkBenef = await queryTx("SELECT id FROM Beneficiario WHERE pessoa_id = ?", [pessoaId]);
+                    if (checkBenef.length > 0) {
+                        await queryTx("UPDATE Beneficiario SET id_projeto = ?, id_processo_inscricao = 1 WHERE id = ?", [u.projeto_id || 1, checkBenef[0].id]);
+                    } else {
+                        await queryTx("INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)", [pessoaId, u.projeto_id || 1]);
+                    }
+                } else {
+                    // COLABORADOR E USUÁRIO
+                    const checkColab = await queryTx("SELECT id FROM colaborador WHERE pessoa_id = ?", [pessoaId]);
+                    let colabId;
+
+                    if (checkColab.length > 0) {
+                        colabId = checkColab[0].id;
+                        await queryTx("UPDATE colaborador SET cargo_id = ?, email_institucional = ?, status = 1 WHERE id = ?", [u.cargo_id || 6, u.email || 'sem_email@inst.com', colabId]);
+                    } else {
+                        const resColab = await queryTx("INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional, status) VALUES (?, ?, ?, 1)", [pessoaId, u.cargo_id || 6, u.email || 'sem_email@inst.com']);
+                        colabId = resColab.insertId;
+                    }
+
+                    if (u.login && u.senha) {
+                        const checkUser = await queryTx("SELECT id FROM usuario WHERE id_colaborador = ?", [colabId]);
+                        if (checkUser.length > 0) {
+                            await queryTx("UPDATE usuario SET login = ?, senha = ?, id_perfil_usuario = ?, status = 1 WHERE id = ?", [u.login, u.senha, u.id_perfil_usuario, checkUser[0].id]);
+                        } else {
+                            await queryTx("INSERT INTO usuario (id_colaborador, id_perfil_usuario, login, senha, status) VALUES (?, ?, ?, ?, 1)", [colabId, u.id_perfil_usuario, u.login, u.senha]);
+                        }
+                    }
+                }
+
+                // 4. CONTABILIZAÇÃO ÚNICA POR PESSOA
+                if (jaExistia) {
+                    atualizados++;
+                } else {
+                    criados++;
+                }
+            }
+
+            await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+            res.status(200).json({ message: "Sincronização realizada com sucesso!", resumo: { criados, atualizados } });
+
+        } catch (error) {
+            connection.rollback(() => { });
+            res.status(500).json({ error: "Erro no processamento: " + error.message });
+        } finally {
+            connection.release();
+        }
+    });
+});
+
+
+
+        
+
+       
+
+
+router.get("/integrhacao/receber-dados", verificarTokenIntegracao, async (req, res) => {
+    const listaUsuarios = req.body;
+
+    if (!Array.isArray(listaUsuarios)) {
+        return res.status(400).json({ error: "O corpo deve ser uma lista JSON." });
+    }
+
+    dbSysConex.getConnection(async (err, connection) => {
+        if (err) return res.status(500).json({ error: "Erro de conexão com banco." });
+
+        const queryTx = (sql, params) => {
+            return new Promise((resolve, reject) => {
+                connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));
+            });
+        };
+
+        try {
+
+            await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
+
+            let criados = 0;
+            let atualizados = 0;
+
+            for (const u of listaUsuarios) {
+
+                if (!u.cpf) continue;
+
+                const cpfLimpo = u.cpf.replace(/\D/g, '');
+
+                const defaults = {
+                    mae: u.nome_mae || "NÃO INFORMADO",
+                    gen: u.genero_id || 1,
+                    etn: u.etnia_id || 1
+                };
+
+                // =================================
+                // PESSOA
+                // =================================
+
+                const rows = await queryTx(
+                    "SELECT id FROM pessoa WHERE cpf = ?",
+                    [cpfLimpo]
+                );
+
+                let pessoaId;
+
+                if (rows.length > 0) {
+
+                    pessoaId = rows[0].id;
+
+                    await queryTx(`
+                        UPDATE pessoa 
+                        SET 
+                            nome_completo = ?,
+                            data_nasc = ?,
+                            nome_mae = ?,
+                            genero_id = ?,
+                            etnia_id = ?,
+                            status = 1
+                        WHERE id = ?
+                    `, [
+                        u.nome_completo,
+                        u.data_nasc || '2000-01-01',
+                        defaults.mae,
+                        defaults.gen,
+                        defaults.etn,
+                        pessoaId
+                    ]);
+
+                    atualizados++;
+
+                } else {
+
+                    const resPessoa = await queryTx(`
+                        INSERT INTO pessoa 
+                        (nome_completo, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status) 
+                        VALUES (?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)
+                    `, [
+                        u.nome_completo,
+                        cpfLimpo,
+                        u.data_nasc || '2000-01-01',
+                        defaults.mae,
+                        defaults.gen,
+                        defaults.etn
+                    ]);
+
+                    pessoaId = resPessoa.insertId;
+                    criados++;
+                }
+
+                // =================================
+                // CONTATO
+                // =================================
+
+                if (u.email) {
+
+                    const checkContato = await queryTx(
+                        "SELECT id FROM contato WHERE pessoa_id = ?",
+                        [pessoaId]
+                    );
+
+                    if (checkContato.length > 0) {
+
+                        await queryTx(
+                            "UPDATE contato SET email = ? WHERE id = ?",
+                            [u.email, checkContato[0].id]
+                        );
+
+                    } else {
+
+                        await queryTx(
+                            "INSERT INTO contato (pessoa_id, email) VALUES (?, ?)",
+                            [pessoaId, u.email]
+                        );
+                    }
+                }
+
+                // =================================
+                // BENEFICIARIO (ALUNO)
+                // =================================
+
+                if (u.tipo === "ALUNO") {
+
+                    const checkBenef = await queryTx(
+                        "SELECT id FROM Beneficiario WHERE pessoa_id = ?",
+                        [pessoaId]
+                    );
+
+                    if (checkBenef.length > 0) {
+
+                        await queryTx(
+                            "UPDATE Beneficiario SET id_projeto = ?, id_processo_inscricao = 1 WHERE id = ?",
+                            [u.projeto_id || 1, checkBenef[0].id]
+                        );
+
+                        atualizados++;
+
+                    } else {
+
+                        await queryTx(
+                            "INSERT INTO Beneficiario (pessoa_id, id_projeto, id_processo_inscricao) VALUES (?, ?, 1)",
+                            [pessoaId, u.projeto_id || 1]
+                        );
+
+                        criados++;
+                    }
+
+                } else {
+
+                    // =================================
+                    // COLABORADOR
+                    // =================================
+
+                    const checkColab = await queryTx(
+                        "SELECT id FROM colaborador WHERE pessoa_id = ?",
+                        [pessoaId]
+                    );
+
+                    const cargoId = u.cargo_id || 6;
+                    const emailInst = u.email || 'sem_email@inst.com';
+
+                    let colabId;
+
+                    if (checkColab.length > 0) {
+
+                        colabId = checkColab[0].id;
+
+                        await queryTx(`
+                            UPDATE colaborador 
+                            SET 
+                                cargo_id = ?,
+                                email_institucional = ?,
+                                status = 1
+                            WHERE id = ?
+                        `, [
+                            cargoId,
+                            emailInst,
+                            colabId
+                        ]);
+
+                        atualizados++;
+
+                    } else {
+
+                        const resColab = await queryTx(`
+                            INSERT INTO colaborador (pessoa_id, cargo_id, email_institucional, status) 
+                            VALUES (?, ?, ?, 1)
+                        `, [
+                            pessoaId,
+                            cargoId,
+                            emailInst
+                        ]);
+
+                        colabId = resColab.insertId;
+                        criados++;
+                    }
+
+                    // =================================
+                    // USUARIO
+                    // =================================
+
+                    if (u.login && u.senha && u.id_perfil_usuario) {
+
+                        const checkUser = await queryTx(
+                            "SELECT id FROM usuario WHERE id_colaborador = ?",
+                            [colabId]
+                        );
+
+                        if (checkUser.length > 0) {
+
+                            await queryTx(`
+                                UPDATE usuario 
+                                SET 
+                                    login = ?,
+                                    senha = ?,
+                                    id_perfil_usuario = ?,
+                                    status = 1
+                                WHERE id = ?
+                            `, [
+                                u.login,
+                                u.senha,
+                                u.id_perfil_usuario,
+                                checkUser[0].id
+                            ]);
+
+                            atualizados++;
+
+                        } else {
+
+                            await queryTx(`
+                                INSERT INTO usuario (id_colaborador, id_perfil_usuario, login, senha, status)
+                                VALUES (?, ?, ?, ?, 1)
+                            `, [
+                                colabId,
+                                u.id_perfil_usuario,
+                                u.login,
+                                u.senha
+                            ]);
+
+                            criados++;
+                        }
+                    }
+                }
+            }
+
+            await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+
+            res.status(200).json({
+                message: "Sincronização realizada com sucesso!",
+                resumo: { criados, atualizados }
+            });
+
+        } catch (error) {
+
+            connection.rollback(() => { });
+
+            res.status(500).json({
+                error: "Erro no processamento: " + error.message
+            });
+
+        } finally {
+
+            connection.release();
+
+        }
+    });
+});
+
+
+router.get("/intebgrhacao/receber-dados", verificarTokenIntegracao, async (req, res) => {
     const listaUsuarios = req.body;
 
     if (!Array.isArray(listaUsuarios)) {
@@ -736,9 +1274,6 @@ router.put("/turmas/:id", verificarUsuario, async (req, res) => {
 router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
     try {
         const turmaId = req.params.id;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
 
         // VERIFICAÇÃO DE SEGURANÇA
         if (!(await verificarAcessoProfessorTurma(req.user.id, turmaId))) {
@@ -753,7 +1288,6 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
             JOIN pessoa p ON b.pessoa_id = p.id
             WHERE m.turma_id = ? AND m.status = 'Ativo'
             ORDER BY p.nome_completo ASC
-            LIMIT ${limit} OFFSET ${offset}
         `;
 
         const sqlCount = `SELECT COUNT(*) as total FROM matriculas WHERE turma_id = ? AND status = 'Ativo'`;
@@ -761,7 +1295,7 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
         const [dados, countRes] = await Promise.all([querySys(sqlDados, [turmaId]), querySys(sqlCount, [turmaId])]);
         const total = countRes[0].total;
 
-        res.json({ data: dados, pagination: { total, page, totalPages: Math.ceil(total / limit), limit } });
+        res.json({ data: dados, pagination: { total, page: 1, totalPages: 1, limit: total } });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
@@ -1101,10 +1635,25 @@ router.delete("/turma-professores/:id", verificarUsuario, async (req, res) => {
 
 router.get("/dashboard/resumo", verificarUsuario, async (req, res) => {
     try {
-        // 1. Contadores (O destructuring [variavel] já pega o primeiro item do array)
-        const [turmasAtivas] = await querySys("SELECT COUNT(*) as total FROM turmas WHERE ativo = 1");
-        const [turmasEncerradas] = await querySys("SELECT COUNT(*) as total FROM turmas WHERE ativo = 0");
-        const [alunosAtivos] = await querySys("SELECT COUNT(*) as total FROM matriculas WHERE status = 'Ativo'");
+        const [turmasAtivas] = await querySys(`
+            SELECT COUNT(*) as total 
+            FROM turmas t
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE t.ativo = 1 AND p.status = 'ativo'
+        `);
+        const [turmasEncerradas] = await querySys(`
+            SELECT COUNT(*) as total 
+            FROM turmas t
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE t.ativo = 0 OR p.status != 'ativo'
+        `);
+        const [alunosAtivos] = await querySys(`
+            SELECT COUNT(DISTINCT m.beneficiario_id) as total 
+            FROM matriculas m
+            JOIN turmas t ON m.turma_id = t.id
+            JOIN projeto p ON t.projeto_id = p.id
+            WHERE m.status = 'Ativo' AND t.ativo = 1 AND p.status = 'ativo'
+        `);
         const [profsVinculados] = await querySys(`
             SELECT COUNT(DISTINCT tp.colaborador_id) as total 
             FROM turma_professores tp
