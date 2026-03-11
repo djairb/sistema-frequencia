@@ -193,7 +193,7 @@ export default function MonitoramentoProfessores() {
                                                 <iframe
                                                     src={`https://somosconexaosocial.org${plano.caminho_planejamento}`}
                                                     className="w-full h-full"
-                                                    title="Planejamento"
+                                                    title="Plano de Trabalho"
                                                 />
                                             </div>
                                         ) : <p className="text-sm text-gray-400 italic">Arquivo não anexado.</p>}

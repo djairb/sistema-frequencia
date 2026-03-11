@@ -42,8 +42,13 @@ const PlanosTrabalho = () => {
             }
 
             const sortedData = data.sort((a, b) => {
-                if (a.ano !== b.ano) return b.ano - a.ano; // descendente
-                return b.mes - a.mes; // descendente
+                const anoA = Number(a.ano);
+                const anoB = Number(b.ano);
+                const mesA = Number(a.mes);
+                const mesB = Number(b.mes);
+                
+                if (anoA !== anoB) return anoB - anoA; // descendente (mais recentes no topo)
+                return mesA - mesB; // ascendente (ordem mensal cronológica 1, 2, 3...)
             });
             setPlanosList(sortedData);
         } catch (error) {
@@ -174,7 +179,7 @@ const PlanosTrabalho = () => {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Mês / Ano</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Planejamento</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Plano de Trabalho</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Relatório</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Enviado em</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Feedback da Coordenação</th>
