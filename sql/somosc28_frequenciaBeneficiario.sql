@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Tempo de geração: 08/03/2026 às 17:45
+-- Tempo de geração: 11/03/2026 às 20:00
 -- Versão do servidor: 5.7.44
 -- Versão do PHP: 8.1.34
 
@@ -27,7 +27,6 @@ SET time_zone = "+00:00";
 -- Estrutura para tabela `aulas`
 --
 
-DROP TABLE IF EXISTS `aulas`;
 CREATE TABLE `aulas` (
   `id` int(11) NOT NULL,
   `turma_id` int(11) NOT NULL,
@@ -44,7 +43,21 @@ CREATE TABLE `aulas` (
 --
 
 INSERT INTO `aulas` (`id`, `turma_id`, `colaborador_id`, `titulo_aula`, `data_aula`, `conteudo`, `numero_aulas`, `created_at`) VALUES
-(12, 22, 19, 'Aula 1 - mundo digital', '2026-03-02', 'Podemos aumentar o tamanho da div a qual esta todos elementos, mes, relatorio, plano e feedback para um espaçamento ', 1, '2026-03-02 22:44:26');
+(12, 22, 19, 'Aula 1 - mundo digital', '2026-03-02', 'Podemos aumentar o tamanho da div a qual esta todos elementos, mes, relatorio, plano e feedback para um espaçamento ', 1, '2026-03-02 22:44:26'),
+(18, 20, 27, 'Abertura das atividades de agricultura', '2026-03-04', 'Na aula foi apresentado aos participantes o que será trabalhado no ano de 2026, além disso foi aberto a sugestões do que eles gostariam de ver nas aulas. ', 1, '2026-03-10 11:32:53'),
+(19, 13, 18, 'Entendendo a internet', '2026-03-10', 'Foi realizado dinamicas para conhecimento e adentrar ao assunto.\nE por fim, abordagem geral do curso.', 1, '2026-03-10 13:22:32'),
+(20, 11, 1, 'Modulo 1 - Aula 01: O que é o Mundo Digital?', '2026-03-10', 'Apresentar ao estudante o contexto do Mundo Digital em que ele está inserido;', 1, '2026-03-10 14:14:36'),
+(21, 8, 15, 'AULA 1 - LETRAMENTO DIGITAL ( CONHECENDO O MUNDO DIGITAL)', '2026-03-10', 'Apresentar ao participante o contexto do Mundo Digital em que ele está inserido.\n\n\n', 1, '2026-03-10 14:43:04'),
+(22, 12, 15, 'AULA 1 - LETRAMENTO DIGITAL ( CONHECENDO O MUNDO DIGITAL)', '2026-03-10', 'Apresentar ao participante o contexto do Mundo Digital em que ele está inserido.', 1, '2026-03-10 14:44:29'),
+(23, 16, 15, 'AULA 1 - LETRAMENTO DIGITAL (Conhecendo o mundo digital )', '2026-03-10', 'Apresentar ao participante o contexto do mundo digital em que ele está inserido ', 1, '2026-03-10 17:55:07'),
+(24, 24, 22, 'Readaptação ao meio aquático.', '2026-03-10', 'Exercícios em intensidade leve para os beneficiários se readaptarem as atividades normais.', 1, '2026-03-10 18:07:04'),
+(25, 17, 18, 'Entendendo a internet', '2026-03-10', 'Foi realizado dinamicas para conhecimento e adentrar ao assunto.\nE por fim, abordagem geral do curso.', 1, '2026-03-10 18:10:59'),
+(26, 25, 28, 'Readaptação é meio âguatico', '2026-03-10', 'Exército em rotina leve ', 1, '2026-03-10 19:10:47'),
+(27, 14, 15, 'AULA 1 - LETRAMENTO DIGITAL (CONHECENDO O MUNDO DIGITAL )', '2026-03-10', 'Apresentar ao participante o contexto do mundo digital em que ele está insecido.', 1, '2026-03-10 19:16:09'),
+(28, 15, 1, 'Modulo 1 - Aula 01: O que é o Mundo Digital?', '2026-03-10', 'Apresentar ao estudante o contexto do Mundo Digital em que ele está inserido;', 1, '2026-03-10 19:19:29'),
+(29, 44, 20, 'Fundamentos: Ataque e Bloqueio', '2026-03-11', 'Introduzir salto,\r tempo de bola e\r noção de bloqueio.\r Melhorar a\r capacidade de\r força dos\r participantes.', 1, '2026-03-11 11:12:05'),
+(30, 20, 27, 'Introdução a hidroponia', '2026-03-11', 'Definição de hidroponia\nPrincipais cultivos hidropônicos\nComo montar uma hidroponia\n', 1, '2026-03-11 11:27:38'),
+(31, 18, 26, 'Acolhida ', '2026-03-11', 'Reconhecer os participantes e apresentar o espaço das atividades de hidroginástica.\n', 1, '2026-03-11 17:59:16');
 
 -- --------------------------------------------------------
 
@@ -52,7 +65,6 @@ INSERT INTO `aulas` (`id`, `turma_id`, `colaborador_id`, `titulo_aula`, `data_au
 -- Estrutura para tabela `Beneficiario`
 --
 
-DROP TABLE IF EXISTS `Beneficiario`;
 CREATE TABLE `Beneficiario` (
   `id` int(11) NOT NULL,
   `pessoa_id` int(11) NOT NULL,
@@ -384,7 +396,129 @@ INSERT INTO `Beneficiario` (`id`, `pessoa_id`, `id_projeto`, `id_processo_inscri
 (316, 348, 4, 1, '2026-03-05 15:00:02.451'),
 (317, 349, 4, 1, '2026-03-05 15:00:02.454'),
 (318, 350, 4, 1, '2026-03-05 15:00:02.457'),
-(319, 351, 4, 1, '2026-03-05 16:00:02.785');
+(319, 351, 4, 1, '2026-03-05 16:00:02.785'),
+(320, 352, 2, 1, '2026-03-10 14:58:09.791'),
+(321, 353, 2, 1, '2026-03-10 14:58:09.796'),
+(322, 354, 2, 1, '2026-03-10 14:58:09.800'),
+(323, 355, 2, 1, '2026-03-10 14:58:09.804'),
+(324, 356, 2, 1, '2026-03-10 14:58:09.807'),
+(325, 357, 2, 1, '2026-03-10 14:58:09.812'),
+(326, 358, 2, 1, '2026-03-10 14:58:09.813'),
+(327, 359, 2, 1, '2026-03-10 14:58:09.814'),
+(328, 360, 2, 1, '2026-03-10 14:58:09.817'),
+(329, 361, 2, 1, '2026-03-10 14:58:09.822'),
+(330, 362, 2, 1, '2026-03-10 14:58:09.823'),
+(331, 363, 2, 1, '2026-03-10 14:58:09.827'),
+(332, 364, 2, 1, '2026-03-10 14:58:09.829'),
+(333, 365, 2, 1, '2026-03-10 14:58:09.832'),
+(334, 366, 2, 1, '2026-03-10 14:58:09.833'),
+(335, 367, 2, 1, '2026-03-10 14:58:09.835'),
+(336, 368, 2, 1, '2026-03-10 14:58:09.836'),
+(337, 369, 2, 1, '2026-03-10 14:58:09.837'),
+(338, 370, 2, 1, '2026-03-10 14:58:09.839'),
+(339, 371, 2, 1, '2026-03-10 14:58:09.840'),
+(340, 372, 2, 1, '2026-03-10 14:58:09.844'),
+(341, 373, 2, 1, '2026-03-10 14:58:09.845'),
+(342, 374, 2, 1, '2026-03-10 14:58:09.845'),
+(343, 375, 2, 1, '2026-03-10 14:58:09.846'),
+(344, 376, 2, 1, '2026-03-10 14:58:09.847'),
+(345, 377, 2, 1, '2026-03-10 14:58:09.848'),
+(346, 378, 2, 1, '2026-03-10 14:58:09.849'),
+(347, 379, 2, 1, '2026-03-10 14:58:09.850'),
+(348, 380, 2, 1, '2026-03-10 14:58:09.851'),
+(349, 381, 2, 1, '2026-03-10 14:58:09.852'),
+(350, 382, 2, 1, '2026-03-10 14:58:09.852'),
+(351, 383, 2, 1, '2026-03-10 14:58:09.853'),
+(352, 384, 2, 1, '2026-03-10 14:58:09.854'),
+(353, 385, 2, 1, '2026-03-10 14:58:09.855'),
+(354, 386, 2, 1, '2026-03-10 14:58:09.856'),
+(355, 387, 2, 1, '2026-03-10 14:58:09.856'),
+(356, 388, 2, 1, '2026-03-10 14:58:09.857'),
+(357, 389, 2, 1, '2026-03-10 14:58:09.858'),
+(358, 390, 2, 1, '2026-03-10 14:58:09.861'),
+(359, 391, 2, 1, '2026-03-10 14:58:09.862'),
+(360, 392, 2, 1, '2026-03-10 14:58:09.866'),
+(361, 393, 2, 1, '2026-03-10 14:58:09.872'),
+(362, 394, 2, 1, '2026-03-10 14:58:09.873'),
+(363, 395, 2, 1, '2026-03-10 14:58:09.875'),
+(364, 396, 2, 1, '2026-03-10 14:58:09.878'),
+(365, 397, 2, 1, '2026-03-10 14:58:09.880'),
+(366, 398, 2, 1, '2026-03-10 14:58:09.882'),
+(367, 399, 2, 1, '2026-03-10 14:58:09.884'),
+(368, 400, 2, 1, '2026-03-10 14:58:09.886'),
+(369, 401, 2, 1, '2026-03-10 14:58:09.889'),
+(370, 402, 2, 1, '2026-03-10 14:58:09.890'),
+(371, 403, 2, 1, '2026-03-10 14:58:09.892'),
+(372, 404, 2, 1, '2026-03-10 14:58:09.896'),
+(373, 405, 2, 1, '2026-03-10 14:58:09.897'),
+(374, 406, 2, 1, '2026-03-10 14:58:09.900'),
+(375, 407, 2, 1, '2026-03-10 14:58:09.902'),
+(376, 408, 2, 1, '2026-03-10 14:58:09.904'),
+(377, 409, 2, 1, '2026-03-10 14:58:09.905'),
+(378, 410, 2, 1, '2026-03-10 14:58:09.907'),
+(379, 411, 2, 1, '2026-03-10 14:58:09.908'),
+(380, 412, 2, 1, '2026-03-10 14:58:09.910'),
+(381, 413, 2, 1, '2026-03-10 14:58:09.911'),
+(382, 414, 2, 1, '2026-03-10 14:58:09.913'),
+(383, 415, 2, 1, '2026-03-10 14:58:09.914'),
+(384, 416, 2, 1, '2026-03-10 14:58:09.918'),
+(385, 417, 2, 1, '2026-03-10 14:58:09.920'),
+(386, 418, 2, 1, '2026-03-10 14:58:09.921'),
+(387, 419, 2, 1, '2026-03-10 14:58:09.923'),
+(388, 420, 2, 1, '2026-03-10 14:58:09.925'),
+(389, 421, 2, 1, '2026-03-10 14:58:09.927'),
+(390, 422, 2, 1, '2026-03-10 14:58:09.929'),
+(391, 423, 2, 1, '2026-03-10 14:58:09.930'),
+(392, 424, 2, 1, '2026-03-10 14:58:09.931'),
+(393, 425, 2, 1, '2026-03-10 14:58:09.933'),
+(394, 426, 2, 1, '2026-03-10 14:58:09.934'),
+(395, 427, 2, 1, '2026-03-10 14:58:09.939'),
+(396, 428, 2, 1, '2026-03-10 14:58:09.940'),
+(397, 429, 2, 1, '2026-03-10 14:58:09.942'),
+(398, 430, 2, 1, '2026-03-10 14:58:09.943'),
+(399, 431, 2, 1, '2026-03-10 14:58:09.945'),
+(400, 432, 2, 1, '2026-03-10 14:58:09.946'),
+(401, 433, 2, 1, '2026-03-10 14:58:09.952'),
+(402, 434, 2, 1, '2026-03-10 14:58:09.954'),
+(403, 435, 2, 1, '2026-03-10 14:58:09.955'),
+(404, 436, 2, 1, '2026-03-10 14:58:09.962'),
+(405, 437, 2, 1, '2026-03-10 14:58:09.967'),
+(406, 438, 2, 1, '2026-03-10 14:58:09.971'),
+(407, 439, 2, 1, '2026-03-10 14:58:09.975'),
+(408, 440, 2, 1, '2026-03-10 14:58:09.976'),
+(409, 441, 2, 1, '2026-03-10 14:58:09.977'),
+(410, 442, 2, 1, '2026-03-10 14:58:09.978'),
+(411, 443, 2, 1, '2026-03-10 14:58:09.979'),
+(412, 444, 2, 1, '2026-03-10 14:58:09.987'),
+(413, 445, 2, 1, '2026-03-10 14:58:09.989'),
+(414, 446, 2, 1, '2026-03-10 14:58:09.989'),
+(415, 447, 2, 1, '2026-03-10 14:58:09.991'),
+(416, 448, 2, 1, '2026-03-10 14:58:09.991'),
+(417, 449, 2, 1, '2026-03-10 14:58:09.992'),
+(418, 450, 2, 1, '2026-03-10 14:58:09.992'),
+(419, 451, 2, 1, '2026-03-10 14:58:09.993'),
+(420, 452, 2, 1, '2026-03-10 14:58:10.019'),
+(421, 453, 2, 1, '2026-03-10 14:58:10.029'),
+(422, 454, 2, 1, '2026-03-10 14:58:10.030'),
+(423, 455, 2, 1, '2026-03-10 14:58:10.032'),
+(424, 456, 2, 1, '2026-03-10 14:58:10.034'),
+(425, 457, 2, 1, '2026-03-10 14:58:10.038'),
+(426, 458, 2, 1, '2026-03-10 14:58:10.039'),
+(427, 459, 2, 1, '2026-03-10 14:58:10.040'),
+(428, 460, 2, 1, '2026-03-10 14:58:10.051'),
+(429, 461, 2, 1, '2026-03-10 14:58:10.075'),
+(430, 462, 2, 1, '2026-03-10 14:58:10.077'),
+(431, 463, 2, 1, '2026-03-10 14:58:10.078'),
+(432, 464, 2, 1, '2026-03-10 14:58:10.081'),
+(433, 465, 2, 1, '2026-03-10 14:58:10.084'),
+(434, 466, 2, 1, '2026-03-10 14:58:10.085'),
+(435, 467, 2, 1, '2026-03-10 14:58:10.086'),
+(436, 468, 2, 1, '2026-03-10 14:58:10.088'),
+(437, 469, 2, 1, '2026-03-10 14:58:10.089'),
+(438, 470, 2, 1, '2026-03-10 14:58:10.090'),
+(439, 471, 2, 1, '2026-03-10 14:58:10.090'),
+(440, 472, 2, 1, '2026-03-10 14:58:10.091'),
+(441, 473, 2, 1, '2026-03-11 09:00:02.177');
 
 -- --------------------------------------------------------
 
@@ -392,7 +526,6 @@ INSERT INTO `Beneficiario` (`id`, `pessoa_id`, `id_projeto`, `id_processo_inscri
 -- Estrutura para tabela `cargo`
 --
 
-DROP TABLE IF EXISTS `cargo`;
 CREATE TABLE `cargo` (
   `id` int(11) NOT NULL,
   `descricao` varchar(191) NOT NULL,
@@ -446,7 +579,6 @@ INSERT INTO `cargo` (`id`, `descricao`, `setor_id`, `status`) VALUES
 -- Estrutura para tabela `colaborador`
 --
 
-DROP TABLE IF EXISTS `colaborador`;
 CREATE TABLE `colaborador` (
   `id` int(11) NOT NULL,
   `pessoa_id` int(11) DEFAULT NULL,
@@ -491,7 +623,8 @@ INSERT INTO `colaborador` (`id`, `pessoa_id`, `cargo_id`, `status`, `email_insti
 (29, 299, 5, 1, 'djair.batista@somosconexaosocial.org'),
 (30, 300, 25, 1, 'leandro.santana@somosconexaosocial.org'),
 (31, 301, 4, 1, 'marcos.paulo@somosconexaosocial.org'),
-(32, 302, 7, 1, 'jenifer.farias@somosconexaosocial.org');
+(32, 302, 7, 1, 'jenifer.farias@somosconexaosocial.org'),
+(33, 474, 27, 1, 'raphael.andrade@somosconexaosocial.org');
 
 -- --------------------------------------------------------
 
@@ -499,7 +632,6 @@ INSERT INTO `colaborador` (`id`, `pessoa_id`, `cargo_id`, `status`, `email_insti
 -- Estrutura para tabela `contato`
 --
 
-DROP TABLE IF EXISTS `contato`;
 CREATE TABLE `contato` (
   `id` int(11) NOT NULL,
   `pessoa_id` int(11) NOT NULL,
@@ -862,7 +994,130 @@ INSERT INTO `contato` (`id`, `pessoa_id`, `celular`, `email`) VALUES
 (348, 348, NULL, 'sem@email.com'),
 (349, 349, NULL, 'sem@email.com'),
 (350, 350, NULL, 'sem@email.com'),
-(351, 351, NULL, 'sem@email.com');
+(351, 351, NULL, 'sem@email.com'),
+(352, 352, NULL, 'sem@email.com'),
+(353, 353, NULL, 'sem@email.com'),
+(354, 354, NULL, 'sem@email.com'),
+(355, 355, NULL, 'sem@email.com'),
+(356, 356, NULL, 'sem@email.com'),
+(357, 357, NULL, 'sem@email.com'),
+(358, 358, NULL, 'sem@email.com'),
+(359, 359, NULL, 'sem@email.com'),
+(360, 360, NULL, 'sem@email.com'),
+(361, 361, NULL, 'sem@email.com'),
+(362, 362, NULL, 'sem@email.com'),
+(363, 363, NULL, 'sem@email.com'),
+(364, 364, NULL, 'sem@email.com'),
+(365, 365, NULL, 'sem@email.com'),
+(366, 366, NULL, 'sem@email.com'),
+(367, 367, NULL, 'sem@email.com'),
+(368, 368, NULL, 'sem@email.com'),
+(369, 369, NULL, 'sem@email.com'),
+(370, 370, NULL, 'sem@email.com'),
+(371, 371, NULL, 'sem@email.com'),
+(372, 372, NULL, 'sem@email.com'),
+(373, 373, NULL, 'sem@email.com'),
+(374, 374, NULL, 'sem@email.com'),
+(375, 375, NULL, 'sem@email.com'),
+(376, 376, NULL, 'sem@email.com'),
+(377, 377, NULL, 'sem@email.com'),
+(378, 378, NULL, 'sem@email.com'),
+(379, 379, NULL, 'sem@email.com'),
+(380, 380, NULL, 'sem@email.com'),
+(381, 381, NULL, 'sem@email.com'),
+(382, 382, NULL, 'sem@email.com'),
+(383, 383, NULL, 'sem@email.com'),
+(384, 384, NULL, 'sem@email.com'),
+(385, 385, NULL, 'sem@email.com'),
+(386, 386, NULL, 'sem@email.com'),
+(387, 387, NULL, 'sem@email.com'),
+(388, 388, NULL, 'sem@email.com'),
+(389, 389, NULL, 'sem@email.com'),
+(390, 390, NULL, 'sem@email.com'),
+(391, 391, NULL, 'sem@email.com'),
+(392, 392, NULL, 'sem@email.com'),
+(393, 393, NULL, 'sem@email.com'),
+(394, 394, NULL, 'sem@email.com'),
+(395, 395, NULL, 'sem@email.com'),
+(396, 396, NULL, 'sem@email.com'),
+(397, 397, NULL, 'sem@email.com'),
+(398, 398, NULL, 'sem@email.com'),
+(399, 399, NULL, 'sem@email.com'),
+(400, 400, NULL, 'sem@email.com'),
+(401, 401, NULL, 'sem@email.com'),
+(402, 402, NULL, 'sem@email.com'),
+(403, 403, NULL, 'sem@email.com'),
+(404, 404, NULL, 'sem@email.com'),
+(405, 405, NULL, 'sem@email.com'),
+(406, 406, NULL, 'sem@email.com'),
+(407, 407, NULL, 'sem@email.com'),
+(408, 408, NULL, 'sem@email.com'),
+(409, 409, NULL, 'sem@email.com'),
+(410, 410, NULL, 'sem@email.com'),
+(411, 411, NULL, 'sem@email.com'),
+(412, 412, NULL, 'sem@email.com'),
+(413, 413, NULL, 'sem@email.com'),
+(414, 414, NULL, 'sem@email.com'),
+(415, 415, NULL, 'sem@email.com'),
+(416, 416, NULL, 'sem@email.com'),
+(417, 417, NULL, 'sem@email.com'),
+(418, 418, NULL, 'sem@email.com'),
+(419, 419, NULL, 'sem@email.com'),
+(420, 420, NULL, 'sem@email.com'),
+(421, 421, NULL, 'sem@email.com'),
+(422, 422, NULL, 'sem@email.com'),
+(423, 423, NULL, 'sem@email.com'),
+(424, 424, NULL, 'sem@email.com'),
+(425, 425, NULL, 'sem@email.com'),
+(426, 426, NULL, 'sem@email.com'),
+(427, 427, NULL, 'sem@email.com'),
+(428, 428, NULL, 'sem@email.com'),
+(429, 429, NULL, 'sem@email.com'),
+(430, 430, NULL, 'sem@email.com'),
+(431, 431, NULL, 'sem@email.com'),
+(432, 432, NULL, 'sem@email.com'),
+(433, 433, NULL, 'sem@email.com'),
+(434, 434, NULL, 'sem@email.com'),
+(435, 435, NULL, 'sem@email.com'),
+(436, 436, NULL, 'sem@email.com'),
+(437, 437, NULL, 'sem@email.com'),
+(438, 438, NULL, 'sem@email.com'),
+(439, 439, NULL, 'sem@email.com'),
+(440, 440, NULL, 'sem@email.com'),
+(441, 441, NULL, 'sem@email.com'),
+(442, 442, NULL, 'sem@email.com'),
+(443, 443, NULL, 'sem@email.com'),
+(444, 444, NULL, 'sem@email.com'),
+(445, 445, NULL, 'sem@email.com'),
+(446, 446, NULL, 'sem@email.com'),
+(447, 447, NULL, 'sem@email.com'),
+(448, 448, NULL, 'sem@email.com'),
+(449, 449, NULL, 'sem@email.com'),
+(450, 450, NULL, 'sem@email.com'),
+(451, 451, NULL, 'sem@email.com'),
+(452, 452, NULL, 'sem@email.com'),
+(453, 453, NULL, 'sem@email.com'),
+(454, 454, NULL, 'sem@email.com'),
+(455, 455, NULL, 'sem@email.com'),
+(456, 456, NULL, 'sem@email.com'),
+(457, 457, NULL, 'sem@email.com'),
+(458, 458, NULL, 'sem@email.com'),
+(459, 459, NULL, 'sem@email.com'),
+(460, 460, NULL, 'sem@email.com'),
+(461, 461, NULL, 'sem@email.com'),
+(462, 462, NULL, 'sem@email.com'),
+(463, 463, NULL, 'sem@email.com'),
+(464, 464, NULL, 'sem@email.com'),
+(465, 465, NULL, 'sem@email.com'),
+(466, 466, NULL, 'sem@email.com'),
+(467, 467, NULL, 'sem@email.com'),
+(468, 468, NULL, 'sem@email.com'),
+(469, 469, NULL, 'sem@email.com'),
+(470, 470, NULL, 'sem@email.com'),
+(471, 471, NULL, 'sem@email.com'),
+(472, 472, NULL, 'sem@email.com'),
+(473, 473, NULL, 'sem@email.com'),
+(474, 474, NULL, 'raphael.andrade@somosconexaosocial.org');
 
 -- --------------------------------------------------------
 
@@ -870,7 +1125,6 @@ INSERT INTO `contato` (`id`, `pessoa_id`, `celular`, `email`) VALUES
 -- Estrutura para tabela `disciplinas`
 --
 
-DROP TABLE IF EXISTS `disciplinas`;
 CREATE TABLE `disciplinas` (
   `id` int(11) NOT NULL,
   `turma_id` int(11) NOT NULL,
@@ -884,7 +1138,6 @@ CREATE TABLE `disciplinas` (
 -- Estrutura para tabela `endereco`
 --
 
-DROP TABLE IF EXISTS `endereco`;
 CREATE TABLE `endereco` (
   `id` int(11) NOT NULL,
   `pessoa_id` int(11) NOT NULL,
@@ -903,7 +1156,6 @@ CREATE TABLE `endereco` (
 -- Estrutura para tabela `escolaridade`
 --
 
-DROP TABLE IF EXISTS `escolaridade`;
 CREATE TABLE `escolaridade` (
   `id` int(11) NOT NULL,
   `descricao` varchar(191) NOT NULL
@@ -929,7 +1181,6 @@ INSERT INTO `escolaridade` (`id`, `descricao`) VALUES
 -- Estrutura para tabela `etnia`
 --
 
-DROP TABLE IF EXISTS `etnia`;
 CREATE TABLE `etnia` (
   `id` int(11) NOT NULL,
   `descricao` varchar(191) NOT NULL
@@ -952,7 +1203,6 @@ INSERT INTO `etnia` (`id`, `descricao`) VALUES
 -- Estrutura para tabela `fotos_aula`
 --
 
-DROP TABLE IF EXISTS `fotos_aula`;
 CREATE TABLE `fotos_aula` (
   `id` int(11) NOT NULL,
   `aula_id` int(11) NOT NULL,
@@ -965,7 +1215,18 @@ CREATE TABLE `fotos_aula` (
 --
 
 INSERT INTO `fotos_aula` (`id`, `aula_id`, `caminho_foto`, `created_at`) VALUES
-(6, 12, '/uploads/fotos_frequencia/a35f2023-c906-45c0-8d63-1dead159fa0e.jpg', '2026-03-02 22:44:27');
+(6, 12, '/uploads/fotos_frequencia/a35f2023-c906-45c0-8d63-1dead159fa0e.jpg', '2026-03-02 22:44:27'),
+(18, 19, '/uploads/fotos_frequencia/5bce5095-5e9c-4f6c-98a2-c3418b89cb0b.jpg', '2026-03-10 13:22:33'),
+(19, 21, '/uploads/fotos_frequencia/e198b8e4-268c-42d1-b31f-83fe09098292.jpg', '2026-03-10 14:43:05'),
+(20, 21, '/uploads/fotos_frequencia/04beeebf-e351-43c2-849f-1dbed1b5c421.jpg', '2026-03-10 14:43:05'),
+(21, 23, '/uploads/fotos_frequencia/4b2aeff9-7b5e-4f34-9633-51a05dab50b2.jpg', '2026-03-10 17:55:09'),
+(22, 23, '/uploads/fotos_frequencia/0ea9036f-c64d-4efa-b363-c988c5b71e59.jpg', '2026-03-10 17:55:09'),
+(23, 24, '/uploads/fotos_frequencia/bdb33285-37d9-4912-9107-bb5ddcebb76b.jpg', '2026-03-10 18:07:05'),
+(24, 25, '/uploads/fotos_frequencia/b6a7f868-0491-4431-ae10-1b83ead46de7.jpg', '2026-03-10 18:11:01'),
+(25, 26, '/uploads/fotos_frequencia/e0c9aa4e-451e-43ae-a4ad-d6011ebf3cbb.jpg', '2026-03-10 19:10:51'),
+(26, 29, '/uploads/fotos_frequencia/0061fff7-12c3-4e9e-a84e-cd169bc27397.jpg', '2026-03-11 11:36:48'),
+(27, 30, '/uploads/fotos_frequencia/44d1abb1-cfaf-41b5-9def-4ec2104d5e5a.jpg', '2026-03-11 12:34:08'),
+(28, 31, '/uploads/fotos_frequencia/1fd0545c-b5b1-46a7-aaca-b46bb0ecdf23.jpg', '2026-03-11 17:59:17');
 
 -- --------------------------------------------------------
 
@@ -973,7 +1234,6 @@ INSERT INTO `fotos_aula` (`id`, `aula_id`, `caminho_foto`, `created_at`) VALUES
 -- Estrutura para tabela `frequencias`
 --
 
-DROP TABLE IF EXISTS `frequencias`;
 CREATE TABLE `frequencias` (
   `id` int(11) NOT NULL,
   `aula_id` int(11) NOT NULL,
@@ -1000,7 +1260,477 @@ INSERT INTO `frequencias` (`id`, `aula_id`, `matricula_id`, `status`, `observaca
 (41, 10, 32, 'Presente', NULL),
 (42, 10, 33, 'Presente', NULL),
 (43, 10, 34, 'Presente', NULL),
-(44, 11, 35, 'Presente', NULL);
+(44, 11, 35, 'Presente', NULL),
+(145, 18, 379, 'Ausente', NULL),
+(146, 18, 381, 'Ausente', NULL),
+(147, 18, 382, 'Ausente', NULL),
+(148, 18, 383, 'Presente', NULL),
+(149, 18, 384, 'Ausente', NULL),
+(150, 18, 385, 'Ausente', NULL),
+(151, 18, 386, 'Ausente', NULL),
+(152, 18, 387, 'Ausente', NULL),
+(153, 18, 388, 'Ausente', NULL),
+(154, 18, 389, 'Ausente', NULL),
+(155, 18, 390, 'Ausente', NULL),
+(156, 18, 391, 'Presente', NULL),
+(157, 18, 392, 'Ausente', NULL),
+(158, 18, 393, 'Ausente', NULL),
+(159, 18, 394, 'Ausente', NULL),
+(160, 18, 395, 'Ausente', NULL),
+(161, 18, 396, 'Ausente', NULL),
+(162, 18, 397, 'Ausente', NULL),
+(163, 18, 398, 'Ausente', NULL),
+(164, 18, 399, 'Ausente', NULL),
+(165, 18, 400, 'Ausente', NULL),
+(166, 18, 401, 'Ausente', NULL),
+(167, 18, 402, 'Ausente', NULL),
+(168, 18, 403, 'Ausente', NULL),
+(169, 18, 404, 'Ausente', NULL),
+(170, 18, 405, 'Ausente', NULL),
+(171, 18, 406, 'Presente', NULL),
+(172, 18, 407, 'Ausente', NULL),
+(173, 18, 408, 'Ausente', NULL),
+(174, 18, 409, 'Ausente', NULL),
+(175, 18, 410, 'Ausente', NULL),
+(176, 18, 411, 'Ausente', NULL),
+(177, 18, 412, 'Presente', NULL),
+(178, 18, 413, 'Presente', NULL),
+(179, 18, 414, 'Ausente', NULL),
+(180, 18, 415, 'Ausente', NULL),
+(181, 18, 416, 'Ausente', NULL),
+(182, 18, 417, 'Ausente', NULL),
+(183, 18, 418, 'Presente', NULL),
+(184, 18, 419, 'Presente', NULL),
+(185, 18, 420, 'Ausente', NULL),
+(186, 18, 421, 'Ausente', NULL),
+(187, 18, 422, 'Ausente', NULL),
+(188, 18, 423, 'Ausente', NULL),
+(189, 18, 424, 'Ausente', NULL),
+(190, 18, 425, 'Ausente', NULL),
+(191, 18, 426, 'Ausente', NULL),
+(192, 18, 427, 'Ausente', NULL),
+(193, 18, 428, 'Ausente', NULL),
+(194, 18, 429, 'Presente', NULL),
+(195, 18, 430, 'Presente', NULL),
+(196, 18, 431, 'Ausente', NULL),
+(197, 18, 432, 'Ausente', NULL),
+(198, 19, 165, 'Ausente', NULL),
+(199, 19, 166, 'Presente', NULL),
+(200, 19, 167, 'Presente', NULL),
+(201, 19, 168, 'Ausente', NULL),
+(202, 19, 169, 'Ausente', NULL),
+(203, 19, 170, 'Justificado', 'Operada dos olhos'),
+(204, 19, 171, 'Presente', NULL),
+(205, 19, 172, 'Ausente', NULL),
+(206, 19, 173, 'Ausente', NULL),
+(207, 19, 174, 'Ausente', NULL),
+(208, 19, 175, 'Ausente', NULL),
+(209, 19, 176, 'Presente', NULL),
+(210, 19, 177, 'Ausente', NULL),
+(211, 19, 178, 'Justificado', 'Doente'),
+(212, 19, 179, 'Justificado', 'Doente'),
+(213, 19, 180, 'Ausente', NULL),
+(214, 19, 181, 'Presente', NULL),
+(215, 19, 182, 'Presente', NULL),
+(216, 19, 183, 'Presente', NULL),
+(217, 19, 184, 'Presente', NULL),
+(218, 19, 185, 'Justificado', 'Doente'),
+(219, 19, 186, 'Presente', NULL),
+(220, 19, 187, 'Presente', NULL),
+(221, 19, 188, 'Ausente', NULL),
+(222, 19, 189, 'Presente', NULL),
+(223, 19, 190, 'Ausente', NULL),
+(224, 19, 191, 'Ausente', NULL),
+(225, 20, 112, 'Ausente', NULL),
+(226, 20, 113, 'Presente', NULL),
+(227, 20, 114, 'Ausente', NULL),
+(228, 20, 115, 'Ausente', NULL),
+(229, 20, 116, 'Presente', NULL),
+(230, 20, 117, 'Ausente', NULL),
+(231, 20, 118, 'Ausente', NULL),
+(232, 20, 119, 'Presente', NULL),
+(233, 20, 120, 'Ausente', NULL),
+(234, 20, 121, 'Ausente', NULL),
+(235, 20, 122, 'Ausente', NULL),
+(236, 20, 123, 'Ausente', NULL),
+(237, 20, 124, 'Ausente', NULL),
+(238, 20, 125, 'Presente', NULL),
+(239, 20, 126, 'Ausente', NULL),
+(240, 20, 127, 'Presente', NULL),
+(241, 20, 128, 'Ausente', NULL),
+(242, 20, 129, 'Ausente', NULL),
+(243, 20, 130, 'Ausente', NULL),
+(244, 20, 131, 'Ausente', NULL),
+(245, 20, 132, 'Ausente', NULL),
+(246, 20, 133, 'Presente', NULL),
+(247, 20, 134, 'Ausente', NULL),
+(248, 21, 89, 'Ausente', NULL),
+(249, 21, 90, 'Ausente', NULL),
+(250, 21, 91, 'Ausente', NULL),
+(251, 21, 92, 'Presente', NULL),
+(252, 21, 93, 'Ausente', NULL),
+(253, 21, 94, 'Presente', NULL),
+(254, 21, 96, 'Ausente', NULL),
+(255, 21, 97, 'Presente', NULL),
+(256, 21, 99, 'Ausente', NULL),
+(257, 21, 100, 'Ausente', NULL),
+(258, 21, 101, 'Presente', NULL),
+(259, 21, 102, 'Presente', NULL),
+(260, 21, 103, 'Presente', NULL),
+(261, 21, 104, 'Ausente', NULL),
+(262, 21, 105, 'Ausente', NULL),
+(263, 21, 106, 'Presente', NULL),
+(264, 21, 107, 'Ausente', NULL),
+(265, 21, 108, 'Ausente', NULL),
+(266, 21, 109, 'Ausente', NULL),
+(267, 21, 110, 'Presente', NULL),
+(268, 21, 111, 'Presente', NULL),
+(269, 21, 234, 'Presente', NULL),
+(270, 22, 135, 'Presente', NULL),
+(271, 22, 136, 'Presente', NULL),
+(272, 22, 137, 'Presente', NULL),
+(273, 22, 138, 'Ausente', NULL),
+(274, 22, 139, 'Presente', NULL),
+(275, 22, 140, 'Presente', NULL),
+(276, 22, 141, 'Ausente', NULL),
+(277, 22, 142, 'Ausente', NULL),
+(278, 22, 143, 'Presente', NULL),
+(279, 22, 144, 'Presente', NULL),
+(280, 22, 145, 'Presente', NULL),
+(281, 22, 146, 'Ausente', NULL),
+(282, 22, 147, 'Ausente', NULL),
+(283, 22, 148, 'Presente', NULL),
+(284, 22, 149, 'Presente', NULL),
+(285, 22, 150, 'Presente', NULL),
+(286, 22, 151, 'Ausente', NULL),
+(287, 22, 152, 'Ausente', NULL),
+(288, 22, 153, 'Presente', NULL),
+(289, 22, 154, 'Ausente', NULL),
+(290, 22, 155, 'Ausente', NULL),
+(291, 22, 156, 'Presente', NULL),
+(292, 22, 157, 'Ausente', NULL),
+(293, 22, 158, 'Ausente', NULL),
+(294, 22, 159, 'Ausente', NULL),
+(295, 22, 160, 'Presente', NULL),
+(296, 22, 161, 'Presente', NULL),
+(297, 22, 162, 'Ausente', NULL),
+(298, 22, 163, 'Ausente', NULL),
+(299, 22, 164, 'Ausente', NULL),
+(300, 23, 235, 'Presente', NULL),
+(301, 23, 236, 'Ausente', NULL),
+(302, 23, 237, 'Ausente', NULL),
+(303, 23, 238, 'Ausente', NULL),
+(304, 23, 239, 'Ausente', NULL),
+(305, 23, 240, 'Presente', NULL),
+(306, 23, 241, 'Presente', NULL),
+(307, 23, 242, 'Presente', NULL),
+(308, 23, 243, 'Ausente', NULL),
+(309, 23, 244, 'Ausente', NULL),
+(310, 23, 245, 'Justificado', 'Fazendo tratamento de varizes '),
+(311, 23, 246, 'Presente', NULL),
+(312, 23, 247, 'Presente', NULL),
+(313, 23, 248, 'Ausente', NULL),
+(314, 23, 249, 'Ausente', NULL),
+(315, 23, 250, 'Ausente', NULL),
+(316, 23, 251, 'Ausente', NULL),
+(317, 23, 252, 'Presente', NULL),
+(318, 23, 253, 'Ausente', NULL),
+(319, 24, 535, 'Presente', NULL),
+(320, 24, 536, 'Justificado', 'Doente'),
+(321, 24, 537, 'Ausente', NULL),
+(322, 24, 538, 'Presente', NULL),
+(323, 24, 539, 'Presente', NULL),
+(324, 24, 540, 'Presente', NULL),
+(325, 24, 541, 'Ausente', NULL),
+(326, 24, 542, 'Presente', NULL),
+(327, 24, 543, 'Presente', NULL),
+(328, 24, 544, 'Ausente', NULL),
+(329, 24, 545, 'Ausente', NULL),
+(330, 24, 546, 'Presente', NULL),
+(331, 24, 547, 'Presente', NULL),
+(332, 24, 548, 'Justificado', 'Problemas pessoais '),
+(333, 24, 549, 'Presente', NULL),
+(334, 24, 550, 'Presente', NULL),
+(335, 24, 551, 'Presente', NULL),
+(336, 24, 552, 'Presente', NULL),
+(337, 24, 553, 'Presente', NULL),
+(338, 24, 554, 'Presente', NULL),
+(339, 24, 555, 'Presente', NULL),
+(340, 24, 556, 'Presente', NULL),
+(341, 24, 557, 'Ausente', NULL),
+(342, 24, 558, 'Presente', NULL),
+(343, 24, 559, 'Presente', NULL),
+(344, 24, 560, 'Presente', NULL),
+(345, 24, 561, 'Presente', NULL),
+(346, 24, 562, 'Presente', NULL),
+(347, 24, 563, 'Presente', NULL),
+(348, 24, 564, 'Justificado', 'Doente'),
+(349, 24, 565, 'Presente', NULL),
+(350, 24, 566, 'Presente', NULL),
+(351, 24, 567, 'Presente', NULL),
+(352, 24, 568, 'Ausente', NULL),
+(353, 24, 569, 'Presente', NULL),
+(354, 24, 570, 'Ausente', NULL),
+(355, 24, 571, 'Ausente', NULL),
+(356, 24, 572, 'Ausente', NULL),
+(357, 24, 573, 'Justificado', 'Doente '),
+(358, 24, 574, 'Presente', NULL),
+(359, 24, 575, 'Ausente', NULL),
+(360, 24, 1273, 'Ausente', NULL),
+(361, 25, 254, 'Ausente', NULL),
+(362, 25, 255, 'Ausente', NULL),
+(363, 25, 256, 'Ausente', NULL),
+(364, 25, 257, 'Presente', NULL),
+(365, 25, 258, 'Justificado', 'Operada'),
+(366, 25, 259, 'Presente', NULL),
+(367, 25, 260, 'Presente', NULL),
+(368, 25, 261, 'Presente', NULL),
+(369, 25, 262, 'Presente', NULL),
+(370, 25, 263, 'Presente', NULL),
+(371, 25, 264, 'Ausente', NULL),
+(372, 25, 265, 'Ausente', NULL),
+(373, 25, 266, 'Ausente', NULL),
+(374, 25, 267, 'Presente', NULL),
+(375, 25, 268, 'Presente', NULL),
+(376, 25, 269, 'Presente', NULL),
+(377, 25, 270, 'Ausente', NULL),
+(378, 25, 271, 'Presente', NULL),
+(379, 25, 1279, 'Ausente', NULL),
+(380, 26, 576, 'Ausente', NULL),
+(381, 26, 577, 'Ausente', NULL),
+(382, 26, 578, 'Ausente', NULL),
+(383, 26, 579, 'Ausente', NULL),
+(384, 26, 580, 'Ausente', NULL),
+(385, 26, 581, 'Presente', NULL),
+(386, 26, 582, 'Presente', NULL),
+(387, 26, 583, 'Presente', NULL),
+(388, 26, 584, 'Ausente', NULL),
+(389, 26, 585, 'Ausente', NULL),
+(390, 26, 586, 'Justificado', NULL),
+(391, 26, 587, 'Presente', NULL),
+(392, 26, 588, 'Presente', NULL),
+(393, 26, 589, 'Ausente', NULL),
+(394, 26, 590, 'Ausente', NULL),
+(395, 26, 591, 'Ausente', NULL),
+(396, 26, 592, 'Ausente', NULL),
+(397, 26, 593, 'Ausente', NULL),
+(398, 26, 594, 'Ausente', NULL),
+(399, 26, 595, 'Ausente', NULL),
+(400, 26, 596, 'Ausente', NULL),
+(401, 26, 597, 'Ausente', NULL),
+(402, 26, 598, 'Presente', NULL),
+(403, 26, 599, 'Ausente', NULL),
+(404, 26, 600, 'Presente', NULL),
+(405, 26, 601, 'Presente', NULL),
+(406, 26, 602, 'Presente', NULL),
+(407, 26, 603, 'Presente', NULL),
+(408, 26, 604, 'Presente', NULL),
+(409, 26, 605, 'Ausente', NULL),
+(410, 26, 606, 'Ausente', NULL),
+(411, 26, 607, 'Ausente', NULL),
+(412, 26, 608, 'Presente', NULL),
+(413, 26, 609, 'Ausente', NULL),
+(414, 26, 610, 'Presente', NULL),
+(415, 26, 611, 'Ausente', NULL),
+(416, 26, 612, 'Presente', NULL),
+(417, 26, 1278, 'Ausente', NULL),
+(418, 27, 192, 'Ausente', NULL),
+(419, 27, 193, 'Justificado', 'Problemas der Saúde'),
+(420, 27, 194, 'Ausente', NULL),
+(421, 27, 195, 'Presente', NULL),
+(422, 27, 196, 'Presente', NULL),
+(423, 27, 197, 'Presente', NULL),
+(424, 27, 198, 'Ausente', NULL),
+(425, 27, 199, 'Presente', NULL),
+(426, 27, 200, 'Presente', NULL),
+(427, 27, 201, 'Ausente', NULL),
+(428, 27, 202, 'Justificado', 'Está Doente'),
+(429, 27, 203, 'Ausente', NULL),
+(430, 27, 204, 'Presente', NULL),
+(431, 27, 205, 'Ausente', NULL),
+(432, 27, 206, 'Presente', NULL),
+(433, 27, 207, 'Presente', NULL),
+(434, 27, 208, 'Presente', NULL),
+(435, 27, 209, 'Presente', NULL),
+(436, 27, 210, 'Ausente', NULL),
+(437, 27, 211, 'Justificado', 'Problemas de Saúde'),
+(438, 27, 212, 'Presente', NULL),
+(439, 27, 213, 'Presente', NULL),
+(440, 28, 214, 'Ausente', NULL),
+(441, 28, 215, 'Presente', NULL),
+(442, 28, 216, 'Ausente', NULL),
+(443, 28, 217, 'Presente', NULL),
+(444, 28, 218, 'Presente', NULL),
+(445, 28, 219, 'Ausente', NULL),
+(446, 28, 220, 'Presente', NULL),
+(447, 28, 221, 'Ausente', NULL),
+(448, 28, 222, 'Ausente', NULL),
+(449, 28, 223, 'Justificado', 'Esta acompanhando o filho operado'),
+(450, 28, 224, 'Presente', NULL),
+(451, 28, 225, 'Presente', NULL),
+(452, 28, 226, 'Justificado', 'Acompanhando o marido enfermo'),
+(453, 28, 227, 'Presente', NULL),
+(454, 28, 228, 'Ausente', NULL),
+(455, 28, 229, 'Ausente', NULL),
+(456, 28, 230, 'Ausente', NULL),
+(457, 28, 231, 'Ausente', NULL),
+(458, 28, 232, 'Presente', NULL),
+(459, 28, 233, 'Ausente', NULL),
+(460, 28, 1274, 'Ausente', NULL),
+(461, 29, 1327, 'Presente', NULL),
+(462, 29, 1328, 'Ausente', NULL),
+(463, 29, 1329, 'Presente', NULL),
+(464, 29, 1330, 'Presente', NULL),
+(465, 29, 1331, 'Presente', NULL),
+(466, 29, 1332, 'Presente', NULL),
+(467, 29, 1333, 'Presente', NULL),
+(468, 29, 1334, 'Ausente', NULL),
+(469, 29, 1335, 'Ausente', NULL),
+(470, 29, 1336, 'Ausente', NULL),
+(471, 29, 1337, 'Presente', NULL),
+(472, 29, 1338, 'Ausente', NULL),
+(473, 29, 1339, 'Presente', NULL),
+(474, 29, 1340, 'Presente', NULL),
+(475, 29, 1341, 'Presente', NULL),
+(476, 29, 1342, 'Justificado', 'Doente '),
+(477, 29, 1343, 'Ausente', NULL),
+(478, 29, 1344, 'Presente', NULL),
+(479, 29, 1345, 'Ausente', NULL),
+(480, 29, 1346, 'Presente', NULL),
+(481, 29, 1347, 'Presente', NULL),
+(482, 29, 1348, 'Presente', NULL),
+(483, 29, 1349, 'Ausente', NULL),
+(484, 29, 1350, 'Ausente', NULL),
+(485, 29, 1351, 'Ausente', NULL),
+(486, 29, 1352, 'Ausente', NULL),
+(487, 29, 1353, 'Ausente', NULL),
+(488, 29, 1354, 'Ausente', NULL),
+(489, 29, 1355, 'Ausente', NULL),
+(490, 29, 1356, 'Justificado', 'Cedili '),
+(491, 29, 1357, 'Justificado', 'Cedili'),
+(492, 29, 1358, 'Ausente', NULL),
+(493, 29, 1359, 'Ausente', NULL),
+(494, 29, 1360, 'Ausente', NULL),
+(495, 29, 1361, 'Presente', NULL),
+(496, 29, 1362, 'Ausente', NULL),
+(497, 29, 1363, 'Ausente', NULL),
+(498, 29, 1364, 'Presente', NULL),
+(499, 29, 1365, 'Presente', NULL),
+(500, 29, 1366, 'Ausente', NULL),
+(501, 29, 1367, 'Ausente', NULL),
+(502, 29, 1368, 'Ausente', NULL),
+(503, 29, 1369, 'Ausente', NULL),
+(504, 29, 1370, 'Presente', NULL),
+(505, 29, 1371, 'Ausente', NULL),
+(506, 29, 1372, 'Ausente', NULL),
+(507, 29, 1373, 'Presente', NULL),
+(508, 29, 1374, 'Ausente', NULL),
+(509, 30, 379, 'Ausente', NULL),
+(510, 30, 381, 'Presente', NULL),
+(511, 30, 382, 'Ausente', NULL),
+(512, 30, 383, 'Presente', NULL),
+(513, 30, 384, 'Ausente', NULL),
+(514, 30, 385, 'Presente', NULL),
+(515, 30, 386, 'Presente', NULL),
+(516, 30, 387, 'Ausente', NULL),
+(517, 30, 388, 'Presente', NULL),
+(518, 30, 389, 'Presente', NULL),
+(519, 30, 390, 'Ausente', NULL),
+(520, 30, 391, 'Presente', NULL),
+(521, 30, 392, 'Ausente', NULL),
+(522, 30, 393, 'Presente', NULL),
+(523, 30, 394, 'Presente', NULL),
+(524, 30, 395, 'Ausente', NULL),
+(525, 30, 396, 'Ausente', NULL),
+(526, 30, 397, 'Ausente', NULL),
+(527, 30, 398, 'Ausente', NULL),
+(528, 30, 399, 'Presente', NULL),
+(529, 30, 400, 'Presente', NULL),
+(530, 30, 401, 'Ausente', NULL),
+(531, 30, 402, 'Presente', NULL),
+(532, 30, 403, 'Ausente', NULL),
+(533, 30, 404, 'Presente', NULL),
+(534, 30, 405, 'Presente', NULL),
+(535, 30, 406, 'Presente', NULL),
+(536, 30, 407, 'Presente', NULL),
+(537, 30, 408, 'Presente', NULL),
+(538, 30, 409, 'Ausente', NULL),
+(539, 30, 410, 'Presente', NULL),
+(540, 30, 411, 'Ausente', NULL),
+(541, 30, 412, 'Presente', NULL),
+(542, 30, 413, 'Presente', NULL),
+(543, 30, 414, 'Presente', NULL),
+(544, 30, 415, 'Presente', NULL),
+(545, 30, 416, 'Presente', NULL),
+(546, 30, 417, 'Justificado', 'doente'),
+(547, 30, 418, 'Presente', NULL),
+(548, 30, 419, 'Presente', NULL),
+(549, 30, 420, 'Ausente', NULL),
+(550, 30, 421, 'Justificado', 'Igreja'),
+(551, 30, 422, 'Presente', NULL),
+(552, 30, 423, 'Justificado', 'médico'),
+(553, 30, 424, 'Presente', NULL),
+(554, 30, 425, 'Presente', NULL),
+(555, 30, 426, 'Ausente', NULL),
+(556, 30, 427, 'Ausente', NULL),
+(557, 30, 428, 'Ausente', NULL),
+(558, 30, 429, 'Ausente', NULL),
+(559, 30, 430, 'Presente', NULL),
+(560, 30, 431, 'Presente', NULL),
+(561, 30, 432, 'Ausente', NULL),
+(562, 31, 272, 'Presente', NULL),
+(563, 31, 273, 'Presente', NULL),
+(564, 31, 274, 'Presente', NULL),
+(565, 31, 275, 'Presente', NULL),
+(566, 31, 276, 'Presente', NULL),
+(567, 31, 277, 'Presente', NULL),
+(568, 31, 278, 'Ausente', NULL),
+(569, 31, 279, 'Justificado', 'médico.'),
+(570, 31, 280, 'Presente', NULL),
+(571, 31, 281, 'Presente', NULL),
+(572, 31, 282, 'Presente', NULL),
+(573, 31, 283, 'Ausente', NULL),
+(574, 31, 284, 'Presente', NULL),
+(575, 31, 285, 'Justificado', 'doente e realizando exames'),
+(576, 31, 286, 'Justificado', 'doente'),
+(577, 31, 287, 'Presente', NULL),
+(578, 31, 288, 'Presente', NULL),
+(579, 31, 289, 'Ausente', NULL),
+(580, 31, 290, 'Presente', NULL),
+(581, 31, 291, 'Justificado', 'realizar exame.'),
+(582, 31, 292, 'Presente', NULL),
+(583, 31, 293, 'Presente', NULL),
+(584, 31, 294, 'Ausente', NULL),
+(585, 31, 295, 'Ausente', NULL),
+(586, 31, 296, 'Presente', NULL),
+(587, 31, 297, 'Presente', NULL),
+(588, 31, 298, 'Presente', NULL),
+(589, 31, 299, 'Presente', NULL),
+(590, 31, 300, 'Ausente', NULL),
+(591, 31, 301, 'Presente', NULL),
+(592, 31, 302, 'Ausente', NULL),
+(593, 31, 303, 'Presente', NULL),
+(594, 31, 304, 'Ausente', NULL),
+(595, 31, 305, 'Presente', NULL),
+(596, 31, 306, 'Presente', NULL),
+(597, 31, 307, 'Presente', NULL),
+(598, 31, 308, 'Presente', NULL),
+(599, 31, 309, 'Ausente', NULL),
+(600, 31, 310, 'Ausente', NULL),
+(601, 31, 311, 'Justificado', 'doente'),
+(602, 31, 312, 'Justificado', 'doente'),
+(603, 31, 313, 'Presente', NULL),
+(604, 31, 314, 'Ausente', NULL),
+(605, 31, 315, 'Ausente', NULL),
+(606, 31, 316, 'Ausente', NULL),
+(607, 31, 317, 'Presente', NULL),
+(608, 31, 318, 'Ausente', NULL),
+(609, 31, 319, 'Ausente', NULL),
+(610, 31, 321, 'Ausente', NULL),
+(611, 31, 322, 'Presente', NULL),
+(612, 31, 323, 'Justificado', 'doente'),
+(613, 31, 377, 'Presente', NULL),
+(614, 31, 378, 'Ausente', NULL);
 
 -- --------------------------------------------------------
 
@@ -1008,7 +1738,6 @@ INSERT INTO `frequencias` (`id`, `aula_id`, `matricula_id`, `status`, `observaca
 -- Estrutura para tabela `genero`
 --
 
-DROP TABLE IF EXISTS `genero`;
 CREATE TABLE `genero` (
   `id` int(11) NOT NULL,
   `descricao` varchar(191) NOT NULL,
@@ -1035,7 +1764,6 @@ INSERT INTO `genero` (`id`, `descricao`, `identidade_id`) VALUES
 -- Estrutura para tabela `identidade_genero`
 --
 
-DROP TABLE IF EXISTS `identidade_genero`;
 CREATE TABLE `identidade_genero` (
   `id` int(11) NOT NULL,
   `descricao` varchar(191) NOT NULL
@@ -1057,7 +1785,6 @@ INSERT INTO `identidade_genero` (`id`, `descricao`) VALUES
 -- Estrutura para tabela `matriculas`
 --
 
-DROP TABLE IF EXISTS `matriculas`;
 CREATE TABLE `matriculas` (
   `id` int(11) NOT NULL,
   `turma_id` int(11) NOT NULL,
@@ -2353,7 +3080,181 @@ INSERT INTO `matriculas` (`id`, `turma_id`, `beneficiario_id`, `data_matricula`,
 (1303, 42, 289, '2026-03-05 15:22:22', 'Ativo'),
 (1304, 42, 293, '2026-03-05 15:22:35', 'Ativo'),
 (1305, 42, 294, '2026-03-05 15:22:54', 'Ativo'),
-(1306, 42, 299, '2026-03-05 15:23:12', 'Ativo');
+(1306, 42, 299, '2026-03-05 15:23:12', 'Ativo'),
+(1307, 43, 105, '2026-03-09 09:29:54', 'Ativo'),
+(1308, 43, 118, '2026-03-09 09:29:54', 'Ativo'),
+(1309, 43, 128, '2026-03-09 09:29:54', 'Ativo'),
+(1310, 43, 156, '2026-03-09 09:29:54', 'Ativo'),
+(1311, 43, 153, '2026-03-09 09:29:54', 'Ativo'),
+(1312, 43, 176, '2026-03-09 09:29:54', 'Ativo'),
+(1313, 43, 242, '2026-03-09 09:29:54', 'Ativo'),
+(1314, 43, 142, '2026-03-09 09:29:54', 'Ativo'),
+(1315, 43, 127, '2026-03-09 09:29:54', 'Ativo'),
+(1316, 43, 107, '2026-03-09 09:29:54', 'Ativo'),
+(1317, 43, 137, '2026-03-09 09:29:54', 'Ativo'),
+(1318, 43, 41, '2026-03-09 09:29:54', 'Ativo'),
+(1319, 43, 144, '2026-03-09 09:29:54', 'Ativo'),
+(1320, 43, 246, '2026-03-09 09:29:54', 'Ativo'),
+(1321, 43, 245, '2026-03-09 09:29:54', 'Ativo'),
+(1322, 43, 64, '2026-03-09 09:29:54', 'Ativo'),
+(1323, 43, 178, '2026-03-09 09:29:54', 'Ativo'),
+(1324, 43, 150, '2026-03-09 09:29:54', 'Ativo'),
+(1325, 43, 201, '2026-03-09 09:29:54', 'Ativo'),
+(1326, 43, 86, '2026-03-09 09:29:54', 'Ativo'),
+(1327, 44, 214, '2026-03-10 15:06:41', 'Ativo'),
+(1328, 44, 217, '2026-03-10 15:06:41', 'Ativo'),
+(1329, 44, 322, '2026-03-10 15:06:41', 'Ativo'),
+(1330, 44, 219, '2026-03-10 15:06:41', 'Ativo'),
+(1331, 44, 221, '2026-03-10 15:06:41', 'Ativo'),
+(1332, 44, 324, '2026-03-10 15:06:41', 'Ativo'),
+(1333, 44, 225, '2026-03-10 15:06:41', 'Ativo'),
+(1334, 44, 226, '2026-03-10 15:06:41', 'Ativo'),
+(1335, 44, 227, '2026-03-10 15:06:41', 'Ativo'),
+(1336, 44, 231, '2026-03-10 15:06:41', 'Ativo'),
+(1337, 44, 232, '2026-03-10 15:06:41', 'Ativo'),
+(1338, 44, 335, '2026-03-10 15:06:41', 'Ativo'),
+(1339, 44, 331, '2026-03-10 15:06:41', 'Ativo'),
+(1340, 44, 236, '2026-03-10 15:06:41', 'Ativo'),
+(1341, 44, 237, '2026-03-10 15:06:41', 'Ativo'),
+(1342, 44, 333, '2026-03-10 15:06:41', 'Ativo'),
+(1343, 44, 334, '2026-03-10 15:06:41', 'Ativo'),
+(1344, 44, 238, '2026-03-10 15:06:41', 'Ativo'),
+(1345, 44, 340, '2026-03-10 15:06:41', 'Ativo'),
+(1346, 44, 343, '2026-03-10 15:06:41', 'Ativo'),
+(1347, 44, 346, '2026-03-10 15:06:41', 'Ativo'),
+(1348, 44, 345, '2026-03-10 15:06:42', 'Ativo'),
+(1349, 44, 344, '2026-03-10 15:06:42', 'Ativo'),
+(1350, 44, 353, '2026-03-10 15:06:42', 'Ativo'),
+(1351, 44, 358, '2026-03-10 15:06:42', 'Ativo'),
+(1352, 44, 357, '2026-03-10 15:06:42', 'Ativo'),
+(1353, 44, 356, '2026-03-10 15:06:42', 'Ativo'),
+(1354, 44, 359, '2026-03-10 15:06:42', 'Ativo'),
+(1355, 44, 360, '2026-03-10 15:06:42', 'Ativo'),
+(1356, 44, 364, '2026-03-10 15:06:42', 'Ativo'),
+(1357, 44, 365, '2026-03-10 15:06:42', 'Ativo'),
+(1358, 44, 372, '2026-03-10 15:06:42', 'Ativo'),
+(1359, 44, 373, '2026-03-10 15:06:42', 'Ativo'),
+(1360, 44, 380, '2026-03-10 15:06:42', 'Ativo'),
+(1361, 44, 389, '2026-03-10 15:06:42', 'Ativo'),
+(1362, 44, 390, '2026-03-10 15:06:42', 'Ativo'),
+(1363, 44, 394, '2026-03-10 15:06:42', 'Ativo'),
+(1364, 44, 399, '2026-03-10 15:06:42', 'Ativo'),
+(1365, 44, 409, '2026-03-10 15:06:42', 'Ativo'),
+(1366, 44, 410, '2026-03-10 15:06:42', 'Ativo'),
+(1367, 44, 414, '2026-03-10 15:06:42', 'Ativo'),
+(1368, 44, 413, '2026-03-10 15:06:42', 'Ativo'),
+(1369, 44, 415, '2026-03-10 15:06:42', 'Ativo'),
+(1370, 44, 422, '2026-03-10 15:06:42', 'Ativo'),
+(1371, 44, 423, '2026-03-10 15:06:42', 'Ativo'),
+(1372, 44, 432, '2026-03-10 15:06:42', 'Ativo'),
+(1373, 44, 433, '2026-03-10 15:06:42', 'Ativo'),
+(1374, 44, 439, '2026-03-10 15:06:42', 'Ativo'),
+(1375, 45, 320, '2026-03-10 15:36:52', 'Ativo'),
+(1376, 45, 213, '2026-03-10 15:36:52', 'Ativo'),
+(1377, 45, 220, '2026-03-10 15:36:52', 'Ativo'),
+(1378, 45, 223, '2026-03-10 15:36:52', 'Ativo'),
+(1379, 45, 328, '2026-03-10 15:36:52', 'Ativo'),
+(1380, 45, 230, '2026-03-10 15:36:53', 'Ativo'),
+(1381, 45, 329, '2026-03-10 15:36:53', 'Ativo'),
+(1382, 45, 330, '2026-03-10 15:36:53', 'Ativo'),
+(1383, 45, 234, '2026-03-10 15:36:53', 'Ativo'),
+(1384, 45, 235, '2026-03-10 15:36:53', 'Ativo'),
+(1385, 45, 337, '2026-03-10 15:36:53', 'Ativo'),
+(1386, 45, 336, '2026-03-10 15:36:53', 'Ativo'),
+(1387, 45, 347, '2026-03-10 15:36:53', 'Ativo'),
+(1388, 45, 348, '2026-03-10 15:36:53', 'Ativo'),
+(1389, 45, 349, '2026-03-10 15:36:53', 'Ativo'),
+(1390, 45, 350, '2026-03-10 15:36:53', 'Ativo'),
+(1391, 45, 352, '2026-03-10 15:36:53', 'Ativo'),
+(1392, 45, 351, '2026-03-10 15:36:53', 'Ativo'),
+(1393, 45, 354, '2026-03-10 15:36:53', 'Ativo'),
+(1394, 45, 355, '2026-03-10 15:36:53', 'Ativo'),
+(1395, 45, 362, '2026-03-10 15:36:53', 'Ativo'),
+(1396, 45, 363, '2026-03-10 15:36:53', 'Ativo'),
+(1397, 45, 367, '2026-03-10 15:36:53', 'Ativo'),
+(1398, 45, 375, '2026-03-10 15:36:53', 'Ativo'),
+(1399, 45, 374, '2026-03-10 15:36:53', 'Ativo'),
+(1400, 45, 377, '2026-03-10 15:36:53', 'Ativo'),
+(1401, 45, 376, '2026-03-10 15:36:53', 'Ativo'),
+(1402, 45, 378, '2026-03-10 15:36:53', 'Ativo'),
+(1403, 45, 381, '2026-03-10 15:36:53', 'Ativo'),
+(1404, 45, 379, '2026-03-10 15:36:53', 'Ativo'),
+(1405, 45, 383, '2026-03-10 15:36:53', 'Ativo'),
+(1406, 45, 385, '2026-03-10 15:36:53', 'Ativo'),
+(1407, 45, 386, '2026-03-10 15:36:53', 'Ativo'),
+(1408, 45, 388, '2026-03-10 15:36:53', 'Ativo'),
+(1409, 45, 391, '2026-03-10 15:36:53', 'Ativo'),
+(1410, 45, 397, '2026-03-10 15:36:53', 'Ativo'),
+(1411, 45, 398, '2026-03-10 15:36:53', 'Ativo'),
+(1412, 45, 401, '2026-03-10 15:36:53', 'Ativo'),
+(1413, 45, 402, '2026-03-10 15:36:53', 'Ativo'),
+(1414, 45, 403, '2026-03-10 15:36:53', 'Ativo'),
+(1415, 45, 404, '2026-03-10 15:36:53', 'Ativo'),
+(1416, 45, 408, '2026-03-10 15:36:53', 'Ativo'),
+(1417, 45, 411, '2026-03-10 15:36:53', 'Ativo'),
+(1418, 45, 412, '2026-03-10 15:36:53', 'Ativo'),
+(1419, 45, 419, '2026-03-10 15:36:53', 'Ativo'),
+(1420, 45, 420, '2026-03-10 15:36:53', 'Ativo'),
+(1421, 45, 421, '2026-03-10 15:36:53', 'Ativo'),
+(1422, 45, 424, '2026-03-10 15:36:53', 'Ativo'),
+(1423, 45, 425, '2026-03-10 15:36:53', 'Ativo'),
+(1424, 45, 426, '2026-03-10 15:36:53', 'Ativo'),
+(1425, 45, 427, '2026-03-10 15:36:53', 'Ativo'),
+(1426, 45, 430, '2026-03-10 15:36:53', 'Ativo'),
+(1427, 45, 429, '2026-03-10 15:36:53', 'Ativo'),
+(1428, 45, 434, '2026-03-10 15:36:53', 'Ativo'),
+(1429, 45, 435, '2026-03-10 15:36:53', 'Ativo'),
+(1430, 45, 437, '2026-03-10 15:36:53', 'Ativo'),
+(1431, 45, 436, '2026-03-10 15:36:53', 'Ativo'),
+(1432, 45, 438, '2026-03-10 15:36:53', 'Ativo'),
+(1433, 46, 321, '2026-03-10 15:46:18', 'Ativo'),
+(1434, 46, 323, '2026-03-10 15:46:18', 'Ativo'),
+(1435, 46, 224, '2026-03-10 15:46:18', 'Ativo'),
+(1436, 46, 326, '2026-03-10 15:46:18', 'Ativo'),
+(1437, 46, 229, '2026-03-10 15:46:18', 'Ativo'),
+(1438, 46, 332, '2026-03-10 15:46:18', 'Ativo'),
+(1439, 46, 338, '2026-03-10 15:46:18', 'Ativo'),
+(1440, 46, 339, '2026-03-10 15:46:18', 'Ativo'),
+(1441, 46, 240, '2026-03-10 15:46:18', 'Ativo'),
+(1442, 46, 368, '2026-03-10 15:46:18', 'Ativo'),
+(1443, 46, 384, '2026-03-10 15:46:18', 'Ativo'),
+(1444, 46, 387, '2026-03-10 15:46:18', 'Ativo'),
+(1445, 46, 395, '2026-03-10 15:46:18', 'Ativo'),
+(1446, 46, 396, '2026-03-10 15:46:18', 'Ativo'),
+(1447, 46, 406, '2026-03-10 15:46:18', 'Ativo'),
+(1448, 46, 417, '2026-03-10 15:46:18', 'Ativo'),
+(1449, 46, 418, '2026-03-10 15:46:18', 'Ativo'),
+(1450, 46, 428, '2026-03-10 15:46:18', 'Ativo'),
+(1451, 46, 440, '2026-03-10 15:46:18', 'Ativo'),
+(1452, 47, 212, '2026-03-10 15:51:19', 'Ativo'),
+(1453, 47, 216, '2026-03-10 15:51:19', 'Ativo'),
+(1454, 47, 215, '2026-03-10 15:51:19', 'Ativo'),
+(1455, 47, 218, '2026-03-10 15:51:19', 'Ativo'),
+(1456, 47, 222, '2026-03-10 15:51:19', 'Ativo'),
+(1457, 47, 325, '2026-03-10 15:51:19', 'Ativo'),
+(1458, 47, 327, '2026-03-10 15:51:19', 'Ativo'),
+(1459, 47, 228, '2026-03-10 15:51:19', 'Ativo'),
+(1460, 47, 233, '2026-03-10 15:51:19', 'Ativo'),
+(1461, 47, 241, '2026-03-10 15:51:19', 'Ativo'),
+(1462, 47, 239, '2026-03-10 15:51:19', 'Ativo'),
+(1463, 47, 341, '2026-03-10 15:51:19', 'Ativo'),
+(1464, 47, 342, '2026-03-10 15:51:19', 'Ativo'),
+(1465, 47, 361, '2026-03-10 15:51:19', 'Ativo'),
+(1466, 47, 366, '2026-03-10 15:51:19', 'Ativo'),
+(1467, 47, 369, '2026-03-10 15:51:19', 'Ativo'),
+(1468, 47, 370, '2026-03-10 15:51:19', 'Ativo'),
+(1469, 47, 371, '2026-03-10 15:51:19', 'Ativo'),
+(1470, 47, 382, '2026-03-10 15:51:19', 'Ativo'),
+(1471, 47, 392, '2026-03-10 15:51:19', 'Ativo'),
+(1472, 47, 393, '2026-03-10 15:51:19', 'Ativo'),
+(1473, 47, 400, '2026-03-10 15:51:19', 'Ativo'),
+(1474, 47, 405, '2026-03-10 15:51:19', 'Ativo'),
+(1475, 47, 407, '2026-03-10 15:51:19', 'Ativo'),
+(1476, 47, 416, '2026-03-10 15:51:19', 'Ativo'),
+(1477, 47, 431, '2026-03-10 15:51:19', 'Ativo'),
+(1478, 21, 190, '2026-03-11 08:40:25', 'Ativo'),
+(1479, 22, 118, '2026-03-11 08:42:06', 'Ativo'),
+(1480, 22, 108, '2026-03-11 08:42:38', 'Ativo');
 
 -- --------------------------------------------------------
 
@@ -2361,7 +3262,6 @@ INSERT INTO `matriculas` (`id`, `turma_id`, `beneficiario_id`, `data_matricula`,
 -- Estrutura para tabela `orgao_emissor`
 --
 
-DROP TABLE IF EXISTS `orgao_emissor`;
 CREATE TABLE `orgao_emissor` (
   `id` int(11) NOT NULL,
   `descricao` varchar(191) NOT NULL,
@@ -2491,7 +3391,6 @@ INSERT INTO `orgao_emissor` (`id`, `descricao`, `uf_emissor`) VALUES
 -- Estrutura para tabela `perfil_usuario`
 --
 
-DROP TABLE IF EXISTS `perfil_usuario`;
 CREATE TABLE `perfil_usuario` (
   `id` int(11) NOT NULL,
   `descricao` varchar(191) NOT NULL
@@ -2515,7 +3414,6 @@ INSERT INTO `perfil_usuario` (`id`, `descricao`) VALUES
 -- Estrutura para tabela `pessoa`
 --
 
-DROP TABLE IF EXISTS `pessoa`;
 CREATE TABLE `pessoa` (
   `id` int(11) NOT NULL,
   `nome_completo` varchar(191) NOT NULL,
@@ -2674,7 +3572,7 @@ INSERT INTO `pessoa` (`id`, `nome_completo`, `nome_social`, `apelido`, `data_nas
 (130, 'MARIA DE LOURDES DOS SANTOS COELHO', NULL, NULL, '1960-02-16 00:00:00.000', 'ANGELITA BEZERRA DA SILVA', NULL, '39897842420', NULL, 'BRASIL', 'BRASIL', 2, 3, 1, 1, NULL, 1, '2026-02-26 12:56:08.636'),
 (131, 'VICENTE JOÃO DE SANTANA', NULL, NULL, '1959-10-15 00:00:00.000', 'JOSEFA  ANA DA CONCEIÇÃO', NULL, '62324098415', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-02-26 12:56:08.636'),
 (132, 'JOSEFA CARMELITA DA SILVA', NULL, NULL, '1964-06-29 00:00:00.000', 'CARMELITA ROSALINA DE LIRA', NULL, '58601201415', NULL, 'BRASIL', 'BRASIL', 2, 1, 1, 1, NULL, 1, '2026-02-26 12:56:08.637'),
-(133, 'MARIA JOSÉ DA SILVA', NULL, NULL, '1951-07-20 00:00:00.000', 'MARIA INÁCIA DA SILVA', NULL, '50705822400', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 12:56:08.637'),
+(133, 'MARIA JOSÉ DA SILVA (CARMA)', NULL, NULL, '1951-07-20 00:00:00.000', 'MARIA INÁCIA DA SILVA', NULL, '50705822400', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 12:56:08.637'),
 (134, 'ANA JOSEFA DA SILVA', NULL, NULL, '1957-12-04 00:00:00.000', 'MARIA JOSEFA DA CONCEIÇÃO', NULL, '03966184486', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 12:56:08.638'),
 (135, 'LUZINETE FRANCISCA DE ALBUQUERQUE', NULL, NULL, '1958-03-25 00:00:00.000', 'FRANCISCA ADELINA DA CONCEIÇÃO', NULL, '54853281487', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 12:56:08.639'),
 (136, 'MARIA OLINDINA DE LIMA', NULL, NULL, '1956-12-24 00:00:00.000', 'OLINDINA MARIA DO CARMO', NULL, '39387720420', NULL, 'BRASIL', 'BRASIL', 2, 2, 1, 1, NULL, 1, '2026-02-26 12:56:08.639'),
@@ -2808,7 +3706,7 @@ INSERT INTO `pessoa` (`id`, `nome_completo`, `nome_social`, `apelido`, `data_nas
 (263, 'CLECIO FERREIRA DE BRITO', NULL, NULL, '1959-06-20 00:00:00.000', 'CECILIA BALBINO DE BRITO', NULL, '29075114400', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-02-26 16:09:03.002'),
 (264, 'MARIA COSMA DA SILVA', NULL, NULL, '1963-11-12 00:00:00.000', 'COSMA MARIA SABINO', NULL, '64210634468', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 16:09:03.003'),
 (265, 'JOSEFA FRANCISCO DO NASCIMENTO', NULL, NULL, '1963-11-06 00:00:00.000', 'MARINA DE ANDRARDE BARBOSA', NULL, '43494153434', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 16:09:03.004'),
-(266, 'MARIA JOSÉ DA SILVA', NULL, NULL, '1954-06-13 00:00:00.000', 'MARIA JOSÉ DA CONCEIÇÃO', NULL, '01360403493', NULL, 'BRASIL', 'BRASIL', 2, 1, 1, 1, NULL, 1, '2026-02-26 16:09:03.005'),
+(266, 'MARIA JOSÉ DA SILVA (MARIA GALEGA)', NULL, NULL, '1954-06-13 00:00:00.000', 'MARIA JOSÉ DA CONCEIÇÃO', NULL, '01360403493', NULL, 'BRASIL', 'BRASIL', 2, 1, 1, 1, NULL, 1, '2026-02-26 16:09:03.005'),
 (267, 'JOSÉ BARBOSA DE SOUSA JUNIOR', NULL, NULL, '1961-09-10 00:00:00.000', 'PAULA NEUZA PEDROSA', NULL, '33582076415', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-02-26 16:09:03.006'),
 (268, 'MARECI JOSEFA DA SILVA', NULL, NULL, '1959-05-18 00:00:00.000', 'JOSEFA ROSA DA CONCEIÇÃO', NULL, '27419973814', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 16:09:03.007'),
 (269, 'TEREZINHA MARIA TEIXEIRA DOS SANTOS', NULL, NULL, '1957-09-18 00:00:00.000', 'MARIA MIRANDA TEIXEIRA', NULL, '04993547455', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-02-26 16:09:03.008'),
@@ -2893,7 +3791,130 @@ INSERT INTO `pessoa` (`id`, `nome_completo`, `nome_social`, `apelido`, `data_nas
 (348, 'MATHEUS  SEVERINO DO NASCIMENTO SOUSA', NULL, NULL, '2016-09-21 00:00:00.000', 'MARCIA MARIA DO NASCIMENTO', NULL, '14028142407', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-05 15:00:02.450'),
 (349, 'MARIA SOPHIA RAMOS DA SILVA', NULL, NULL, '2018-08-20 00:00:00.000', 'MARIANA ONERCINA DA SILVA', NULL, '15889632418', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-05 15:00:02.451'),
 (350, 'DAFYNY SOPHYA DA LUZ MENDONÇA', NULL, NULL, '2017-05-26 00:00:00.000', 'DAIANE SANTOS DA LUZ', NULL, '14572891486', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-05 15:00:02.456'),
-(351, 'DAVI LUCAS FERREIRA DE SANTANA', NULL, NULL, '2018-09-09 00:00:00.000', 'MARIA JOSÉ DE MELO FERREIRA', NULL, '15881109406', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-05 16:00:02.783');
+(351, 'DAVI LUCAS FERREIRA DE SANTANA', NULL, NULL, '2018-09-09 00:00:00.000', 'MARIA JOSÉ DE MELO FERREIRA', NULL, '15881109406', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-05 16:00:02.783'),
+(352, 'SEVERINA HELENA DE SOUZA LIMA', NULL, NULL, '2016-02-01 00:00:00.000', 'SEVERINA MARIA DE SOUZA', NULL, '13643030436', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.785'),
+(353, 'EDYLA KAYLANNY DOS SANTOS FELIPE', NULL, NULL, '2016-12-08 00:00:00.000', 'VERONICA DOS SANTOS CAVALCANTE', NULL, '14184360467', NULL, 'BRASIL', 'BRASIL', 2, 3, 1, 1, NULL, 1, '2026-03-10 14:58:09.795'),
+(354, 'PEDRO JOSÉ TEXEIRA DA SILVA', NULL, NULL, '2018-11-01 00:00:00.000', 'RENATA ELIELZA TEXEIRA', NULL, '17202893444', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.800'),
+(355, 'BRUNA LUNA DE ALBUQUERQUE SILVA', NULL, NULL, '2016-10-28 00:00:00.000', 'JOSÉ ARMANDO D SILVA IRMÃO', NULL, '14059933406', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.803'),
+(356, 'JÚLIO CÉSAR DA SILVA NASCIMENTO', NULL, NULL, '2016-10-15 00:00:00.000', 'SILENE CECILIA DA SILVA NASCIMENTO', NULL, '14045949496', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.807'),
+(357, 'LUIS HENRIQUE DA SILVA', NULL, NULL, '2016-07-22 00:00:00.000', 'FRANQUILINA MARIA DA SILVA NETA', NULL, '13936109435', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.811'),
+(358, 'ANNA ALÍCIA DA SILVA', NULL, NULL, '2017-02-09 00:00:00.000', 'NADIA MICAELY DA CRUZ SILVA', NULL, '14357276497', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.812'),
+(359, 'DAVI RODRIGUES BARROS', NULL, NULL, '2016-01-12 00:00:00.000', 'CLAUDIA DANIELLA RODRIGUES DA SILVA', NULL, '50709601808', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.813'),
+(360, 'LAURA SOPHIA DA HORA SILVA', NULL, NULL, '2013-11-11 00:00:00.000', 'CHARLENE IRENE DA HORA', NULL, '16713991459', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.817'),
+(361, 'JHONNY JORGE DA SILVA MENDES', NULL, NULL, '2017-06-04 00:00:00.000', 'LUANA MARIA DA SILVA', NULL, '14599312460', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.821'),
+(362, 'RAFAEL PASCOAL DA SILVA', NULL, NULL, '2017-03-08 00:00:00.000', 'MARIA ANA PASCOAL', NULL, '14419643471', NULL, 'BRASIL', 'BRASIL', 1, 5, 1, 1, NULL, 1, '2026-03-10 14:58:09.822'),
+(363, 'JHONAS GABRYEL SOARES DO NASCIMENTO', NULL, NULL, '2015-07-17 00:00:00.000', 'LUCIELE DO NASCIMENTO SILVA', NULL, '17425090457', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.826'),
+(364, 'ÍSIS MARIELLY DA SILVA', NULL, NULL, '2020-01-27 00:00:00.000', 'NATALIA TAMIRES DA CRUZ SILVA', NULL, '17107372475', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.828'),
+(365, 'PEDRO VICTOR MARTINS DA SILVA (GÊMEO)', NULL, NULL, '2015-06-21 00:00:00.000', 'VALQUIRIA BARBOSA DA SILVA', NULL, '16725866409', NULL, 'BRASIL', 'BRASIL', 1, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.831'),
+(366, 'ADRIAN EMANUEL BERNARDO PESSOA', NULL, NULL, '2013-12-26 00:00:00.000', 'ANA JOSEFA BERNARDO PESSOA', NULL, '16480572416', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.832'),
+(367, 'PEDRO HENRIQUE MARTINS  DA SILVA (GÊMEO)', NULL, NULL, '2015-06-21 00:00:00.000', 'VALQUIRIA BARBOSA DA SILVA', NULL, '16725877435', NULL, 'BRASIL', 'BRASIL', 1, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.834'),
+(368, 'THAÍS NAYARA SOARES DE SANTANA', NULL, NULL, '2017-08-04 00:00:00.000', 'VIVIANE SOARES DA SILVA', NULL, '14726433482', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.835'),
+(369, 'JOSÉ MIGUEL SILVA SANTANA', NULL, NULL, '2017-11-17 00:00:00.000', 'VITÓRIA DA SILVA BORGES', NULL, '14921726426', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.836'),
+(370, 'DANYEL SOARES DA SILVA', NULL, NULL, '2017-09-26 00:00:00.000', 'MARIA CRISTIANE DA SILVA', NULL, '14810071499', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.838'),
+(371, 'DANYLO SOARES DA SILVA', NULL, NULL, '2017-09-20 00:00:00.000', 'MARIA CRISTIANE DA SILVA', NULL, '14810055450', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.839'),
+(372, 'JOÃO MIGUEL FARIAS ALVES', NULL, NULL, '2018-07-12 00:00:00.000', 'JÉSSICA MYRELA FARIAS', NULL, '15713179451', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.843'),
+(373, 'AGHATA BEATRIZ CRISTIANO SILVA', NULL, NULL, '2017-03-30 00:00:00.000', 'CARLA INGRID DA SILVA CRISTIANO', NULL, '14494223492', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.844'),
+(374, 'MAXUELL PEDRO ISRAEL DA SILVA', NULL, NULL, '2012-06-26 00:00:00.000', 'MOIZELITA MARIA DA SILVA', NULL, '16250124462', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.845'),
+(375, 'BERNARDO FLAVIO LIMA DO NASCIMENTO', NULL, NULL, '2016-08-24 00:00:00.000', 'ALCICLEIDE LAUDECI DE LIMA', NULL, '13979810402', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.846'),
+(376, 'KAUÃ VITOR LIMA DO NASCIMENTO', NULL, NULL, '2013-03-27 00:00:00.000', 'MARIA LAUDECI DE LIMA', NULL, '16684639462', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.847'),
+(377, 'KAIKE VITOR LIMA DO NASCIMENTO', NULL, NULL, '2015-01-15 00:00:00.000', 'MARIA LAUDECI DE LIMA', NULL, '13974056432', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.847'),
+(378, 'JULIO CESAR DOS SANTOS', NULL, NULL, '2016-07-02 00:00:00.000', 'JAQUELINE DOS SANTOS LIMA', NULL, '14018223471', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.848'),
+(379, 'APOLO DE SOUZA RODRIGUES', NULL, NULL, '2019-03-31 00:00:00.000', 'MYSLANE MARIA DE SOUZA', NULL, '16375999430', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.849'),
+(380, 'LUDMILA LOUISE DE FRANÇA PEREIRA', NULL, NULL, '2016-11-22 00:00:00.000', 'CRICIANE MARIA DE FRANÇA', NULL, '14107834484', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.850'),
+(381, 'LAVÍNIA ANTONELLA DE SOUZA MELO', NULL, NULL, '2017-12-29 00:00:00.000', 'ELVIRA VITÓRIA DE SOUZA NASCIMENTO', NULL, '15386374486', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.851'),
+(382, 'JOSÉ RAFAEL DA SILVA', NULL, NULL, '2018-03-28 00:00:00.000', 'INACIA MARIA DA SILVA', NULL, '15440296409', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.852'),
+(383, 'AGHATA VICTORIA GONÇALVES DE LIMA', NULL, NULL, '2010-10-05 00:00:00.000', 'ERICA GONÇALVES DA MOTA', NULL, '15671716489', NULL, 'BRASIL', 'BRASIL', 2, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.853'),
+(384, 'JOÃO LUÍZ DE SOUSA EPÍFANIO', NULL, NULL, '2016-04-25 00:00:00.000', 'JOANA DE SOUSA DO NASCIMENTO', NULL, '13782522419', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.854'),
+(385, 'LEANDRO JUNIOR DA SILVA SOUZA', NULL, NULL, '2013-01-28 00:00:00.000', 'MARIA LUCIA DA SILVA', NULL, '16816537459', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.854'),
+(386, 'ANNA JÚLIA SANTOS DA SILVA', NULL, NULL, '2019-03-16 00:00:00.000', 'JARDIELE NATALYDE SOUSA', NULL, '16347768445', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.855'),
+(387, 'MARIA LUIZA VITÓRIA DE MOURA SILVA', NULL, NULL, '2020-05-02 00:00:00.000', 'PATRICIA SEVERINA DE MOURA SILVA', NULL, '15554801951', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.856'),
+(388, 'JOSÉ DANIEL DA SILVA FREITAS', NULL, NULL, '2016-06-18 00:00:00.000', 'TAYS MICHELE BERNARDO DA SILVA', NULL, '13859437429', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.857'),
+(389, 'ERIK KAUAN ARRUDA FERREIRA', NULL, NULL, '2018-06-18 00:00:00.000', 'GILVANEIDE HELENA DE ARRUDA', NULL, '15665914495', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.857'),
+(390, 'THALLYS SAMUEL D SILVA FREITAS', NULL, NULL, '2014-08-05 00:00:00.000', 'TAYS MICHELE BERNARDO DA SILVA', NULL, '15714447425', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.858'),
+(391, 'ALLIF DANILO DA SILVA', NULL, NULL, '2013-07-22 00:00:00.000', 'FRANCIELE DIANA ROSA DA SILVA', NULL, '16429361462', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.861'),
+(392, 'LUCAS GABRIEL DA SILVA SOUZA', NULL, NULL, '2017-03-22 00:00:00.000', 'FRANCIELE DIANA ROSA DA SILVA', NULL, '17390333456', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.865'),
+(393, 'THOMAS ANTONIO LIMA DA SILVA', NULL, NULL, '2012-11-07 00:00:00.000', 'HELENA DE LIMA', NULL, '16642323467', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.867'),
+(394, 'ENZO MIGUEL DO NASCIMENTO SILVA', NULL, NULL, '2018-06-19 00:00:00.000', 'ELIDA DAIANY DO NASCIMENTO ALVES', NULL, '15696478441', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.872'),
+(395, 'EVERTON LUAN DO NASCIMENTO SILVA', NULL, NULL, '2013-11-09 00:00:00.000', 'ELIANE MARIA DO NASCIMENTO', NULL, '13819048405', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.874'),
+(396, 'GUILHERME JOSÉ DA SILVA', NULL, NULL, '2013-11-18 00:00:00.000', 'MARIA  APARECIDA DA SILVA IRMÃ', NULL, '15551265455', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.876'),
+(397, 'GUSTAVO JOSÉ DA SILVA', NULL, NULL, '2015-05-23 00:00:00.000', 'MARIA APARECIDA DA SILVA IRMÃ', NULL, '15551249417', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.878'),
+(398, 'MAYCON FERREIRA DA SILVA', NULL, NULL, '2016-02-24 00:00:00.000', 'MARIA LÚCIA DA SILVA', NULL, '13668368473', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.881'),
+(399, 'HEITOR GABRIEL DE OLIVEIRA SILVA', NULL, NULL, '2019-04-29 00:00:00.000', 'JANAINA BETÂNIA DE OLIVEIRA', NULL, '16446444443', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.883'),
+(400, 'GUSTAVO FERREIRA DA SILVA', NULL, NULL, '2018-03-13 00:00:00.000', 'ELIZABETE MARIA DA SILVA', NULL, '20631137777', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.884'),
+(401, 'RUAN CARLOS DA SILVA SANTOS', NULL, NULL, '2013-03-26 00:00:00.000', 'EDILVA PEREIRA DA SILVA', NULL, '15839134406', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.887'),
+(402, 'RAYSSA RAQUELY DA SILVA SANTOS', NULL, NULL, '2015-12-24 00:00:00.000', 'EDILVA PEREIRA DA SILVA', NULL, '15839115452', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.889'),
+(403, 'KAIO HENRIQUE AECIO DA SILVA', NULL, NULL, '2015-12-26 00:00:00.000', 'JOSEANE FERREIRA DA SILVA', NULL, '13731334496', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.891'),
+(404, 'JUNIOR HENRIQUE DA SILVA SOUSA', NULL, NULL, '2012-11-16 00:00:00.000', 'JAILMA GABRIELA  VASCONCELOS DA SILVA', NULL, '16627491478', NULL, 'BRASIL', 'BRASIL', 2, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.893'),
+(405, 'JOSE GABRIEL DA SILVA', NULL, NULL, '2016-03-10 00:00:00.000', 'GILVANIA SEVERINA DA SILVA', NULL, '13716584479', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.896'),
+(406, 'MIGUEL HENRIQUE DA SILVA SOUSA', NULL, NULL, '2016-04-23 00:00:00.000', 'JAILMA GABRIELA VASCONCELOS DA SILVA', NULL, '13776385456', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.899'),
+(407, 'ANNA BEATRIZ DA SILVA', NULL, NULL, '2012-01-17 00:00:00.000', 'GILVANIA SEVERINA DA SILVA', NULL, '16751026439', NULL, 'BRASIL', 'BRASIL', 2, 5, 1, 1, NULL, 1, '2026-03-10 14:58:09.901'),
+(408, 'MARIA JULIA DA SILVA NASCIMENTO', NULL, NULL, '2018-05-30 00:00:00.000', 'FLAVIA DA SILVA FRANCISCO', NULL, '15677609455', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.903'),
+(409, 'JOÃO PEDRO DA SILVA NASCIMENTO', NULL, NULL, '2016-06-28 00:00:00.000', 'FLAVIA DA SILVA FRANCISCO', NULL, '13875951484', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.904'),
+(410, 'DEIVYSON GOMES DA SILVA', NULL, NULL, '2014-09-04 00:00:00.000', 'ANGELA KELLY CABRAL DA SILVA', NULL, '13978524457', NULL, 'BRASIL', 'BRASIL', 1, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.906'),
+(411, 'KAYKY ALEXANDRE PAULINO DE SOUZA', NULL, NULL, '2012-12-23 00:00:00.000', 'SANDRA  ANTONIA  ALEXANDRE', NULL, '13969624410', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.907'),
+(412, 'JOÃO MIGUEL VELOZO DE ARAUJO', NULL, NULL, '2013-12-01 00:00:00.000', 'JOAILENE VELOZO DA SILVA', NULL, '16389901402', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.909'),
+(413, 'KAMYLLY VALENTINA ALEXANDRE DE SOUZA', NULL, NULL, '2015-04-15 00:00:00.000', 'SANDRA ANTONIA ALEXANDRE', NULL, '13969640458', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.910'),
+(414, 'WESLEY CAUÃ PEREIRA DA SILVA', NULL, NULL, '2012-12-10 00:00:00.000', 'ANA PAULA PEREIRA DA SILVA', NULL, '18333384480', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.912'),
+(415, 'NICOLLAS ADRIANO DA SILVA SANTOS', NULL, NULL, '2016-06-07 00:00:00.000', 'WILLIANE CRISTINA DA SILVA SANTOS', NULL, '14017508421', NULL, 'BRASIL', 'BRASIL', 1, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.913'),
+(416, 'RAFAEL OLIVEIRA E SILVA', NULL, NULL, '2016-06-01 00:00:00.000', 'JOSINEIDE ANDREIA E SILVA', NULL, '13844974474', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.916'),
+(417, 'JOÃO GUILHERME OLIVEIRA DA SILVA', NULL, NULL, '2020-03-09 00:00:00.000', 'ROSÉLIA MARIA DE OLIVEIRA', NULL, '17095916411', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.918'),
+(418, 'ANA JULIA OLIVEIRA DA SILVA', NULL, NULL, '2011-10-24 00:00:00.000', 'ROSÉLIA MARIA DE OLIVEIRA', NULL, '15646404428', NULL, 'BRASIL', 'BRASIL', 2, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.920'),
+(419, 'YSYS LORENNA RAMOS DE SOUZA', NULL, NULL, '2015-03-25 00:00:00.000', 'RENATA MARIA RAMOS', NULL, '17486418401', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.922'),
+(420, 'DAVI LUCAS SILVA', NULL, NULL, '2018-01-18 00:00:00.000', 'IZONEIDE JOSEFA DA SILVA', NULL, '15287067496', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.924'),
+(421, 'JOÃO LUCAS SILVA GUIMARÃES', NULL, NULL, '2014-01-27 00:00:00.000', 'ELIETE JOSEFA DA SILVA GUIMARÂES', NULL, '71784352403', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.925'),
+(422, 'MARCELO VINÍCIUS SILVA GUIMARÃES', NULL, NULL, '2015-09-18 00:00:00.000', 'ELIETE JOSEFA DA SILVA GUIMARÂES', NULL, '71784350460', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.927'),
+(423, 'JOSÉ GUILHERME RODRIGUES DA SILVA', NULL, NULL, '2013-04-13 00:00:00.000', 'JANAINA CARNEIRO DA SILVA', NULL, '15710043435', NULL, 'BRASIL', 'BRASIL', 1, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.929'),
+(424, 'DAVI LUCAS DA SILVA', NULL, NULL, '2016-02-25 00:00:00.000', 'SANDRA MARIA DA SILVA', NULL, '13715491418', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.931'),
+(425, 'ARTHUR VENICIUS DA SILVA', NULL, NULL, '2015-02-08 00:00:00.000', 'SANDRA MARIA DA SILVA', NULL, '16892007406', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.932'),
+(426, 'CAUÃ VINICIUS OLIVEIRA DA SILVA', NULL, NULL, '2013-02-20 00:00:00.000', 'JACILENE MARIA DE OLIVEIRA', NULL, '16400884408', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.933'),
+(427, 'PEDRO HENRIQUE DE SANTANA OLIVEIRA', NULL, NULL, '2014-02-19 00:00:00.000', 'CINTIA DE SANTANA LIMA', NULL, '16676481448', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.935'),
+(428, 'PEDRO HENRIQUE INOCENCIO SILVA', NULL, NULL, '2017-04-05 00:00:00.000', 'SANDRA MARIA DA SILVA', NULL, '52762516811', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.939'),
+(429, 'ARTHUR LUÍS DA SILVA MARTINS', NULL, NULL, '2019-04-23 00:00:00.000', 'HAMAYANE MARÍLIA DA SILVA', NULL, '16443809432', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.941'),
+(430, 'ALICY KEVILLYN DA SILVA', NULL, NULL, '2016-03-15 00:00:00.000', 'LUCIVANIA COSMA DA SILVA', NULL, '13717552481', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.942'),
+(431, 'JOSE ALLAN KERRYSON DA SILVA', NULL, NULL, '2014-01-12 00:00:00.000', 'LUCIVANIA COSMA DA SILVA', NULL, '16950814470', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.944'),
+(432, 'PEDRO HENRIQUE RODRIGUES DE FREITAS', NULL, NULL, '2010-04-24 00:00:00.000', 'PATRICIA RODRIGUES DA SILVA', NULL, '15428947438', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.945'),
+(433, 'KETHILLY MIRELLY SANTOS RODRIGUES', NULL, NULL, '2018-03-22 00:00:00.000', 'MARIA LÚCIA DOS SANTOS', NULL, '15422255402', NULL, 'BRASIL', 'BRASIL', 2, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.950'),
+(434, 'KEMILLY MICAELLY SANTOS DA SILVA', NULL, NULL, '2011-10-02 00:00:00.000', 'MARIA LÚCIA DOS SANTOS', NULL, '47315477845', NULL, 'BRASIL', 'BRASIL', 2, 2, 1, 1, NULL, 1, '2026-03-10 14:58:09.953'),
+(435, 'SARAH FIGUERÊDO SILVA', NULL, NULL, '2020-02-06 00:00:00.000', 'NADJA MARIA GONDIM DE FIGUERÊDO', NULL, '17041068420', NULL, 'BRASIL', 'BRASIL', 2, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.954'),
+(436, 'YCARO HENRIQUE NASCIMENTO DA SILVA', NULL, NULL, '2016-06-30 00:00:00.000', 'CÁSSIA MARIA DA SILVA', NULL, '13912724474', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.962'),
+(437, 'MATEUS ANTONY DA SILVA MENEZES', NULL, NULL, '2013-02-22 00:00:00.000', 'RAFAELA FERREIRA DA SILVA MENEZES', NULL, '14414871409', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.967'),
+(438, 'CAYLAN JOÃO DE OLIVEIRA FELIX', NULL, NULL, '2012-04-27 00:00:00.000', 'MARIA JOSÉ DE OLIVEIRA', NULL, '17725072454', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.970'),
+(439, 'RALF DOS SANTOS FELIPE SILVA', NULL, NULL, '2012-12-13 00:00:00.000', 'MARIA JOSE DOS SANTOS', NULL, '12148529471', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.975'),
+(440, 'WESLLEY RODRIGUES SILVA DOS SANTOS', NULL, NULL, '2009-05-06 00:00:00.000', 'ELISÂNGELA MARIA DA SILVA', NULL, '15926542405', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.976'),
+(441, 'JOÃO GUILHERME ALMEIDA MOREIRA DA SILVA', NULL, NULL, '2013-03-18 00:00:00.000', 'LÚBIA CRISTINA DE ALMEIDA', NULL, '16140242436', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.976'),
+(442, 'JAILTON DE LIMA AMORIM', NULL, NULL, '2012-10-05 00:00:00.000', 'MARIANA CORREIA DE LIMA', NULL, '16480896408', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.977'),
+(443, 'DAVY HENRIQUE SANTANA DO NASCIMENTO', NULL, NULL, '2015-04-26 00:00:00.000', 'TATIANE PRAZERES DO NASCINENTO', NULL, '72021398471', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.978'),
+(444, 'EMMANUEL SOARES DA SILVA', NULL, NULL, '2020-01-03 00:00:00.000', 'ANA CARA DE LIMA SOARES', NULL, '16952272470', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.986'),
+(445, 'PÂMELA ALICE DA SILVA LIMA', NULL, NULL, '2016-04-28 00:00:00.000', 'MÁRCIA CRISTIANE DA SILVA', NULL, '13783225418', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.988'),
+(446, 'PATRICK RIKELMY DA SILVA LIMA', NULL, NULL, '2012-10-17 00:00:00.000', 'MÁRCIA CRISTIANE DA SILVA', NULL, '16665739490', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.989'),
+(447, 'MIGUEL DORNELIS SILVA LUZ', NULL, NULL, '2013-02-01 00:00:00.000', 'LUCIANA LUIZA DA SILVA', NULL, '14139415401', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.990'),
+(448, 'JEISYKELI DIAS DA SILVA', NULL, NULL, '2012-11-12 00:00:00.000', 'SANDRILLE DIAS DA CRUZ', NULL, '12928337423', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.991'),
+(449, 'SAMUEL JOSÉ DIAS DA SILVA', NULL, NULL, '2014-07-09 00:00:00.000', 'SAMUEL JOSÉ DIAS DA SILVA', NULL, '12961964458', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.991'),
+(450, 'JOSÉ LUCAS OLIVEIRA SILVA', NULL, NULL, '2014-12-18 00:00:00.000', 'EVELYN LETICIA OLIVEIRA DA SILVA', NULL, '13358064409', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:09.992'),
+(451, 'FELIPE MICAEL DOS SANTOS SILVA', NULL, NULL, '2014-10-29 00:00:00.000', 'MIKAELA DOS SANTOS GOMES', NULL, '16961140475', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-10 14:58:09.993'),
+(452, 'LUIZ FELIPE DA SILVA NASCIMENTO', NULL, NULL, '2019-10-08 00:00:00.000', 'LUCIANA BEATRIZ DOS SANTOS SILVA', NULL, '16757798484', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.018'),
+(453, 'YHUDY MIGUEL DA SILVA MELO', NULL, NULL, '2018-04-26 00:00:00.000', 'MICHELE AMARAL DA SILVA', NULL, '15637805423', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.028'),
+(454, 'VINICIUS MANOEL SILVA DE JESUS', NULL, NULL, '2016-04-20 00:00:00.000', 'VALQUIRIA JOSEFA DA SILVA', NULL, '13792955482', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.030'),
+(455, 'GABRIEL DOS SANTOS CONSTÂNCIO DA SILVA', NULL, NULL, '2013-01-25 00:00:00.000', 'MARIA DA PAZ DOS SANTOS', NULL, '18149149430', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.031'),
+(456, 'WESLLEM GABRIEL MOREIRA DE ARAUJO', NULL, NULL, '2009-09-29 00:00:00.000', 'ANA PATRICIA DA CONCEIÇÃO MOREIRA', NULL, '16641363473', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.032'),
+(457, 'DAYARA SOPHIA DA SILVA FELIX', NULL, NULL, '2015-10-16 00:00:00.000', 'ROBERTA TEREZA DA SILVA', NULL, '16609836493', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.037'),
+(458, 'CARLOS EDUARDO GOMES DOS SANTOS', NULL, NULL, '2018-09-10 00:00:00.000', 'LEIDIANE GOMES DA SILVA', NULL, '15860622473', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.038'),
+(459, 'BRYAN KAIQUE DOS SANTOS SOUZA', NULL, NULL, '2019-03-22 00:00:00.000', 'ROSIMARE DOS SANTOS MARIANON SOUZA', NULL, '16349861485', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.039'),
+(460, 'WAGNER MAURILIO BARBOSA DA SILVA', NULL, NULL, '2014-12-29 00:00:00.000', 'ANA LUCIA BARBOSA', NULL, '17094408480', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.050'),
+(461, 'JORGE EDUARDO GOMES DOS SANTOS', NULL, NULL, '2014-09-19 00:00:00.000', 'EDNA ROSA GOMES DA SILVA', NULL, '16691921488', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.073'),
+(462, 'CARLOS ALBERTO DE BARROS JUNIOR', NULL, NULL, '2013-09-06 00:00:00.000', 'EDVA ROSA GOMES DA SILVA BARROS', NULL, '18103253405', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.076'),
+(463, 'DAVY LUCCAS DO NASCIMENTO SANTOS', NULL, NULL, '2014-05-15 00:00:00.000', 'CALUDIA ERLAINE DE CONCEIÇÃO NASCIEMNTO', NULL, '16498862416', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.077'),
+(464, 'JOSÉ LEONARDO FERRERA DA SILVA', NULL, NULL, '2013-06-20 00:00:00.000', 'JOSENEIDE CREUZA FERREIRA', NULL, '16496309485', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.080'),
+(465, 'JOSÉ ISAIAS FERREIRA DE LIMA', NULL, NULL, '2013-02-26 00:00:00.000', 'ALESSANDRA DE HOLANDA FERREIRA', NULL, '17427989422', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.083'),
+(466, 'INGRIDY SAMARA FERREIRA DE LIMA', NULL, NULL, '2011-11-18 00:00:00.000', 'ALESSANDRA DE HOLANDA FERREIRA', NULL, '16637015474', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.084'),
+(467, 'LORENNA MANUELLA DA SILVA NASCIMENTO', NULL, NULL, '2019-02-04 00:00:00.000', 'GRAZIELE MARIA DOS SANTOS SILVA', NULL, '16461297413', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.085'),
+(468, 'MELLYSSA NATHIELLY FRANÇA DA SILVA', NULL, NULL, '2019-04-03 00:00:00.000', 'NATALI TRAJANO DE FRANÇA', NULL, '16406671481', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.087'),
+(469, 'WALLESON HENRIQUE FRANÇA DA SILVA', NULL, NULL, '2018-01-07 00:00:00.000', 'NATALI TRAJANO DE FRANÇA', NULL, '15649751420', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.088'),
+(470, 'GREYCE KELLY FERREIRA DE VASCONCELOS', NULL, NULL, '2011-04-18 00:00:00.000', 'ROSANGELA MARIA FERREIRA', NULL, '05287484402', NULL, 'BRASIL', 'BRASIL', 2, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.089'),
+(471, 'JOSE ALEJANDRO DA SILVA GONÇALVES', NULL, NULL, '2012-10-09 00:00:00.000', 'ELISANGELA MARIA DA SILVA', NULL, '17943367456', NULL, 'BRASIL', 'BRASIL', 1, 4, 1, 1, NULL, 1, '2026-03-10 14:58:10.090'),
+(472, 'MARIANA SANTANA DOS SANTOS', NULL, NULL, '2015-03-15 00:00:00.000', 'JOSE HILDA MARIA DE SANTANA', NULL, '00695953486', NULL, 'BRASIL', 'BRASIL', 2, 3, 1, 1, NULL, 1, '2026-03-10 14:58:10.091'),
+(473, 'IANDERSON RUAN DA SILVA', NULL, NULL, '2013-05-24 00:00:00.000', 'NATALIA TAMIRES DA CRUZ SILVA', NULL, '16409754469', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-11 09:00:02.176'),
+(474, 'RAPHAEL EMANOEL DE ANDRADE CAITANO', NULL, NULL, '2002-08-01 00:00:00.000', 'MARIA MADALENA DE ANDRADE COELHO', NULL, '70758977484', NULL, 'BRASIL', 'BRASIL', 1, 1, 1, 1, NULL, 1, '2026-03-11 12:00:02.580');
 
 -- --------------------------------------------------------
 
@@ -2901,7 +3922,6 @@ INSERT INTO `pessoa` (`id`, `nome_completo`, `nome_social`, `apelido`, `data_nas
 -- Estrutura para tabela `plano_trabalho`
 --
 
-DROP TABLE IF EXISTS `plano_trabalho`;
 CREATE TABLE `plano_trabalho` (
   `id` int(11) NOT NULL,
   `usuario_id` int(11) NOT NULL,
@@ -2919,9 +3939,11 @@ CREATE TABLE `plano_trabalho` (
 --
 
 INSERT INTO `plano_trabalho` (`id`, `usuario_id`, `ano`, `mes`, `caminho_planejamento`, `caminho_relatorio`, `feedback_coordenador`, `created_at`, `updated_at`) VALUES
-(10, 19, 2026, 1, '/uploads/planos_trabalho/plano_b05dc9cf-1f24-4539-a64f-b934ae561163.pdf', '/uploads/planos_trabalho/plano_a963f8bd-0c2e-4cec-a694-226c587f35c9.pdf', 'precisa rever as metas', '2026-03-04 17:26:47', '2026-03-04 17:28:22'),
-(8, 23, 2026, 3, '/uploads/planos_trabalho/plano_8e1cffb9-e867-4be8-a159-8e976ac7983b.pdf', NULL, NULL, '2026-03-04 16:59:33', '2026-03-04 16:59:33'),
-(9, 19, 2026, 3, '/uploads/planos_trabalho/plano_23336656-e13a-44a7-a4a5-a32a68c8b5ec.pdf', '/uploads/planos_trabalho/plano_878caa28-adf3-48eb-aab7-35d473bc0069.pdf', 'tudo certo', '2026-03-04 17:26:19', '2026-03-04 17:28:11');
+(14, 18, 2026, 3, '/uploads/planos_trabalho/plano_90b55515-5b84-4cbb-b282-1454f0d4927f.pdf', '/uploads/planos_trabalho/plano_54bbf929-031a-4954-993b-b32d4d8e443a.pdf', NULL, '2026-03-09 17:10:56', '2026-03-09 17:10:56'),
+(15, 25, 2026, 3, NULL, '/uploads/planos_trabalho/plano_9b875089-58a9-436c-aeb1-d58a229f6e7f.pdf', 'Beatriz, houve algum erro no envio do seu relatório, o mesmo foi enviado com 131 páginas e a maioria está em branco, pedimos que você possa o reorganizar e anexar novamente. Em caso de dúvidas, estamos a disposição!', '2026-03-09 17:52:42', '2026-03-11 11:51:34'),
+(16, 26, 2026, 3, '/uploads/planos_trabalho/plano_a5438b03-7294-488d-b4cf-5520babebc9f.pdf', '/uploads/planos_trabalho/plano_c86a984d-06f3-4f9b-bd2a-6c7b6e528822.pdf', 'Olá Irlane, Plano de Trabalho e relatório avaliados e aprovados!', '2026-03-09 17:53:46', '2026-03-11 11:54:38'),
+(17, 22, 2026, 3, '/uploads/planos_trabalho/plano_bf260268-6c4d-4f6a-88b6-8f8824feca67.pdf', '/uploads/planos_trabalho/plano_478f5dd2-405e-4543-917b-a866940695ca.pdf', 'Plano de Trabalho e Relatório Mensal avaliado e aprovado!', '2026-03-09 17:56:14', '2026-03-11 11:47:36'),
+(8, 23, 2026, 3, '/uploads/planos_trabalho/plano_8e1cffb9-e867-4be8-a159-8e976ac7983b.pdf', NULL, 'Jailson, Plano de Trabalho avaliado e aprovado.', '2026-03-04 16:59:33', '2026-03-11 11:56:53');
 
 -- --------------------------------------------------------
 
@@ -2929,7 +3951,6 @@ INSERT INTO `plano_trabalho` (`id`, `usuario_id`, `ano`, `mes`, `caminho_planeja
 -- Estrutura para tabela `processo_inscricao`
 --
 
-DROP TABLE IF EXISTS `processo_inscricao`;
 CREATE TABLE `processo_inscricao` (
   `id` int(11) NOT NULL,
   `id_projeto` int(11) DEFAULT NULL,
@@ -2942,7 +3963,6 @@ CREATE TABLE `processo_inscricao` (
 -- Estrutura para tabela `projeto`
 --
 
-DROP TABLE IF EXISTS `projeto`;
 CREATE TABLE `projeto` (
   `id` int(11) NOT NULL,
   `titulo` varchar(255) NOT NULL,
@@ -2966,7 +3986,6 @@ INSERT INTO `projeto` (`id`, `titulo`, `status`) VALUES
 -- Estrutura para tabela `setor`
 --
 
-DROP TABLE IF EXISTS `setor`;
 CREATE TABLE `setor` (
   `id` int(11) NOT NULL,
   `nome` varchar(191) NOT NULL,
@@ -3003,7 +4022,6 @@ INSERT INTO `setor` (`id`, `nome`, `status`) VALUES
 -- Estrutura para tabela `tipo_documento`
 --
 
-DROP TABLE IF EXISTS `tipo_documento`;
 CREATE TABLE `tipo_documento` (
   `id` int(11) NOT NULL,
   `nome` varchar(191) NOT NULL,
@@ -3017,7 +4035,6 @@ CREATE TABLE `tipo_documento` (
 -- Estrutura para tabela `turmas`
 --
 
-DROP TABLE IF EXISTS `turmas`;
 CREATE TABLE `turmas` (
   `id` int(11) NOT NULL,
   `projeto_id` int(11) NOT NULL,
@@ -3053,7 +4070,6 @@ INSERT INTO `turmas` (`id`, `projeto_id`, `nome`, `turno`, `periodo`, `dias_aula
 (22, 3, 'HIDROGINÁSTICA - TURMA B', 'Manhã', '2026.1', '[\"Ter\",\"Qui\"]', NULL, NULL, 1, '2026-02-27 14:41:46'),
 (24, 3, 'HIDROGINÁSTICA - TURMA C', 'Tarde', '2026.1', '[\"Ter\",\"Qui\"]', NULL, NULL, 1, '2026-03-03 13:30:15'),
 (25, 3, 'HIDROGINÁSTICA - TURMA D', 'Tarde', '2026.1', '[\"Ter\",\"Qui\"]', NULL, NULL, 1, '2026-03-03 13:30:59'),
-(28, 3, 'turma teste', 'Tarde', '2026.1', '[\"Ter\",\"Qui\"]', NULL, NULL, 0, '2026-03-04 17:23:55'),
 (29, 3, 'DANÇA - TURMA A', 'Manhã', '2026.1', '[\"Seg\"]', NULL, NULL, 1, '2026-03-04 19:28:52'),
 (30, 3, ' HIDROPONIA - TURMA A', 'Manhã', '2026.1', '[\"Seg\"]', NULL, NULL, 1, '2026-03-04 19:30:22'),
 (31, 3, ' CAMINHADA - TURMA A', 'Manhã', '2026.1', '[\"Sex\"]', NULL, NULL, 1, '2026-03-04 19:34:23'),
@@ -3067,7 +4083,12 @@ INSERT INTO `turmas` (`id`, `projeto_id`, `nome`, `turno`, `periodo`, `dias_aula
 (39, 3, 'HIDROPONIA - TURMA D', 'Tarde', '2026.1', '[\"Seg\"]', NULL, NULL, 1, '2026-03-04 19:50:58'),
 (40, 3, 'CAMINHADA - TURMA D', 'Tarde', '2026.1', '[\"Seg\"]', NULL, NULL, 1, '2026-03-04 19:52:34'),
 (41, 4, 'FERREIRA DE LIRA', 'Manhã', '2026.1', '[\"Ter\",\"Qui\"]', NULL, NULL, 1, '2026-03-05 18:00:59'),
-(42, 4, 'FERREIRA DE LIRA', 'Tarde', '2026.1', '[\"Ter\",\"Qui\"]', NULL, NULL, 1, '2026-03-05 18:17:35');
+(42, 4, 'FERREIRA DE LIRA', 'Tarde', '2026.1', '[\"Ter\",\"Qui\"]', NULL, NULL, 1, '2026-03-05 18:17:35'),
+(43, 3, 'Teste Treinamento Plataforma Frequencia ', 'Manhã', '2026.1', '[]', '2026-03-09', '2026-12-22', 0, '2026-03-09 12:29:08'),
+(44, 2, 'OP. COMUNIDADES - VILA BOA ESPERANÇA', 'Manhã', '2026.1', '[\"Ter\",\"Qua\",\"Qui\",\"Sex\"]', NULL, NULL, 1, '2026-03-10 17:28:08'),
+(45, 2, 'OP. COMUNIDADES - VILA BOA ESPERANÇA', 'Tarde', '2026.1', '[\"Seg\",\"Ter\",\"Qui\"]', NULL, NULL, 1, '2026-03-10 18:17:54'),
+(46, 2, 'OP. COMUNIDADES - NOVA ITAENGA', 'Tarde', '2026.1', '[\"Seg\",\"Ter\",\"Qua\",\"Qui\"]', NULL, NULL, 1, '2026-03-10 18:41:16'),
+(47, 2, 'OP. COMUNIDADES - NOVA ITAENGA', 'Manhã', '2026.1', '[\"Seg\",\"Ter\",\"Qua\",\"Qui\"]', NULL, NULL, 1, '2026-03-10 18:47:22');
 
 -- --------------------------------------------------------
 
@@ -3075,7 +4096,6 @@ INSERT INTO `turmas` (`id`, `projeto_id`, `nome`, `turno`, `periodo`, `dias_aula
 -- Estrutura para tabela `turma_professores`
 --
 
-DROP TABLE IF EXISTS `turma_professores`;
 CREATE TABLE `turma_professores` (
   `id` int(11) NOT NULL,
   `turma_id` int(11) NOT NULL,
@@ -3140,7 +4160,17 @@ INSERT INTO `turma_professores` (`id`, `turma_id`, `colaborador_id`, `disciplina
 (65, 41, 25, NULL, 1),
 (66, 41, 26, NULL, 1),
 (67, 42, 25, NULL, 1),
-(68, 42, 26, NULL, 1);
+(68, 42, 26, NULL, 1),
+(69, 42, 19, NULL, 0),
+(70, 43, 1, NULL, 0),
+(71, 43, 18, NULL, 0),
+(72, 43, 19, NULL, 0),
+(73, 44, 19, NULL, 1),
+(74, 44, 20, NULL, 1),
+(75, 45, 19, NULL, 1),
+(76, 45, 20, NULL, 1),
+(77, 46, 21, NULL, 1),
+(78, 47, 21, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -3148,7 +4178,6 @@ INSERT INTO `turma_professores` (`id`, `turma_id`, `colaborador_id`, `disciplina
 -- Estrutura para tabela `usuario`
 --
 
-DROP TABLE IF EXISTS `usuario`;
 CREATE TABLE `usuario` (
   `id` int(11) NOT NULL,
   `id_colaborador` int(11) NOT NULL,
@@ -3181,7 +4210,7 @@ INSERT INTO `usuario` (`id`, `id_colaborador`, `id_perfil_usuario`, `login`, `se
 (16, 16, 2, 'paulo.santana', '$2b$10$MxME9GO338z0/URt4v5QtOOu0oSGyZ3IZS1hAjPuBfHnN3XXnhThi', 1),
 (17, 17, 2, 'wenderson.farias', '$2b$10$leTAvJmUGljJZRrpNH/0NewAZqDxZBC7dxrFZcv.1MWhfP.TBCbsO', 1),
 (18, 18, 6, 'daniel.neto', '$2b$10$GDfN2Oon8g6iQKk491zBUOUypuYxr4IknaPlLBRiwuDwlkFThNTrW', 1),
-(19, 19, 6, 'geovane.lima', '$2b$10$HQHOCubskJoEHEij137n3OjLMOXa1qPJ387mslLDW8IWKwMfnJn2y', 1),
+(19, 19, 6, 'geovane.lima', '$2b$10$RQsH2/T0Ofya.PO.x6BEx.5c3GcjrknLsQuT3a0O14Maug0gsH3cO', 1),
 (20, 20, 6, 'hernandes.fernandes', '$2b$10$MAduCrq9GsS4SyGHOQXQ3.OjfrdfN6RpZyyvn6uplE7o5IoJgjlSC', 1),
 (21, 21, 6, 'alex.silva', '$2b$10$aiZqggnH9K/uOUKcdWrHouq6gA4mJ/OdctggnDV.yaSyJd6aPsPia', 1),
 (22, 22, 6, 'marcus.guilherme', '$2b$10$gYbkmpNMCj6w0d4qNqLK0OokzwQy0tpRB7K6o3YmySEAWCvyb0bIi', 1),
@@ -3191,10 +4220,11 @@ INSERT INTO `usuario` (`id`, `id_colaborador`, `id_perfil_usuario`, `login`, `se
 (26, 26, 6, 'irlane.ivanilza', '$2b$10$HVOS5OmF/zmGwZvkQ/YDDun5UhJZU9Brj5HPBsrwEf.1FjQreWseq', 1),
 (27, 27, 6, 'vitoria.regia', '$2b$10$E8PiRsBnZNUDD8Xn6TXogOjR2rgyS/48B0gMaPrad1xZ5QPpECL2.', 1),
 (28, 28, 6, 'joao.vitor', '$2b$10$h9X2.BORIBXotnhMnuiqgeMDbWm112SdcAtWTYpRnPqo8iwW/HQq6', 1),
-(29, 29, 2, 'djair.batista', '$2b$10$X3eTkzfUHzpCqRhgkRAVN.ajr3BQIzZsoUNEAPberq6LwzPvT/O5W', 1),
-(30, 30, 6, 'leandro.inacio', '$2b$10$VtUkvgjkuAp7T2DmjtzPMu4yBD4th0kJbQ6uTPCXH1VbniEtX5mVq', 1),
-(31, 31, 6, 'marco.paulo', '$2b$10$qFWBkESfint36BGVZB.0vOOMWCuzs1IB6l41E2.fSUFJxrFcmYNZm', 1),
-(32, 32, 6, 'jenifer.farias', '$2b$10$dprMhxee63AE9ylomer5PuU6wAmzaQB70etn.InQqiIhnq/PHpnMm', 1);
+(29, 29, 3, 'djair.batista', '$2b$10$X3eTkzfUHzpCqRhgkRAVN.ajr3BQIzZsoUNEAPberq6LwzPvT/O5W', 1),
+(30, 30, 6, 'leandro.inacio', '$2b$10$CmsRAaPOws/C88uD1yJEzebZLugfwqzU6TcHUAiJFB8NzAnUHJXyC', 1),
+(31, 31, 6, 'marco.paulo', '$2b$10$dqCewDvMQakqG9BtaukKeO123H4.Dx3KY0olOcIw5k0E7Az.yyz9e', 1),
+(32, 32, 6, 'jenifer.farias', '$2b$10$09I0UWGwCYnLnhLRis2MmevQWhxH55FIoZroSI2eoh3ct6ZEveqt.', 1),
+(33, 33, 6, 'raphael.andrade', '$2b$10$nwBfiamD./4IXMJEDHXqz.T.v5faEQ04TWNdYJIncScHqYeVEMhuK', 1);
 
 --
 -- Índices para tabelas despejadas
@@ -3390,13 +4420,13 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de tabela `aulas`
 --
 ALTER TABLE `aulas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT de tabela `Beneficiario`
 --
 ALTER TABLE `Beneficiario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=320;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=442;
 
 --
 -- AUTO_INCREMENT de tabela `cargo`
@@ -3408,13 +4438,13 @@ ALTER TABLE `cargo`
 -- AUTO_INCREMENT de tabela `colaborador`
 --
 ALTER TABLE `colaborador`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de tabela `contato`
 --
 ALTER TABLE `contato`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=352;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=475;
 
 --
 -- AUTO_INCREMENT de tabela `disciplinas`
@@ -3444,13 +4474,13 @@ ALTER TABLE `etnia`
 -- AUTO_INCREMENT de tabela `fotos_aula`
 --
 ALTER TABLE `fotos_aula`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT de tabela `frequencias`
 --
 ALTER TABLE `frequencias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=615;
 
 --
 -- AUTO_INCREMENT de tabela `genero`
@@ -3468,7 +4498,7 @@ ALTER TABLE `identidade_genero`
 -- AUTO_INCREMENT de tabela `matriculas`
 --
 ALTER TABLE `matriculas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1307;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1481;
 
 --
 -- AUTO_INCREMENT de tabela `orgao_emissor`
@@ -3486,13 +4516,13 @@ ALTER TABLE `perfil_usuario`
 -- AUTO_INCREMENT de tabela `pessoa`
 --
 ALTER TABLE `pessoa`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=352;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=475;
 
 --
 -- AUTO_INCREMENT de tabela `plano_trabalho`
 --
 ALTER TABLE `plano_trabalho`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de tabela `processo_inscricao`
@@ -3522,19 +4552,19 @@ ALTER TABLE `tipo_documento`
 -- AUTO_INCREMENT de tabela `turmas`
 --
 ALTER TABLE `turmas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT de tabela `turma_professores`
 --
 ALTER TABLE `turma_professores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT de tabela `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- Restrições para tabelas despejadas
