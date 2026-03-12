@@ -113,12 +113,12 @@ const ListaTurmas = () => {
             const logoPath = projectLogos[turma.nome_projeto];
             
             return (
-              <div key={turma.id} onClick={() => navigate(`/app/turmas/${turma.id}`)} className="relative overflow-hidden bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-full">
+              <div key={turma.id} onClick={() => navigate(`/app/turmas/${turma.id}`)} className="relative overflow-hidden bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-full">
                 
                 {/* Listra Lateral Neutra */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 transition-colors ${turma.ativo ? 'bg-slate-800 group-hover:bg-slate-900' : 'bg-gray-300'}`}></div>
 
-                <div className="flex flex-col gap-2 pl-1">
+                <div className="flex flex-col gap-1 pl-1">
                   {/* Informações da Esquerda (Topo) */}
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] font-bold uppercase text-gray-500">{turma.nome_projeto || 'Geral'}</span>
@@ -135,8 +135,8 @@ const ListaTurmas = () => {
                 </div>
 
                 {/* Rodapé do Card com Logo */}
-                <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
-                  <div className="flex gap-4">
+                <div className="flex justify-between items-end mt-4 pt-3 border-t border-gray-50 pl-1">
+                  <div className="flex gap-2">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500" title="Alunos Ativos">
                       <GraduationCap size={14} className="text-green-500" /> {turma.total_alunos}
                     </div>
@@ -148,7 +148,7 @@ const ListaTurmas = () => {
                   {/* Logo à Direita na Parte de Baixo */}
                   <div className="flex-shrink-0">
                      {logoPath ? (
-                        <img src={logoPath} alt={`Logo ${turma.nome_projeto}`} className="h-24 w-24 object-contain" />
+                        <img src={logoPath} alt={`Logo ${turma.nome_projeto}`} className="h-20 w-20 object-contain" />
                       ) : (
                         <div className="h-16 w-16 flex flex-col items-center justify-center bg-gray-50 border border-dashed border-gray-200 rounded-full text-gray-400 group-hover:text-blue-400 transition-colors" title="Adicionar Imagem">
                           <ImageIcon size={20} />
