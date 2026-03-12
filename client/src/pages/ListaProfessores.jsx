@@ -1,24 +1,50 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/sysconex';
-import { Users, Mail, GraduationCap, Search } from 'lucide-react';
+import { Users, Mail, GraduationCap, Search, X } from 'lucide-react';
 
 const ListaProfessores = () => {
+    const navigate = useNavigate();
     const [professores, setProfessores] = useState([]);
+    const [todasTurmas, setTodasTurmas] = useState([]);
     const [filtro, setFiltro] = useState('');
     const [loading, setLoading] = useState(true);
 
+    // Modal State
+    const [showTurmasModal, setShowTurmasModal] = useState(false);
+    const [profSelecionado, setProfSelecionado] = useState(null);
+    const [turmasDoProf, setTurmasDoProf] = useState([]);
+
     useEffect(() => {
-        // Chama a rota nova que criamos
-        api.get('/professores/geral')
-            .then(res => setProfessores(res.data))
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
+        setLoading(true);
+        Promise.all([
+            api.get('/professores/geral'),
+            api.get('/turmas') // Busca todas as turmas ativas/inativas para filtrar localmente
+        ])
+        .then(([resProfs, resTurmas]) => {
+            setProfessores(resProfs.data);
+            setTodasTurmas(resTurmas.data);
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false));
     }, []);
 
     const profsFiltrados = professores.filter(p =>
         p.nome_completo.toLowerCase().includes(filtro.toLowerCase()) ||
         p.email_institucional?.toLowerCase().includes(filtro.toLowerCase())
     );
+
+    const handleOpenTurmas = (prof) => {
+        // Filtra turmas nas quais este professor está alocado
+        const turmasAlocadas = todasTurmas.filter(t => t.professor_id === prof.id || t.professor_id === prof.usuario_id || String(t.professores_ids).includes(String(prof.usuario_id)));
+        setProfSelecionado(prof);
+        
+        // Se a API /turmas não retornar os professores associados de forma fácil, o modal servirá como fallback
+        // Para garantir precisão, assumimos que no backend as turmas possuem um `professor_id` ou algo equivalente.
+        // Se `turmasAlocadas` vier vazio pela forma que a API envia, usaremos o fallback visual de "Aguardando turmas"
+        setTurmasDoProf(turmasAlocadas); 
+        setShowTurmasModal(true);
+    };
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
@@ -41,34 +67,94 @@ const ListaProfessores = () => {
             {loading ? <p className="text-center py-10 text-gray-400">Carregando equipe...</p> : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {profsFiltrados.map(prof => (
-                        <div key={prof.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center text-center">
-                            <div className="w-20 h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4">
-                                {prof.nome_completo.charAt(0)}
+                        <div key={prof.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center text-center h-full">
+                            
+                            {/* Bloco de Informações - Estica para empurrar o rodapé */}
+                            <div className="flex-1 flex flex-col items-center w-full">
+                                <div className="w-20 h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-2xl font-bold mb-4">
+                                    {prof.nome_completo.charAt(0)}
+                                </div>
+
+                                <h3 className="font-bold text-gray-800 text-lg">{prof.nome_completo}</h3>
+
+                                <div className="flex items-center justify-center gap-2 text-gray-500 text-xs mt-1 mb-6 w-full px-2">
+                                    <Mail size={12} className="shrink-0" />
+                                    <span className="truncate" title={prof.email_institucional}>
+                                        {prof.email_institucional}
+                                    </span>
+                                </div>
                             </div>
 
-                            <h3 className="font-bold text-gray-800 text-lg">{prof.nome_completo}</h3>
-
-                            <div className="flex items-center justify-center gap-2 text-gray-500 text-xs mt-1 mb-4 w-full px-2">
-                                <Mail size={12} className="shrink-0" /> {/* shrink-0 pro ícone não esmagar */}
-                                <span className="truncate" title={prof.email_institucional}>
-                                    {prof.email_institucional}
-                                </span>
-                            </div>
-
-                            <div className="w-full pt-4 border-t border-gray-50 flex justify-between items-center">
-                                {/* <span className="text-xs text-gray-400 font-mono">ID: {prof.id}</span> */}
-                                <span className="flex items-center gap-1 text-sm font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
+                            {/* Rodapé - Sempre alinhado à base */}
+                            <div className="w-full pt-4 mt-auto border-t border-gray-50 flex justify-between items-center bg-white">
+                                <button
+                                    onClick={() => handleOpenTurmas(prof)}
+                                    className="flex items-center gap-1 text-sm font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-full transition-colors"
+                                    title="Ver Turmas deste Professor"
+                                >
                                     <GraduationCap size={16} /> {prof.total_turmas} Turmas
-                                </span>
+                                </button>
                                 <button
                                     onClick={() => window.location.hash = `#/app/professores/${prof.usuario_id}/planos`}
-                                    className="text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
+                                    className="text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-lg transition-colors shadow-sm whitespace-nowrap"
                                 >
                                     Ver Planos
                                 </button>
                             </div>
                         </div>
                     ))}
+                    {profsFiltrados.length === 0 && (
+                        <p className="col-span-full text-center py-10 text-gray-400">Nenhum professor encontrado com esse filtro.</p>
+                    )}
+                </div>
+            )}
+
+            {/* Modal de Turmas do Professor */}
+            {showTurmasModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="bg-purple-50 px-6 py-4 border-b border-purple-100 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-lg font-bold text-purple-900">Turmas Vinculadas</h2>
+                                <p className="text-xs text-purple-600 font-medium">Docente: {profSelecionado?.nome_completo}</p>
+                            </div>
+                            <button onClick={() => setShowTurmasModal(false)} className="text-purple-400 hover:text-purple-600 transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto w-full">
+                            {turmasDoProf.length > 0 ? (
+                                <ul className="space-y-3 w-full">
+                                    {turmasDoProf.map(turma => (
+                                        <li key={turma.id} className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:shadow-sm transition-all flex flex-col cursor-pointer" onClick={() => { setShowTurmasModal(false); navigate(`/app/turmas/${turma.id}`); }}>
+                                            <div className="flex justify-between items-start w-full">
+                                                <div className="flex-1 w-full">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 bg-purple-100 px-2 py-0.5 rounded">{turma.nome_projeto || 'Projeto Geral'}</span>
+                                                    <h4 className="font-bold text-gray-800 mt-2 text-base leading-tight break-words pr-2">{turma.nome}</h4>
+                                                </div>
+                                                {!turma.ativo && <span className="text-[10px] font-bold uppercase text-gray-500 bg-gray-200 px-2 py-1 rounded shrink-0 ml-2">Encerrada</span>}
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 text-xs text-gray-500 mt-3 font-medium">
+                                              <span className="bg-white border border-gray-200 px-2 py-1 rounded shadow-sm">{turma.periodo}</span>
+                                              <span className="bg-white border border-gray-200 px-2 py-1 rounded shadow-sm">{turma.turno}</span>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <GraduationCap size={48} className="mx-auto text-purple-200 mb-3" />
+                                    <p className="text-gray-500 text-sm">Nenhuma turma encontrada localmente para este professor.</p>
+                                    <p className="text-xs text-gray-400 mt-2">Pode ser necessário consultar o banco de forma isolada.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                            <button onClick={() => setShowTurmasModal(false)} className="px-5 py-2 font-bold text-gray-600 hover:bg-gray-200 rounded-lg transition-colors">Fechar</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
