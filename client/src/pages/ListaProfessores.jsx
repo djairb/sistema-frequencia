@@ -14,17 +14,13 @@ const ListaProfessores = () => {
     const [showTurmasModal, setShowTurmasModal] = useState(false);
     const [profSelecionado, setProfSelecionado] = useState(null);
     const [turmasDoProf, setTurmasDoProf] = useState([]);
+    const [loadingTurmas, setLoadingTurmas] = useState(false);
 
     useEffect(() => {
         setLoading(true);
-        Promise.all([
-            api.get('/professores/geral'),
-            api.get('/turmas') // Busca todas as turmas ativas/inativas para filtrar localmente
-        ])
-        .then(([resProfs, resTurmas]) => {
-            setProfessores(resProfs.data);
-            setTodasTurmas(resTurmas.data);
-        })
+        // Agora busca apenas a lista de professores geral, o modal busca as turmas sob demanda
+        api.get('/professores/geral')
+        .then(res => setProfessores(res.data))
         .catch(err => console.error(err))
         .finally(() => setLoading(false));
     }, []);
@@ -34,16 +30,21 @@ const ListaProfessores = () => {
         p.email_institucional?.toLowerCase().includes(filtro.toLowerCase())
     );
 
-    const handleOpenTurmas = (prof) => {
-        // Filtra turmas nas quais este professor está alocado
-        const turmasAlocadas = todasTurmas.filter(t => t.professor_id === prof.id || t.professor_id === prof.usuario_id || String(t.professores_ids).includes(String(prof.usuario_id)));
+    const handleOpenTurmas = async (prof) => {
         setProfSelecionado(prof);
-        
-        // Se a API /turmas não retornar os professores associados de forma fácil, o modal servirá como fallback
-        // Para garantir precisão, assumimos que no backend as turmas possuem um `professor_id` ou algo equivalente.
-        // Se `turmasAlocadas` vier vazio pela forma que a API envia, usaremos o fallback visual de "Aguardando turmas"
-        setTurmasDoProf(turmasAlocadas); 
         setShowTurmasModal(true);
+        setLoadingTurmas(true);
+        
+        try {
+            // Usa a nova rota que acabamos de criar no backend
+            const res = await api.get(`/professores/${prof.usuario_id}/turmas`);
+            setTurmasDoProf(res.data || []);
+        } catch (error) {
+            console.error("Erro ao buscar turmas:", error);
+            setTurmasDoProf([]);
+        } finally {
+            setLoadingTurmas(false);
+        }
     };
 
     return (
@@ -124,7 +125,12 @@ const ListaProfessores = () => {
                         </div>
 
                         <div className="p-6 overflow-y-auto w-full">
-                            {turmasDoProf.length > 0 ? (
+                            {loadingTurmas ? (
+                                <div className="text-center py-8">
+                                    <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
+                                    <p className="text-purple-600 font-bold text-sm">Buscando turmas...</p>
+                                </div>
+                            ) : turmasDoProf.length > 0 ? (
                                 <ul className="space-y-3 w-full">
                                     {turmasDoProf.map(turma => (
                                         <li key={turma.id} className="p-4 bg-gray-50 border border-gray-100 rounded-xl hover:shadow-sm transition-all flex flex-col cursor-pointer" onClick={() => { setShowTurmasModal(false); navigate(`/app/turmas/${turma.id}`); }}>
@@ -145,8 +151,7 @@ const ListaProfessores = () => {
                             ) : (
                                 <div className="text-center py-8">
                                     <GraduationCap size={48} className="mx-auto text-purple-200 mb-3" />
-                                    <p className="text-gray-500 text-sm">Nenhuma turma encontrada localmente para este professor.</p>
-                                    <p className="text-xs text-gray-400 mt-2">Pode ser necessário consultar o banco de forma isolada.</p>
+                                    <p className="text-gray-500 text-sm">O professor não possui turmas alocadas.</p>
                                 </div>
                             )}
                         </div>

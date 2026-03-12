@@ -1805,5 +1805,39 @@ router.get("/monitoramento/aulas/:colaboradorId/:ano/:mes", verificarUsuario, as
         res.status(500).json({ error: "Erro ao buscar histórico de aulas do professor." });
     }
 });
+router.get("/professores/:usuarioId/turmas", verificarUsuario, async (req, res) => {
+    try {
+        const { usuarioId } = req.params;
+        
+        // 1. Acha o colaboradorId usando o usuarioId
+        const [user] = await querySys("SELECT id_colaborador FROM usuario WHERE id = ?", [usuarioId]);
+        if (!user || !user.id_colaborador) {
+             return res.json([]);
+        }
+
+        // 2. Busca as turmas atreladas ao colaborador na tabela de vínculo + JOIN projeto
+        const sql = `
+            SELECT t.*, 
+                   p.titulo as nome_projeto
+            FROM turmas t
+            JOIN turma_professores tp ON t.id = tp.turma_id
+            LEFT JOIN projeto p ON t.projeto_id = p.id
+            WHERE tp.colaborador_id = ? AND tp.ativo = 1
+            ORDER BY t.nome ASC
+        `;
+        const turmas = await querySys(sql, [user.id_colaborador]);
+        
+        // Formata os tipos caso venham string
+        const turmasFormatadas = Array.isArray(turmas) ? turmas.map(t => ({
+             ...t,
+             ativo: t.ativo === 1 || t.ativo === '1' || t.ativo === true
+        })) : [];
+
+        res.json(turmasFormatadas);
+    } catch (error) {
+        console.error("Erro ao buscar turmas do professor:", error);
+        res.status(500).json({ error: "Erro ao buscar turmas" });
+    }
+});
 
 module.exports = router;
