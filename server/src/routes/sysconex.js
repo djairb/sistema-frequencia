@@ -127,22 +127,33 @@ const verificarAcessoProfessorTurma = async (usuarioId, turmaId) => {
 };
 
 const verificarAcessoProfessorAula = async (usuarioId, aulaId) => {
-    // 1. Busca dados do user (colaborador e perfil)
+    // 1. Identifica o colaborador e o perfil do usuário logado
     const [user] = await querySys("SELECT id_colaborador, id_perfil_usuario FROM usuario WHERE id = ?", [usuarioId]);
     if (!user) return false;
 
-    // 2. Descobre dados da aula (turma e autor)
+    // 2. Se for Admin/Coordenação (Perfil != 6), o acesso é livre
+    if (user.id_perfil_usuario !== 6) return true;
+
+    // 3. Busca a aula para saber a qual turma ela pertence e quem a criou
     const [aula] = await querySys("SELECT turma_id, colaborador_id FROM aulas WHERE id = ?", [aulaId]);
     if (!aula) return false;
 
-    // 3. Regra: Coordenador (não-6) pode tudo. Professor (6) só se for o autor.
-    if (user.id_perfil_usuario !== 6) return true;
+    // 4. Checa se o professor logado é o "dono" (quem criou) da aula
+    const ehCriadorDaAula = (aula.colaborador_id === user.id_colaborador);
 
-    // Se for professor, tem que ser o DONO da aula
-    if (aula.colaborador_id !== user.id_colaborador) return false;
+    // 5. Checa se o professor logado está vinculado à turma desta aula (mesmo que não tenha criado a aula)
+    const [vinculo] = await querySys(`
+        SELECT id FROM turma_professores 
+        WHERE turma_id = ? AND colaborador_id = ? AND ativo = 1
+        LIMIT 1
+    `, [aula.turma_id, user.id_colaborador]);
 
-    return true;
+    const estaVinculadoATurma = !!vinculo;
+
+    // Retorna true se ele for o criador OU se estiver vinculado à turma no momento
+    return ehCriadorDaAula || estaVinculadoATurma;
 }
+
 
 router.post("/auth/login", async (req, res) => {
 
