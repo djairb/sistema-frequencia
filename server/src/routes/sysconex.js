@@ -236,38 +236,37 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                 const cpfLimpo = u.cpf.replace(/\D/g, '');
                 let pessoaId;
 
-                // Flags de controle  
                 let ehNovaPessoa = false;
                 let houveAlteracaoReal = false;
 
                 const defaults = {
                     mae: u.nome_mae || "NÃO INFORMADO",
                     gen: u.genero_id || 1,
-                    etn: u.etnia_id || 1
+                    etn: u.etnia_id || 1,
+                    apelido: u.apelido || null // Pegando o apelido aqui
                 };
 
                 // =================================  
-                // 1. PESSOA  
+                // 1. PESSOA (Atualizado com Apelido)
                 // =================================  
                 const rows = await queryTx("SELECT id FROM pessoa WHERE cpf = ?", [cpfLimpo]);
 
                 if (rows.length > 0) {
                     pessoaId = rows[0].id;
                     const resPessoa = await queryTx(`  
-                    UPDATE pessoa   
-                    SET nome_completo = ?, data_nasc = ?, nome_mae = ?, genero_id = ?, etnia_id = ?, status = 1  
-                    WHERE id = ?  
-                `, [u.nome_completo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn, pessoaId]);
+                        UPDATE pessoa   
+                        SET nome_completo = ?, apelido = ?, data_nasc = ?, nome_mae = ?, genero_id = ?, etnia_id = ?, status = 1  
+                        WHERE id = ?  
+                    `, [u.nome_completo, defaults.apelido, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn, pessoaId]);
 
-                    // Se o MySQL alterou alguma coluna, mudou de fato  
                     if (resPessoa.changedRows > 0) houveAlteracaoReal = true;
 
                 } else {
                     const resPessoa = await queryTx(`  
-                    INSERT INTO pessoa   
-                    (nome_completo, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status)   
-                    VALUES (?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)  
-                `, [u.nome_completo, cpfLimpo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn]);
+                        INSERT INTO pessoa   
+                        (nome_completo, apelido, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status)   
+                        VALUES (?, ?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)  
+                    `, [u.nome_completo, defaults.apelido, cpfLimpo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn]);
 
                     pessoaId = resPessoa.insertId;
                     ehNovaPessoa = true;
@@ -283,7 +282,7 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                         if (resC.changedRows > 0) houveAlteracaoReal = true;
                     } else {
                         await queryTx("INSERT INTO contato (pessoa_id, email) VALUES (?, ?)", [pessoaId, u.email]);
-                        if (!ehNovaPessoa) houveAlteracaoReal = true; // Inserir novo dado em pessoa antiga é uma alteração  
+                        if (!ehNovaPessoa) houveAlteracaoReal = true;
                     }
                 }
 
@@ -300,7 +299,6 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                         if (!ehNovaPessoa) houveAlteracaoReal = true;
                     }
                 } else {
-                    // COLABORADOR  
                     const checkColab = await queryTx("SELECT id FROM colaborador WHERE pessoa_id = ?", [pessoaId]);
                     const cargoId = u.cargo_id || 6;
                     const emailInst = u.email || 'sem_email@inst.com';
@@ -316,7 +314,6 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                         if (!ehNovaPessoa) houveAlteracaoReal = true;
                     }
 
-                    // USUARIO  
                     if (u.login && u.senha && u.id_perfil_usuario) {
                         const checkUser = await queryTx("SELECT id FROM usuario WHERE id_colaborador = ?", [colabId]);
                         if (checkUser.length > 0) {
@@ -329,7 +326,6 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                     }
                 }
 
-                // Contabilidade final por pessoa  
                 if (ehNovaPessoa) {
                     totalCriados++;
                 } else if (houveAlteracaoReal) {
@@ -355,7 +351,6 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
             connection.release();
         }
     });
-
 });
 
 
