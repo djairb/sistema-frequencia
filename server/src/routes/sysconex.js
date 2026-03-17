@@ -239,15 +239,17 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                 let ehNovaPessoa = false;
                 let houveAlteracaoReal = false;
 
+                // Consolidação de campos da Pessoa
                 const defaults = {
                     mae: u.nome_mae || "NÃO INFORMADO",
                     gen: u.genero_id || 1,
                     etn: u.etnia_id || 1,
-                    apelido: u.apelido || null // Pegando o apelido aqui
+                    apelido: u.apelido || null,
+                    nome_social: u.nome_social || null // Novo campo adicionado aqui
                 };
 
                 // =================================  
-                // 1. PESSOA (Atualizado com Apelido)
+                // 1. PESSOA (Atualizado com Apelido e Nome Social)
                 // =================================  
                 const rows = await queryTx("SELECT id FROM pessoa WHERE cpf = ?", [cpfLimpo]);
 
@@ -255,18 +257,18 @@ router.post("/integracao/receber-dados", verificarTokenIntegracao, async (req, r
                     pessoaId = rows[0].id;
                     const resPessoa = await queryTx(`  
                         UPDATE pessoa   
-                        SET nome_completo = ?, apelido = ?, data_nasc = ?, nome_mae = ?, genero_id = ?, etnia_id = ?, status = 1  
+                        SET nome_completo = ?, apelido = ?, nome_social = ?, data_nasc = ?, nome_mae = ?, genero_id = ?, etnia_id = ?, status = 1  
                         WHERE id = ?  
-                    `, [u.nome_completo, defaults.apelido, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn, pessoaId]);
+                    `, [u.nome_completo, defaults.apelido, defaults.nome_social, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn, pessoaId]);
 
                     if (resPessoa.changedRows > 0) houveAlteracaoReal = true;
 
                 } else {
                     const resPessoa = await queryTx(`  
                         INSERT INTO pessoa   
-                        (nome_completo, apelido, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status)   
-                        VALUES (?, ?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)  
-                    `, [u.nome_completo, defaults.apelido, cpfLimpo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn]);
+                        (nome_completo, apelido, nome_social, cpf, data_nasc, nome_mae, naturalidade, nacionalidade, genero_id, etnia_id, escolaridade_id, orgao_emissor_id, status)   
+                        VALUES (?, ?, ?, ?, ?, ?, 'BRASIL', 'BRASIL', ?, ?, 1, 1, 1)  
+                    `, [u.nome_completo, defaults.apelido, defaults.nome_social, cpfLimpo, u.data_nasc || '2000-01-01', defaults.mae, defaults.gen, defaults.etn]);
 
                     pessoaId = resPessoa.insertId;
                     ehNovaPessoa = true;
