@@ -330,7 +330,7 @@ const DetalhesTurma = () => {
                                     <div key={item.matricula_id || item.vinculo_id} className="p-4 flex justify-between items-center hover:bg-gray-50 rounded-lg group">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${abaAtiva === 'alunos' ? 'bg-green-500' : 'bg-indigo-500'}`}>{item.nome_completo?.charAt(0)}</div>
-                                            <div><p className="font-bold text-gray-800">{item.nome_completo}</p><p className="text-xs text-gray-500 font-mono">{item.cpf ? `CPF: ${item.cpf}` : `Email: ${item.email_institucional}`}</p></div>
+                                            <div><p className="font-bold text-gray-800">{item.nome_completo} {item.apelido && <span className="text-sm font-normal text-gray-500">({item.apelido})</span>}</p><p className="text-xs text-gray-500 font-mono">{item.cpf ? `CPF: ${item.cpf}` : `Email: ${item.email_institucional}`}</p></div>
                                         </div>
                                         <button onClick={() => handleRemover(item.matricula_id || item.vinculo_id, abaAtiva === 'alunos' ? 'aluno' : 'prof')} className="text-gray-300 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={18} /></button>
                                     </div>
@@ -354,7 +354,7 @@ const DetalhesTurma = () => {
                         <div className="p-4 border-b bg-gray-50"><p className="text-xs font-bold text-gray-600 uppercase mb-1">Conteúdo</p><p className="text-gray-800 bg-white p-3 rounded border border-gray-200 text-sm">{aulaSelecionada.conteudo}</p></div>
                         <div className="flex-1 overflow-y-auto p-2">
                             {frequenciaAula.length === 0 ? <p className="text-center py-8 text-gray-400">Carregando...</p> :
-                                <table className="w-full text-sm text-left"><tbody className="divide-y divide-gray-100">{frequenciaAula.map((freq, idx) => (<tr key={idx} className="hover:bg-gray-50"><td className="px-4 py-3 font-medium text-gray-800">{freq.nome_completo}</td><td className="px-4 py-3 text-right"><span className={`px-2 py-1 rounded text-xs font-bold ${freq.status === 'Presente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{freq.status}</span></td></tr>))}</tbody></table>}
+                                <table className="w-full text-sm text-left"><tbody className="divide-y divide-gray-100">{frequenciaAula.map((freq, idx) => (<tr key={idx} className="hover:bg-gray-50"><td className="px-4 py-3 font-medium text-gray-800">{freq.nome_completo} {freq.apelido && <span className="text-xs text-gray-500 font-normal">({freq.apelido})</span>}</td><td className="px-4 py-3 text-right"><span className={`px-2 py-1 rounded text-xs font-bold ${freq.status === 'Presente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{freq.status}</span></td></tr>))}</tbody></table>}
                         </div>
                     </div>
                 </div>
@@ -377,7 +377,7 @@ const DetalhesTurma = () => {
                                 <div key={item.id} onClick={() => toggleSelecao(item.id)} className={`p-3 rounded-lg flex items-center justify-between cursor-pointer border ${selecionados.includes(item.id) ? 'bg-blue-50 border-blue-200' : 'bg-white hover:border-gray-200'}`}>
                                     <div className="flex items-center gap-3">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${abaAtiva === 'alunos' ? 'bg-green-400' : 'bg-indigo-400'}`}>{item.nome_completo?.charAt(0)}</div>
-                                        <div><p className="font-bold text-gray-800 text-sm">{item.nome_completo}</p><p className="text-xs text-gray-500">{item.cpf ? `CPF: ${item.cpf}` : `Email: ${item.email_institucional}`}</p></div>
+                                        <div><p className="font-bold text-gray-800 text-sm">{item.nome_completo} {item.apelido && <span className="text-gray-500 font-normal">({item.apelido})</span>}</p><p className="text-xs text-gray-500">{item.cpf ? `CPF: ${item.cpf}` : `Email: ${item.email_institucional}`}</p></div>
                                     </div>
                                     <div className={selecionados.includes(item.id) ? "text-blue-600" : "text-gray-300"}>{selecionados.includes(item.id) ? <CheckSquare size={20} /> : <Square size={20} />}</div>
                                 </div>

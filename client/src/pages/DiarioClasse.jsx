@@ -176,6 +176,7 @@ export default function DiarioClasse() {
       const alunosFormatados = listaMatriculas.map(item => ({
         id: item.matricula_id,
         nome: item.nome_completo,
+        apelido: item.apelido,
         cpf: item.cpf,
         beneficiario_id: item.beneficiario_id
       }));
@@ -304,6 +305,7 @@ export default function DiarioClasse() {
             id: f.matricula_id,
             nome: f.nome_completo || "Aluno Histórico", // ListaChamada usa .nome
             nome_completo: f.nome_completo,
+            apelido: f.apelido,
             cpf: f.cpf,
             status_matricula: 'Inativo' // Flag visual
           });
@@ -640,6 +642,7 @@ export default function DiarioClasse() {
                           >
                             <td className="px-6 py-4 font-medium text-gray-800">
                               {aluno.nome_completo}
+                              {aluno.apelido && <span className="ml-1 text-xs font-normal text-gray-500">({aluno.apelido})</span>}
                               {isCritical && <span className="ml-2 inline-block px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-700 font-bold">CRÍTICO</span>}
                             </td>
                             <td className="px-6 py-4 text-center text-gray-600">{aluno.total_aulas}</td>
@@ -832,6 +835,7 @@ function ListaChamada({ alunos, mapaPresenca, setMapaPresenca, observacoes, setO
                     <div className="flex flex-col">
                       <span className={`font-medium text-sm md:text-base ${status === 'Ausente' ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                         {aluno.nome || aluno.nome_completo}
+                        {aluno.apelido && <span className={`ml-1 text-sm font-normal ${status === 'Ausente' ? 'text-gray-400' : 'text-gray-500'}`}>({aluno.apelido})</span>}
                         {aluno.status_matricula === 'Inativo' && (
                           <span className="ml-2 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
                             Histórico

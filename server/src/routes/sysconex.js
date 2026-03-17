@@ -486,7 +486,7 @@ router.get("/beneficiarios/busca", verificarUsuario, async (req, res) => {
         }
 
         const sqlDados = `
-            SELECT b.id, p.nome_completo, p.cpf, pr.titulo as nome_projeto
+            SELECT b.id, p.nome_completo, p.apelido, p.cpf, pr.titulo as nome_projeto
             FROM Beneficiario b 
             JOIN pessoa p ON b.pessoa_id = p.id 
             JOIN projeto pr ON b.id_projeto = pr.id
@@ -535,7 +535,7 @@ router.get("/colaboradores/busca", verificarUsuario, async (req, res) => {
         // Buscamos apenas quem tem perfil de PROFESSOR (ID 6) ou pode ser qualquer colaborador?
         // Vou deixar aberto para qualquer colaborador, mas você pode filtrar com "AND u.id_perfil_usuario = 6" se quiser
         const sqlDados = `
-            SELECT c.id, p.nome_completo, p.cpf, c.email_institucional
+            SELECT c.id, p.nome_completo, p.apelido, p.cpf, c.email_institucional
             FROM colaborador c
             JOIN pessoa p ON c.pessoa_id = p.id
             WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?
@@ -755,7 +755,7 @@ router.get("/turmas/:id/matriculas", verificarUsuario, async (req, res) => {
 
         // FILTRO: AND m.status = 'Ativo'
         const sqlDados = `
-            SELECT m.id as matricula_id, m.beneficiario_id, p.nome_completo, p.cpf
+            SELECT m.id as matricula_id, m.beneficiario_id, p.nome_completo, p.apelido, p.cpf
             FROM matriculas m
             JOIN Beneficiario b ON m.beneficiario_id = b.id
             JOIN pessoa p ON b.pessoa_id = p.id
@@ -1014,7 +1014,7 @@ router.get("/aulas/:id/frequencia", verificarUsuario, async (req, res) => {
         }
 
         const sql = `
-            SELECT f.status, f.observacao, f.matricula_id, p.nome_completo, p.cpf
+            SELECT f.status, f.observacao, f.matricula_id, p.nome_completo, p.apelido, p.cpf
             FROM frequencias f
             JOIN matriculas m ON f.matricula_id = m.id
             JOIN Beneficiario b ON m.beneficiario_id = b.id
@@ -1043,6 +1043,7 @@ router.get("/turmas/:id/professores", verificarUsuario, async (req, res) => {
         tp.id as vinculo_id, 
         tp.colaborador_id, 
         p.nome_completo, 
+        p.apelido,
         p.cpf,                     -- <--- ADICIONAR ESTA LINHA AQUI
         c.email_institucional
     FROM turma_professores tp
@@ -1246,6 +1247,7 @@ router.get("/turmas/:id/estatisticas", verificarUsuario, async (req, res) => {
         const sql = `
             SELECT 
                 p.nome_completo,
+                p.apelido,
                 p.cpf,
                 m.id as matricula_id,
                 COUNT(f.id) as total_aulas,
@@ -1388,7 +1390,7 @@ router.get("/beneficiarios/search", verificarUsuario, async (req, res) => {
 
         const term = `%${q}%`;
         const sql = `
-            SELECT b.id, p.nome_completo, p.cpf
+            SELECT b.id, p.nome_completo, p.apelido, p.cpf
             FROM Beneficiario b
             JOIN pessoa p ON b.pessoa_id = p.id
             WHERE p.nome_completo LIKE ? OR p.cpf LIKE ?
@@ -1407,7 +1409,7 @@ router.get("/beneficiarios/:id/historico", verificarUsuario, async (req, res) =>
     try {
         // 1. Dados Pessoais
         const sqlBenef = `
-            SELECT b.id, p.nome_completo, p.cpf, p.data_nasc as data_nascimento, 
+            SELECT b.id, p.nome_completo, p.apelido, p.cpf, p.data_nasc as data_nascimento, 
                    ct.email, ct.celular as telefone_celular
             FROM Beneficiario b
             JOIN pessoa p ON b.pessoa_id = p.id
