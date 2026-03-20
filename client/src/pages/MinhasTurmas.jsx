@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/auth';
 import { getMinhasTurmas } from '../services/sysconex';
 import {
-  BookOpen, Calendar, Clock, GraduationCap,
-  ArrowRight, Loader2, School
+  BookOpen, Calendar, GraduationCap,
+  ArrowRight, Loader2, School, Users
 } from 'lucide-react';
 
 const MinhasTurmas = () => {
@@ -102,6 +102,16 @@ const MinhasTurmas = () => {
                         ? turma.dias_aula.join(', ')
                         : 'Dias não definidos'}
                     </span>
+                  </div>
+                  <div className="flex items-center gap-4 pt-1 border-t border-gray-50">
+                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <GraduationCap size={15} className="text-green-500" />
+                      <span><strong>{turma.total_alunos ?? 0}</strong> alunos</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <Users size={15} className="text-purple-500" />
+                      <span><strong>{turma.total_professores ?? 0}</strong> professores</span>
+                    </div>
                   </div>
                 </div>
 

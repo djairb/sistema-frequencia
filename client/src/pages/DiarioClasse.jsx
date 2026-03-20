@@ -37,6 +37,10 @@ export default function DiarioClasse() {
   // --- ESTADOS DE HISTÓRICO ---
   const [historico, setHistorico] = useState([]);
 
+  // Controle de autoria: id_colaborador do usuário logado
+  const colaboradorLogadoId = user?.id_colaborador ?? null;
+  const ehCoordenacao = user?.perfil_id !== 6; // perfil 6 = professor
+
   // --- ESTADOS DE ESTATÍSTICAS ---
   const [estatisticas, setEstatisticas] = useState(null);
 
@@ -520,7 +524,11 @@ export default function DiarioClasse() {
                 <p className="text-gray-500">Nenhuma aula registrada nesta turma ainda.</p>
               </div>
             ) : (
-              historico.map(aula => (
+              historico.map(aula => {
+                // Professores só podem excluir suas próprias aulas; coordenação pode excluir qualquer uma
+                const podeExcluir = ehCoordenacao || (colaboradorLogadoId && aula.colaborador_id === colaboradorLogadoId);
+
+                return (
                 <div key={aula.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -549,16 +557,18 @@ export default function DiarioClasse() {
                     >
                       <Edit size={16} /> Editar
                     </button>
-                    <button
-                      onClick={() => handleDelete(aula.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Excluir aula"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {podeExcluir && (
+                      <button
+                        onClick={() => handleDelete(aula.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Excluir aula"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </div>
-              ))
+              )})
             )}
           </div>
         )

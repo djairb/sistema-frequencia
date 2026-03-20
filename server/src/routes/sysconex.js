@@ -138,20 +138,30 @@ const verificarAcessoProfessorAula = async (usuarioId, aulaId) => {
     const [aula] = await querySys("SELECT turma_id, colaborador_id FROM aulas WHERE id = ?", [aulaId]);
     if (!aula) return false;
 
-    // 4. Checa se o professor logado é o "dono" (quem criou) da aula
-    const ehCriadorDaAula = (aula.colaborador_id === user.id_colaborador);
-
-    // 5. Checa se o professor logado está vinculado à turma desta aula (mesmo que não tenha criado a aula)
+    // 4. Checa se o professor logado está vinculado à turma desta aula (ver ou editar)
     const [vinculo] = await querySys(`
         SELECT id FROM turma_professores 
         WHERE turma_id = ? AND colaborador_id = ? AND ativo = 1
         LIMIT 1
     `, [aula.turma_id, user.id_colaborador]);
 
-    const estaVinculadoATurma = !!vinculo;
+    // Qualquer professor da turma pode ver/editar
+    return !!vinculo;
+};
 
-    // Retorna true se ele for o criador OU se estiver vinculado à turma no momento
-    return ehCriadorDaAula || estaVinculadoATurma;
+// HELPER RESTRITIVO: somente o criador da aula (ou coordenação) pode excluir
+const verificarAutorDaAula = async (usuarioId, aulaId) => {
+    const [user] = await querySys("SELECT id_colaborador, id_perfil_usuario FROM usuario WHERE id = ?", [usuarioId]);
+    if (!user) return false;
+
+    // Coordenação/Admin podem excluir qualquer aula
+    if (user.id_perfil_usuario !== 6) return true;
+
+    // Professor só pode excluir a própria aula
+    const [aula] = await querySys("SELECT colaborador_id FROM aulas WHERE id = ?", [aulaId]);
+    if (!aula) return false;
+
+    return aula.colaborador_id === user.id_colaborador;
 }
 
 
@@ -209,7 +219,8 @@ router.post("/auth/login", async (req, res) => {
             user: {
                 nome: usuario.nome_completo,
                 perfil: usuario.perfil,
-                perfil_id: usuario.id_perfil_usuario
+                perfil_id: usuario.id_perfil_usuario,
+                id_colaborador: usuario.id_colaborador // necessário para controle de autoria no diário
             }
         });
 
@@ -866,6 +877,7 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
         // Traz a aula e o nome do professor que registrou
         const sqlDados = `
             SELECT a.id, a.titulo_aula, a.data_aula, a.conteudo, a.created_at,
+                   a.colaborador_id,
                    p.nome_completo as professor_nome
             FROM aulas a
             JOIN colaborador c ON a.colaborador_id = c.id
@@ -983,9 +995,9 @@ router.put("/aulas/:id", verificarUsuario, async (req, res) => {
 router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
     const { id } = req.params;
 
-    // VERIFICAÇÃO DE SEGURANÇA
-    if (!(await verificarAcessoProfessorAula(req.user.id, id))) {
-        return res.status(403).json({ error: "Acesso negado. Você não pode excluir esta aula." });
+    // VERIFICAÇÃO DE SEGURANÇA: somente o criador da aula (ou coordenação) pode excluir
+    if (!(await verificarAutorDaAula(req.user.id, id))) {
+        return res.status(403).json({ error: "Acesso negado. Você só pode excluir aulas que você mesmo registrou." });
     }
 
     dbSysConex.getConnection(async (err, connection) => {
@@ -1218,7 +1230,9 @@ router.get("/professores/me/turmas", verificarUsuario, async (req, res) => {
 
         // 2. Buscar turmas onde ele é professor (ativo) e a turma/projeto também estão ativos
         const sql = `
-            SELECT t.id, t.nome, t.turno, t.periodo, t.dias_aula, p.titulo as nome_projeto
+            SELECT t.id, t.nome, t.turno, t.periodo, t.dias_aula, p.titulo as nome_projeto,
+                (SELECT COUNT(*) FROM matriculas m WHERE m.turma_id = t.id AND m.status = 'Ativo') as total_alunos,
+                (SELECT COUNT(*) FROM turma_professores tp2 WHERE tp2.turma_id = t.id AND tp2.ativo = 1) as total_professores
             FROM turmas t
             JOIN turma_professores tp ON t.id = tp.turma_id
             JOIN projeto p ON t.projeto_id = p.id
