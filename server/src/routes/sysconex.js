@@ -838,8 +838,8 @@ router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
             // 2. Cria a Aula
             // OBS: A tabela 'aulas' tem 'numero_aulas' (default 1). Vamos passar explicitamente.
             const resAula = await queryTx(
-                "INSERT INTO aulas (turma_id, colaborador_id, titulo_aula, data_aula, conteudo, numero_aulas) VALUES (?, ?, ?, ?, ?, ?)",
-                [turmaId, colaboradorId, titulo_aula || '', data_aula, conteudo, 1]
+                "INSERT INTO aulas (turma_id, colaborador_id, titulo_aula, data_aula, conteudo, observacoes, numero_aulas) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [turmaId, colaboradorId, titulo_aula || '', data_aula, conteudo, req.body.observacoes || null, 1]
             );
             const aulaId = resAula.insertId;
 
@@ -876,7 +876,7 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
 
         // Traz a aula e o nome do professor que registrou
         const sqlDados = `
-            SELECT a.id, a.titulo_aula, a.data_aula, a.conteudo, a.created_at,
+            SELECT a.id, a.titulo_aula, a.data_aula, a.conteudo, a.observacoes, a.created_at,
                    a.colaborador_id,
                    p.nome_completo as professor_nome
             FROM aulas a
@@ -945,10 +945,21 @@ router.put("/aulas/:id", verificarUsuario, async (req, res) => {
             await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
 
             // 1. Atualizar dados básicos da aula
-            await queryTx(
-                "UPDATE aulas SET titulo_aula = ?, data_aula = ?, conteudo = ? WHERE id = ?",
-                [titulo_aula || '', data_aula, conteudo, id]
-            );
+            let updateSql = "UPDATE aulas SET titulo_aula = ?, data_aula = ?, conteudo = ?";
+            let updateParams = [titulo_aula || '', data_aula, conteudo];
+
+            if (req.body.observacoes !== undefined) {
+                // Somente quem criou a aula (ou coordenação) pode alterar as observações
+                if (await verificarAutorDaAula(req.user.id, id)) {
+                    updateSql += ", observacoes = ?";
+                    updateParams.push(req.body.observacoes || null);
+                }
+            }
+
+            updateSql += " WHERE id = ?";
+            updateParams.push(id);
+
+            await queryTx(updateSql, updateParams);
 
             // 2. Atualizar frequências
             // Estratégia: Iterar e fazer UPDATE individual. Se não existir, faz INSERT (caso aluno novo tenha entrado na turma, por exemplo)

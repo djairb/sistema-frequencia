@@ -33,6 +33,7 @@ export default function DiarioClasse() {
   const [dataAula, setDataAula] = useState(new Date().toISOString().split('T')[0]);
   const [mapaPresenca, setMapaPresenca] = useState({});
   const [observacoes, setObservacoes] = useState({});
+  const [observacoesAula, setObservacoesAula] = useState("");
 
   // --- ESTADOS DE HISTÓRICO ---
   const [historico, setHistorico] = useState([]);
@@ -155,6 +156,8 @@ export default function DiarioClasse() {
   const [editDataAula, setEditDataAula] = useState("");
   const [editMapaPresenca, setEditMapaPresenca] = useState({});
   const [editObservacoes, setEditObservacoes] = useState({});
+  const [editObservacoesAula, setEditObservacoesAula] = useState("");
+  const [aulaEditandoAutorId, setAulaEditandoAutorId] = useState(null);
 
 
   useEffect(() => {
@@ -226,6 +229,7 @@ export default function DiarioClasse() {
         titulo_aula: tituloAula,
         data_aula: dataAula,
         conteudo: conteudo,
+        observacoes: observacoesAula,
         lista_presenca: listaFinal
       };
 
@@ -252,6 +256,7 @@ export default function DiarioClasse() {
       // Limpa form ou redireciona pro histórico
       setTituloAula("");
       setConteudo("");
+      setObservacoesAula("");
       setFotosNovas([]); // Limpa fotos
       setMapaPresenca(prev => {
         const reset = {};
@@ -283,10 +288,12 @@ export default function DiarioClasse() {
 
   async function handleOpenModal(aula, mode) {
     setAulaEditando(aula.id);
+    setAulaEditandoAutorId(aula.colaborador_id);
     setModalMode(mode);
     setEditTituloAula(aula.titulo_aula || "");
     setEditDataAula(aula.data_aula.split('T')[0]);
     setEditConteudo(aula.conteudo);
+    setEditObservacoesAula(aula.observacoes || "");
     setModalOpen(true);
     setAlunosParaEdicao([]); // Reset
 
@@ -359,6 +366,7 @@ export default function DiarioClasse() {
         titulo_aula: editTituloAula,
         data_aula: editDataAula,
         conteudo: editConteudo,
+        observacoes: editObservacoesAula,
         lista_presenca: listaFinal
       };
 
@@ -454,11 +462,21 @@ export default function DiarioClasse() {
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Conteúdo Ministrado</label>
                   <textarea
-                    rows="8"
+                    rows="6"
                     className="w-full border p-2 rounded focus:ring-2 ring-blue-500 outline-none resize-none text-gray-700"
                     placeholder="Descreva o que foi ensinado hoje..."
                     value={conteudo}
                     onChange={e => setConteudo(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Observações Gerais (Opcional)</label>
+                  <textarea
+                    rows="4"
+                    className="w-full border p-2 rounded focus:ring-2 ring-blue-500 outline-none resize-none text-gray-700"
+                    placeholder="Observações pertinentes à aula ou aos alunos..."
+                    value={observacoesAula}
+                    onChange={e => setObservacoesAula(e.target.value)}
                   />
                 </div>
               </div>
@@ -723,11 +741,20 @@ export default function DiarioClasse() {
                       />
                       <label className="block text-sm font-medium text-gray-600 mb-1">Conteúdo</label>
                       <textarea
-                        rows="10"
+                        rows="6"
                         className="w-full border p-2 rounded resize-none disabled:bg-gray-100 disabled:text-gray-500"
                         value={editConteudo}
                         onChange={e => setEditConteudo(e.target.value)}
                         disabled={modalMode === 'view'}
+                      />
+                      <label className="block text-sm font-medium text-gray-600 mb-1 mt-4">Observações Gerais (Opcional)</label>
+                      <textarea
+                        rows="4"
+                        className="w-full border p-2 rounded resize-none disabled:bg-gray-100 disabled:text-gray-500"
+                        value={editObservacoesAula}
+                        onChange={e => setEditObservacoesAula(e.target.value)}
+                        disabled={modalMode === 'view' || (!ehCoordenacao && colaboradorLogadoId !== aulaEditandoAutorId)}
+                        title={(!ehCoordenacao && colaboradorLogadoId !== aulaEditandoAutorId) ? "Apenas o autor da aula pode editar as observações." : ""}
                       />
                     </div>
 
