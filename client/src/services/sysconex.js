@@ -172,6 +172,11 @@ export const getPlanosTrabalhoUsuario = async (usuarioId) => {
     return response.data;
 };
 
+export const getPlanosTrabalhoColaborador = async (colaboradorId) => {
+    const response = await api.get(`/plano-trabalho/usuario/${colaboradorId}/detalhes`);
+    return response.data;
+};
+
 export const deletePlanoTrabalho = async (planoId) => {
     const response = await api.delete(`/plano-trabalho/${planoId}`);
     return response.data;

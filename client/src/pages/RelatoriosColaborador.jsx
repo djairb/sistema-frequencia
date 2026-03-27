@@ -265,14 +265,14 @@ const RelatoriosColaborador = () => {
                             <div className="space-y-4">
                                 <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-indigo-400 transition-colors bg-gray-50/50 group">
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Relatório Mensal (PDF)</label>
-                                    <p className="text-xs text-gray-500 mb-2">Tamanho máximo: 2MB.</p>
+                                    <p className="text-xs text-gray-500 mb-2">Tamanho máximo: 7MB.</p>
                                     <input
                                         type="file"
                                         accept="application/pdf"
                                         onChange={e => {
                                             const file = e.target.files[0];
-                                            if (file && file.size > 2 * 1024 * 1024) {
-                                                alert("O arquivo de Relatório excede o limite de 2MB!");
+                                            if (file && file.size > 7 * 1024 * 1024) {
+                                                alert("O arquivo de Relatório excede o limite de 7MB!");
                                                 e.target.value = null;
                                                 setRelatorioFile(null);
                                             } else {

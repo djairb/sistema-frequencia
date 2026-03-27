@@ -46,7 +46,7 @@ const storagePlanos = multer.diskStorage({
 
 const uploadPlanos = multer({
     storage: storagePlanos,
-    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+    limits: { fileSize: 7 * 1024 * 1024 }, // 7MB limit
     fileFilter: (req, file, cb) => {
         if (file.mimetype === "application/pdf") {
             cb(null, true);
@@ -1098,6 +1098,9 @@ router.get("/turmas/:id/professores", verificarUsuario, async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
+// Rota para listar todos os colaboradores e seus cargos
+
+
 router.post("/turmas/:id/professores", verificarUsuario, async (req, res) => {
     const { id: turmaId } = req.params;
     const { professor_id } = req.body;
@@ -1217,6 +1220,28 @@ router.get("/professores/geral", verificarUsuario, async (req, res) => {
             JOIN pessoa p ON c.pessoa_id = p.id
             JOIN usuario u ON u.id_colaborador = c.id  -- <--- AQUI ESTAVA O SEGREDO
             WHERE u.id_perfil_usuario = 6             -- <--- FILTRA SÓ PROFESSOR
+            ORDER BY p.nome_completo ASC
+        `;
+        const results = await querySys(sql);
+        res.json(results);
+    } catch (error) {
+        console.error("Erro ao listar professores:", error);
+        res.status(500).json({ error: "Erro ao listar professores." });
+    }
+});
+
+router.get("/colaboradores", verificarUsuario, async (req, res) => {
+    try {
+        const sql = `
+            SELECT c.id, p.nome_completo, p.cpf, c.email_institucional, u.id as usuario_id,
+            -- Subquery para contar turmas ativas
+            (SELECT COUNT(*) FROM turma_professores tp 
+             WHERE tp.colaborador_id = c.id AND tp.ativo = 1) as total_turmas
+            
+            FROM colaborador c
+            JOIN pessoa p ON c.pessoa_id = p.id
+            JOIN usuario u ON u.id_colaborador = c.id  -- <--- AQUI ESTAVA O SEGREDO
+            WHERE u.id_perfil_usuario = 3             -- <--- FILTRA SÓ PROFESSOR
             ORDER BY p.nome_completo ASC
         `;
         const results = await querySys(sql);
@@ -1616,7 +1641,7 @@ router.post("/plano-trabalho", verificarUsuario, (req, res, next) => {
         if (err instanceof multer.MulterError) {
             // Um erro do Multer ocorreu durante o upload.
             if (err.code === 'LIMIT_FILE_SIZE') {
-                return res.status(400).json({ error: "O arquivo excede o limite máximo permitido de 2MB." });
+                return res.status(400).json({ error: "O arquivo excede o limite máximo permitido de 7MB." });
             }
             return res.status(400).json({ error: `Erro no upload: ${err.message}` });
         } else if (err) {

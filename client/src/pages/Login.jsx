@@ -50,8 +50,8 @@ const Login = () => {
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
                 <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-gray-800">SysConex Frequência</h1>
-                    <p className="text-gray-500 text-sm">Faça login para gerenciar suas turmas</p>
+                    <h1 className="text-2xl font-bold text-gray-800">SysConex - Mod. Frequência</h1>
+                    <p className="text-gray-500 text-sm">Faça login com suas credenciais</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
