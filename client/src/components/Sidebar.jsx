@@ -18,6 +18,9 @@ export function Sidebar({ isOpen, onClose }) {
       { label: 'Professores', path: '/app/professores', icon: Users },
       { label: 'Relatórios', path: '/app/relatorios', icon: BarChart2 },
     ],
+    3: [ // Colaborador
+      { label: 'Relatórios Mensais', path: '/app/relatorios-colaborador', icon: FileText },
+    ],
     6: [ // Professor
       { label: 'Minhas Turmas', path: '/app/minhas-turmas', icon: BookOpen },
       { label: 'Planos de Trabalho', path: '/app/planos-trabalho', icon: FileText },

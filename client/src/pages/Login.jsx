@@ -32,7 +32,11 @@ const Login = () => {
             else if (perfil === 6) {
                 navigate('/app/minhas-turmas');
             } 
-            // Outros (Estagiário, etc) - Mandamos pra home genérica por enquanto
+            // 3 = Colaborador
+            else if (perfil === 3) {
+                navigate('/app/relatorios-colaborador');
+            }
+            // Outros - Mandamos pra home genérica por enquanto
             else {
                 navigate('/app/home');
             }
