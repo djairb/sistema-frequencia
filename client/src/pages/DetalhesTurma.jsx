@@ -41,6 +41,8 @@ const DetalhesTurma = () => {
     const [modalDuplicarOpen, setModalDuplicarOpen] = useState(false);
     const [novoNomeDaTurma, setNovoNomeDaTurma] = useState('');
     const [loadingDuplicacao, setLoadingDuplicacao] = useState(false);
+    const [salvandoSelecionados, setSalvandoSelecionados] = useState(false);
+    const [salvandoEdicaoTurma, setSalvandoEdicaoTurma] = useState(false);
 
 
     // --- INICIALIZAÇÃO ---
@@ -95,13 +97,17 @@ const DetalhesTurma = () => {
 
     const handleSalvarEdicao = async (e) => {
         e.preventDefault();
+        if (salvandoEdicaoTurma) return;
+        setSalvandoEdicaoTurma(true);
         try {
             await api.put(`/turmas/${id}`, dadosEdicao);
             alert("Turma atualizada com sucesso!");
             setModalEditarOpen(false);
-            carregarTurma(); // Atualiza o header
+            carregarTurma();
         } catch (error) {
             alert("Erro ao atualizar turma.");
+        } finally {
+            setSalvandoEdicaoTurma(false);
         }
     };
 
@@ -168,6 +174,8 @@ const DetalhesTurma = () => {
 
     const handleSalvarSelecionados = async () => {
         if (selecionados.length === 0) return alert("Selecione um item.");
+        if (salvandoSelecionados) return;
+        setSalvandoSelecionados(true);
         try {
             if (abaAtiva === 'alunos') {
                 await api.post(`/turmas/${id}/matriculas`, { aluno_id: selecionados });
@@ -182,6 +190,8 @@ const DetalhesTurma = () => {
         } catch (error) {
             const msg = error.response?.data?.detalhes ? error.response.data.detalhes.join('\n') : (error.response?.data?.error || "Erro ao salvar.");
             alert("⚠️ Atenção:\n" + msg);
+        } finally {
+            setSalvandoSelecionados(false);
         }
     };
 
@@ -386,7 +396,7 @@ const DetalhesTurma = () => {
                         {modalBuscaData.total > 0 && <div className="bg-white border-t border-gray-100"><Pagination data={modalBuscaData} onChangePage={handlePaginaModal} simple={true} /></div>}
                         <div className="p-4 border-t border-gray-100 bg-white flex justify-end gap-2">
                             <button onClick={() => setModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancelar</button>
-                            <button onClick={handleSalvarSelecionados} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg disabled:opacity-50 text-sm" disabled={selecionados.length === 0}>Salvar</button>
+                            <button onClick={handleSalvarSelecionados} disabled={selecionados.length === 0 || salvandoSelecionados} className={`px-6 py-2 text-white rounded-lg font-bold shadow-lg text-sm transition-all ${selecionados.length === 0 || salvandoSelecionados ? 'bg-blue-400 cursor-not-allowed opacity-50' : 'bg-blue-600 hover:bg-blue-700'}`}>{salvandoSelecionados ? 'Salvando...' : 'Salvar'}</button>
                         </div>
                     </div>
                 </div>
@@ -492,7 +502,7 @@ const DetalhesTurma = () => {
                             </div>
                             <div className="flex justify-end gap-3 mt-6">
                                 <button type="button" onClick={() => setModalEditarOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
-                                <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">Salvar</button>
+                                <button type="submit" disabled={salvandoEdicaoTurma} className={`px-6 py-2 text-white rounded font-bold transition-all ${salvandoEdicaoTurma ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>{salvandoEdicaoTurma ? 'Salvando...' : 'Salvar'}</button>
                             </div>
                         </form>
                     </div>

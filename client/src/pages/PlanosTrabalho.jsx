@@ -23,6 +23,7 @@ const PlanosTrabalho = () => {
     const [editFeedbackId, setEditFeedbackId] = useState(null);
     const [tempFeedback, setTempFeedback] = useState('');
     const [isEditingPlano, setIsEditingPlano] = useState(false);
+    const [salvandoPlano, setSalvandoPlano] = useState(false);
 
 
     useEffect(() => {
@@ -81,7 +82,8 @@ const PlanosTrabalho = () => {
             alert("Selecione pelo menos um arquivo (Planejamento ou Relatório).");
             return;
         }
-
+        if (salvandoPlano) return;
+        setSalvandoPlano(true);
         try {
             const formData = new FormData();
             formData.append('ano', selectedAno);
@@ -99,6 +101,8 @@ const PlanosTrabalho = () => {
         } catch (error) {
             console.error("Erro no upload", error);
             alert("Erro ao enviar arquivos.");
+        } finally {
+            setSalvandoPlano(false);
         }
     };
 
@@ -400,8 +404,8 @@ const PlanosTrabalho = () => {
                                 <button type="button" onClick={() => setIsPlanoModalOpen(false)} className="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold transition-colors">
                                     Cancelar
                                 </button>
-                                <button type="submit" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all shadow-sm shadow-indigo-200">
-                                    <CheckCircle size={18} /> Salvar Arquivos
+                                <button type="submit" disabled={salvandoPlano} className={`px-5 py-2.5 text-white rounded-lg font-bold flex items-center gap-2 transition-all shadow-sm ${salvandoPlano ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'}`}>
+                                    <CheckCircle size={18} /> {salvandoPlano ? 'Salvando...' : 'Salvar Arquivos'}
                                 </button>
                             </div>
                         </form>

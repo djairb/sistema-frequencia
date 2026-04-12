@@ -50,6 +50,10 @@ export default function DiarioClasse() {
   const [galeria, setGaleria] = useState([]); // Array de fotos vindas do banco
   const [uploading, setUploading] = useState(false);
 
+  // --- PROTEÇÃO CONTRA DUPLO CLIQUE ---
+  const [salvando, setSalvando] = useState(false);
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+
   // --- HANDLERS DE FOTOS ---
   const onDrop = async (acceptedFiles) => {
     const options = {
@@ -216,7 +220,9 @@ export default function DiarioClasse() {
   // --- AÇÕES DE REGISTRO (NOVA AULA) ---
   async function handleSalvarNovo() {
     if (!conteudo) return alert("Por favor, informe o conteúdo da aula.");
+    if (salvando) return;
 
+    setSalvando(true);
     try {
       const listaFinal = Object.keys(mapaPresenca).map(matriculaId => ({
         matricula_id: Number(matriculaId),
@@ -268,6 +274,8 @@ export default function DiarioClasse() {
 
     } catch (error) {
       alert(`Erro: ${error.message || "Erro ao salvar"}`);
+    } finally {
+      setSalvando(false);
     }
   }
 
@@ -355,6 +363,8 @@ export default function DiarioClasse() {
   }
 
   async function handleSalvarEdicao() {
+    if (salvandoEdicao) return;
+    setSalvandoEdicao(true);
     try {
       const listaFinal = Object.keys(editMapaPresenca).map(matriculaId => ({
         matricula_id: Number(matriculaId),
@@ -377,6 +387,8 @@ export default function DiarioClasse() {
 
     } catch (error) {
       alert("Erro ao atualizar: " + error.message);
+    } finally {
+      setSalvandoEdicao(false);
     }
   }
 
@@ -512,9 +524,14 @@ export default function DiarioClasse() {
 
             <button
               onClick={handleSalvarNovo}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all transform active:scale-95"
+              disabled={salvando}
+              className={`w-full py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 ${
+                salvando
+                  ? 'bg-blue-400 cursor-not-allowed text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'
+              }`}
             >
-              <Save size={20} /> Salvar Diário
+              <Save size={20} /> {salvando ? 'Salvando...' : 'Salvar Diário'}
             </button>
           </div>
 
@@ -810,8 +827,12 @@ export default function DiarioClasse() {
                   Fechar
                 </button>
                 {modalMode === 'edit' && (
-                  <button onClick={handleSalvarEdicao} className="px-5 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200">
-                    Salvar Alterações
+                  <button
+                    onClick={handleSalvarEdicao}
+                    disabled={salvandoEdicao}
+                    className={`px-5 py-2 text-white font-bold rounded-lg shadow-lg transition-all ${salvandoEdicao ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`}
+                  >
+                    {salvandoEdicao ? 'Salvando...' : 'Salvar Alterações'}
                   </button>
                 )}
               </div>

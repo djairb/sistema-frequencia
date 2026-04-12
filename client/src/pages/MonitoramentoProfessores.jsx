@@ -18,6 +18,7 @@ export default function MonitoramentoProfessores() {
     const [aulas, setAulas] = useState([]);
     const [loadingData, setLoadingData] = useState(false);
     const [dataFetched, setDataFetched] = useState(false);
+    const [salvandoFeedback, setSalvandoFeedback] = useState(false);
 
     useEffect(() => {
         carregarProfessores();
@@ -76,12 +77,16 @@ export default function MonitoramentoProfessores() {
 
     const handleSalvarFeedback = async () => {
         if (!plano) return;
+        if (salvandoFeedback) return;
+        setSalvandoFeedback(true);
         try {
             await salvarFeedbackPlano(plano.id, feedback);
             alert('Feedback salvo com sucesso!');
         } catch (error) {
             console.error(error);
             alert('Erro ao salvar feedback.');
+        } finally {
+            setSalvandoFeedback(false);
         }
     };
 
@@ -230,9 +235,10 @@ export default function MonitoramentoProfessores() {
                                     />
                                     <button
                                         onClick={handleSalvarFeedback}
-                                        className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg shadow-indigo-200"
+                                        disabled={salvandoFeedback}
+                                        className={`mt-4 w-full text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg ${salvandoFeedback ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'}`}
                                     >
-                                        <Save size={18} /> Salvar Feedback
+                                        <Save size={18} /> {salvandoFeedback ? 'Salvando...' : 'Salvar Feedback'}
                                     </button>
                                 </div>
 

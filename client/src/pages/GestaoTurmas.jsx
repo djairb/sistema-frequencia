@@ -18,6 +18,7 @@ const GestaoTurmas = () => {
     const [projetos, setProjetos] = useState([]); // Para o modal
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [criando, setCriando] = useState(false);
 
     // Form State (Mantive igual)
     const [novaTurma, setNovaTurma] = useState({
@@ -43,13 +44,19 @@ const GestaoTurmas = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (criando) return;
+        setCriando(true);
         try {
             await api.post('/turmas', novaTurma);
             alert("Turma criada!");
             setShowModal(false);
             carregarDados();
             setNovaTurma({ projeto_id: '', nome: '', turno: 'Manhã', periodo: '', data_inicio: '', data_fim: '', dias_aula: [] });
-        } catch (error) { alert("Erro ao criar turma."); }
+        } catch (error) {
+            alert("Erro ao criar turma.");
+        } finally {
+            setCriando(false);
+        }
     };
 
     const handleDiaChange = (dia) => {
@@ -229,7 +236,7 @@ const GestaoTurmas = () => {
 
                             <div className="flex justify-end gap-3 pt-4">
                                 <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                                <button type="submit" className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg">Criar Turma</button>
+                                <button type="submit" disabled={criando} className={`px-5 py-2 text-white rounded-lg font-bold shadow-lg transition-all ${criando ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>{criando ? 'Criando...' : 'Criar Turma'}</button>
                             </div>
                         </form>
                     </div>

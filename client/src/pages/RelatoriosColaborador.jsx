@@ -17,6 +17,7 @@ const RelatoriosColaborador = () => {
     const [relatoriosList, setRelatoriosList] = useState([]);
     const [loadingRelatorios, setLoadingRelatorios] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [salvandoRelatorio, setSalvandoRelatorio] = useState(false);
 
     useEffect(() => {
         carregarRelatorios();
@@ -50,7 +51,8 @@ const RelatoriosColaborador = () => {
             alert("Selecione o arquivo de Relatório Mensal.");
             return;
         }
-
+        if (salvandoRelatorio) return;
+        setSalvandoRelatorio(true);
         try {
             const formData = new FormData();
             formData.append('ano', selectedAno);
@@ -66,6 +68,8 @@ const RelatoriosColaborador = () => {
         } catch (error) {
             console.error("Erro no upload", error);
             alert("Erro ao enviar arquivo.");
+        } finally {
+            setSalvandoRelatorio(false);
         }
     };
 
@@ -288,8 +292,8 @@ const RelatoriosColaborador = () => {
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold transition-colors">
                                     Cancelar
                                 </button>
-                                <button type="submit" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all shadow-sm shadow-indigo-200">
-                                    <CheckCircle size={18} /> Salvar Relatório
+                                <button type="submit" disabled={salvandoRelatorio} className={`px-5 py-2.5 text-white rounded-lg font-bold flex items-center gap-2 transition-all shadow-sm ${salvandoRelatorio ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'}`}>
+                                    <CheckCircle size={18} /> {salvandoRelatorio ? 'Salvando...' : 'Salvar Relatório'}
                                 </button>
                             </div>
                         </form>

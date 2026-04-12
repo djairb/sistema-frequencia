@@ -176,7 +176,7 @@ router.post("/auth/login", async (req, res) => {
         // 1. Busca o usuário no banco pelo Login (CPF)
         // Trazemos também o nome da pessoa para exibir no Front
         const sql = `
-            SELECT u.id, u.login, u.senha, u.id_perfil_usuario, p.descricao as perfil, pes.nome_completo
+            SELECT u.id, u.login, u.senha, u.id_perfil_usuario, u.id_colaborador, p.descricao as perfil, pes.nome_completo
             FROM usuario u
             JOIN perfil_usuario p ON u.id_perfil_usuario = p.id
             JOIN colaborador c ON u.id_colaborador = c.id
