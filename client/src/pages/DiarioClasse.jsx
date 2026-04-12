@@ -284,8 +284,8 @@ export default function DiarioClasse() {
     if (!confirm("Tem certeza que deseja excluir esta aula? Isso apagará o registro de frequência também.")) return;
     try {
       await deleteAula(aulaId);
+      setHistorico(prev => prev.filter(a => a.id !== aulaId));
       alert("Aula excluída.");
-      carregarHistorico();
     } catch (error) {
       alert("Erro ao excluir aula.");
     }

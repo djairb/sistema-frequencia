@@ -1023,19 +1023,33 @@ router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
         try {
             await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
 
-            // 1. Excluir Frequências Primeiro (Constraint FK)
+            // 1. Buscar e excluir fotos da aula (FK + arquivos físicos)
+            const fotos = await queryTx("SELECT caminho_foto FROM fotos_aula WHERE aula_id = ?", [id]);
+            await queryTx("DELETE FROM fotos_aula WHERE aula_id = ?", [id]);
+
+            for (const foto of fotos) {
+                const nomeArquivo = path.basename(foto.caminho_foto);
+                const caminhoArquivo = path.join(UPLOAD_PATH, nomeArquivo);
+                fs.unlink(caminhoArquivo, (err) => {
+                    if (err && err.code !== 'ENOENT') {
+                        console.error(`Erro ao deletar arquivo físico ${caminhoArquivo}:`, err);
+                    }
+                });
+            }
+
+            // 2. Excluir Frequências (FK)
             await queryTx("DELETE FROM frequencias WHERE aula_id = ?", [id]);
 
-            // 2. Excluir Aula
+            // 3. Excluir Aula
             await queryTx("DELETE FROM aulas WHERE id = ?", [id]);
 
             await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
             res.json({ message: "Aula excluída com sucesso!" });
 
         } catch (error) {
-            connection.rollback(() => { });
+            connection.rollback(() => {});
             console.error("Erro ao excluir aula:", error);
-            res.status(500).json({ error: "Erro ao excluir aula." });
+            res.status(500).json({ error: "Erro ao excluir aula: " + error.message });
         } finally {
             connection.release();
         }
