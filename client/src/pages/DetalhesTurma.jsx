@@ -75,10 +75,11 @@ const DetalhesTurma = () => {
         } catch (error) { console.error("Erro profs"); }
     };
 
-    const carregarAulas = async (page = 1) => {
+    const carregarAulas = async () => {
         try {
-            const res = await api.get(`/turmas/${id}/aulas?page=${page}&limit=10`);
-            setAulasData({ list: res.data.data, total: res.data.pagination.total, page: res.data.pagination.page, totalPages: res.data.pagination.totalPages });
+            const res = await api.get(`/turmas/${id}/aulas`);
+            const lista = res.data.data || [];
+            setAulasData({ list: lista, total: lista.length, page: 1, totalPages: 1 });
         } catch (error) { console.error("Erro aulas"); }
     };
 
@@ -361,7 +362,11 @@ const DetalhesTurma = () => {
                             <div><h3 className="text-lg font-bold">Frequência Registrada</h3><p className="text-blue-100 text-sm">{new Date(aulaSelecionada.data_aula).toLocaleDateString()} • Prof. {aulaSelecionada.professor_nome}</p></div>
                             <button onClick={() => setModalAulaOpen(false)}><X className="text-white/80 hover:text-white" /></button>
                         </div>
-                        <div className="p-4 border-b bg-gray-50"><p className="text-xs font-bold text-gray-600 uppercase mb-1">Conteúdo</p><p className="text-gray-800 bg-white p-3 rounded border border-gray-200 text-sm">{aulaSelecionada.conteudo}</p></div>
+                        <div className="p-4 border-b bg-gray-50 space-y-3">
+                            {aulaSelecionada.titulo_aula && <div><p className="text-xs font-bold text-gray-600 uppercase mb-1">Título</p><p className="text-gray-800 bg-white p-3 rounded border border-gray-200 text-sm font-medium">{aulaSelecionada.titulo_aula}</p></div>}
+                            <div><p className="text-xs font-bold text-gray-600 uppercase mb-1">Conteúdo</p><p className="text-gray-800 bg-white p-3 rounded border border-gray-200 text-sm">{aulaSelecionada.conteudo}</p></div>
+                            {aulaSelecionada.observacoes && <div><p className="text-xs font-bold text-gray-600 uppercase mb-1">Observações do Professor</p><p className="text-gray-800 bg-yellow-50 p-3 rounded border border-yellow-200 text-sm">{aulaSelecionada.observacoes}</p></div>}
+                        </div>
                         <div className="flex-1 overflow-y-auto p-2">
                             {frequenciaAula.length === 0 ? <p className="text-center py-8 text-gray-400">Carregando...</p> :
                                 <table className="w-full text-sm text-left"><tbody className="divide-y divide-gray-100">{frequenciaAula.map((freq, idx) => (<tr key={idx} className="hover:bg-gray-50"><td className="px-4 py-3 font-medium text-gray-800">{freq.nome_completo} {freq.apelido && <span className="text-xs text-gray-500 font-normal">({freq.apelido})</span>}</td><td className="px-4 py-3 text-right"><span className={`px-2 py-1 rounded text-xs font-bold ${freq.status === 'Presente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{freq.status}</span></td></tr>))}</tbody></table>}
