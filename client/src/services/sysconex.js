@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 
-// const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
+const API_URL = 'https://sra2.somosconexaosocial.org/api/sysconex-freq';
 
-const API_URL = 'http://localhost:10000/sysconex-freq';
+// const API_URL = 'http://localhost:10000/sysconex-freq';
 // tem que mudar o link para a visualização em diario de classe
 
 
@@ -13,6 +13,18 @@ export const api = axios.create({
         'Content-Type': 'application/json'
     }
 });
+
+// Interceptor para evitar cache abusivo do navegador em chamadas GET
+api.interceptors.request.use((config) => {
+    if (config.method === 'get') {
+        config.params = {
+            ...config.params,
+            _t: new Date().getTime() // Cache buster
+        };
+    }
+    return config;
+});
+
 
 
 export const loginSession = async (cpf, senha) => {
@@ -80,6 +92,11 @@ export const updateAula = async (aulaId, payload) => {
 
 export const deleteAula = async (aulaId) => {
     const response = await api.delete(`/aulas/${aulaId}`);
+    return response.data;
+};
+
+export const deleteAulasBulk = async (ids) => {
+    const response = await api.post('/aulas/bulk-delete', { ids });
     return response.data;
 };
 

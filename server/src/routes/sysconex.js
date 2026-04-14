@@ -810,7 +810,6 @@ router.delete("/matriculas/:id", verificarUsuario, async (req, res) => {
 router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
     const { id: turmaId } = req.params;
     const { professor_id, titulo_aula, data_aula, conteudo, lista_presenca } = req.body;
-
     // VERIFICAÇÃO DE SEGURANÇA
     if (!(await verificarAcessoProfessorTurma(req.user.id, turmaId))) {
         return res.status(403).json({ error: "Acesso negado. Você não tem permissão para registrar aula nesta turma." });
@@ -871,7 +870,7 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
     try {
         const turmaId = req.params.id;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 100;
         const offset = (page - 1) * limit;
 
         // Traz a aula e o nome do professor que registrou
@@ -1002,28 +1001,113 @@ router.put("/aulas/:id", verificarUsuario, async (req, res) => {
     });
 });
 
-// 4. EXCLUIR AULA
-router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
-    const { id } = req.params;
+// 4a. EXCLUIR AULAS EM LOTE
+router.post("/aulas/bulk-delete", verificarUsuario, async (req, res) => {
+    const { ids } = req.body;
 
-    // VERIFICAÇÃO DE SEGURANÇA: somente o criador da aula (ou coordenação) pode excluir
-    if (!(await verificarAutorDaAula(req.user.id, id))) {
-        return res.status(403).json({ error: "Acesso negado. Você só pode excluir aulas que você mesmo registrou." });
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Envie um array de IDs para excluir." });
+    }
+
+    // Verificar autorização para cada aula
+    const [user] = await querySys("SELECT id_colaborador, id_perfil_usuario FROM usuario WHERE id = ?", [req.user.id]);
+    if (!user) return res.status(403).json({ error: "Usuário não encontrado." });
+
+    const ehCoordenacao = user.id_perfil_usuario !== 6;
+
+    if (!ehCoordenacao) {
+        // Professor: verificar se todas as aulas são dele
+        const placeholders = ids.map(() => '?').join(',');
+        const aulas = await querySys(`SELECT id, colaborador_id FROM aulas WHERE id IN (${placeholders})`, ids);
+        const naoAutorizado = aulas.filter(a => a.colaborador_id !== user.id_colaborador);
+        if (naoAutorizado.length > 0) {
+            return res.status(403).json({ error: "Você só pode excluir aulas que você mesmo registrou." });
+        }
     }
 
     dbSysConex.getConnection(async (err, connection) => {
-        if (err) return res.status(500).json({ error: "Erro de conexão." });
+        if (err) {
+            console.error("Erro ao obter conexão:", err);
+            return res.status(500).json({ error: "Erro de conexão." });
+        }
 
         const queryTx = (sql, params) => {
             return new Promise((resolve, reject) => {
-                connection.query(sql, params, (e, r) => e ? reject(e) : resolve(r));
+                connection.query(sql, params, (e, r) => {
+                    if (e) reject(e);
+                    else resolve(r);
+                });
             });
         };
 
         try {
             await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
 
-            // 1. Buscar e excluir fotos da aula (FK + arquivos físicos)
+            const placeholders = ids.map(() => '?').join(',');
+
+            // 1. Excluir fotos (arquivos físicos)
+            const fotos = await queryTx(`SELECT caminho_foto FROM fotos_aula WHERE aula_id IN (${placeholders})`, ids);
+            await queryTx(`DELETE FROM fotos_aula WHERE aula_id IN (${placeholders})`, ids);
+
+            for (const foto of fotos) {
+                const nomeArquivo = path.basename(foto.caminho_foto);
+                const caminhoArquivo = path.join(UPLOAD_PATH, nomeArquivo);
+                fs.unlink(caminhoArquivo, (err) => {
+                    if (err && err.code !== 'ENOENT') {
+                        console.error(`Erro ao deletar arquivo físico ${caminhoArquivo}:`, err);
+                    }
+                });
+            }
+
+            // 2. Excluir Frequências
+            await queryTx(`DELETE FROM frequencias WHERE aula_id IN (${placeholders})`, ids);
+
+            // 3. Excluir Aulas
+            const result = await queryTx(`DELETE FROM aulas WHERE id IN (${placeholders})`, ids);
+
+            await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+
+            res.json({ message: `${result.affectedRows} aula(s) excluída(s) com sucesso!`, deleted: result.affectedRows });
+
+        } catch (error) {
+            connection.rollback(() => {});
+            console.error("Erro ao excluir aulas em lote:", error);
+            res.status(500).json({ error: "Erro ao excluir aulas: " + error.message });
+        } finally {
+            connection.release();
+        }
+    });
+});
+
+// 4b. EXCLUIR AULA (individual)
+router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
+    const { id } = req.params;
+
+    // VERIFICAÇÃO DE SEGURANÇA: somente o criador da aula (ou coordenação) pode excluir
+    const autorizado = await verificarAutorDaAula(req.user.id, id);
+    if (!autorizado) {
+        return res.status(403).json({ error: "Acesso negado. Você só pode excluir aulas que você mesmo registrou." });
+    }
+
+    dbSysConex.getConnection(async (err, connection) => {
+        if (err) {
+            console.error("Erro ao obter conexão:", err);
+            return res.status(500).json({ error: "Erro de conexão." });
+        }
+
+        const queryTx = (sql, params) => {
+            return new Promise((resolve, reject) => {
+                connection.query(sql, params, (e, r) => {
+                    if (e) reject(e);
+                    else resolve(r);
+                });
+            });
+        };
+
+        try {
+            await new Promise((resolve, reject) => connection.beginTransaction(e => e ? reject(e) : resolve()));
+
+            // 1. Excluir fotos da aula (arquivos físicos)
             const fotos = await queryTx("SELECT caminho_foto FROM fotos_aula WHERE aula_id = ?", [id]);
             await queryTx("DELETE FROM fotos_aula WHERE aula_id = ?", [id]);
 
@@ -1037,13 +1121,14 @@ router.delete("/aulas/:id", verificarUsuario, async (req, res) => {
                 });
             }
 
-            // 2. Excluir Frequências (FK)
+            // 2. Excluir Frequências
             await queryTx("DELETE FROM frequencias WHERE aula_id = ?", [id]);
 
             // 3. Excluir Aula
             await queryTx("DELETE FROM aulas WHERE id = ?", [id]);
 
             await new Promise((resolve, reject) => connection.commit(e => e ? reject(e) : resolve()));
+
             res.json({ message: "Aula excluída com sucesso!" });
 
         } catch (error) {

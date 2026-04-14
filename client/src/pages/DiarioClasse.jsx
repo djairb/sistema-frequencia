@@ -4,7 +4,7 @@ import ModalHistoricoAluno from '../components/ModalHistoricoAluno';
 import { AuthContext } from '../contexts/auth';
 import api, {
   getTurmaById, getAlunosMatriculados, registrarAula,
-  getHistoricoAulas, deleteAula, updateAula, getFrequenciaAula, getTurmaEstatisticas
+  getHistoricoAulas, deleteAula, deleteAulasBulk, updateAula, getFrequenciaAula, getTurmaEstatisticas
 } from '../services/sysconex';
 import {
   ArrowLeft, Calendar, UserCheck, Save, BookOpen,
@@ -37,6 +37,9 @@ export default function DiarioClasse() {
 
   // --- ESTADOS DE HISTÓRICO ---
   const [historico, setHistorico] = useState([]);
+  const [selecaoAtiva, setSelecaoAtiva] = useState(false);
+  const [aulasSelecionadas, setAulasSelecionadas] = useState(new Set());
+  const [excluindoLote, setExcluindoLote] = useState(false);
 
   // Controle de autoria: id_colaborador do usuário logado
   const colaboradorLogadoId = user?.id_colaborador ?? null;
@@ -288,6 +291,41 @@ export default function DiarioClasse() {
       alert("Aula excluída.");
     } catch (error) {
       alert("Erro ao excluir aula.");
+    }
+  }
+
+  function toggleSelecionarAula(aulaId) {
+    setAulasSelecionadas(prev => {
+      const novo = new Set(prev);
+      if (novo.has(aulaId)) novo.delete(aulaId);
+      else novo.add(aulaId);
+      return novo;
+    });
+  }
+
+  function toggleSelecionarTodas() {
+    const aulasExcluiveis = historico.filter(a => ehCoordenacao || (colaboradorLogadoId && a.colaborador_id === colaboradorLogadoId));
+    if (aulasSelecionadas.size === aulasExcluiveis.length) {
+      setAulasSelecionadas(new Set());
+    } else {
+      setAulasSelecionadas(new Set(aulasExcluiveis.map(a => a.id)));
+    }
+  }
+
+  async function handleDeleteSelecionadas() {
+    if (aulasSelecionadas.size === 0) return;
+    if (!confirm(`Tem certeza que deseja excluir ${aulasSelecionadas.size} aula(s)? Isso apagará os registros de frequência também.`)) return;
+    setExcluindoLote(true);
+    try {
+      await deleteAulasBulk(Array.from(aulasSelecionadas));
+      setHistorico(prev => prev.filter(a => !aulasSelecionadas.has(a.id)));
+      alert(`${aulasSelecionadas.size} aula(s) excluída(s).`);
+      setAulasSelecionadas(new Set());
+      setSelecaoAtiva(false);
+    } catch (error) {
+      alert("Erro ao excluir aulas: " + (error.response?.data?.error || error.message));
+    } finally {
+      setExcluindoLote(false);
     }
   }
 
@@ -553,6 +591,38 @@ export default function DiarioClasse() {
       {
         abaAtiva === 'historico' && (
           <div className="animate-fade-in space-y-4">
+            {historico.length > 0 && (
+              <div className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setSelecaoAtiva(prev => !prev); setAulasSelecionadas(new Set()); }}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${selecaoAtiva ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  >
+                    {selecaoAtiva ? 'Cancelar seleção' : 'Selecionar'}
+                  </button>
+                  {selecaoAtiva && (
+                    <>
+                      <button
+                        onClick={toggleSelecionarTodas}
+                        className="px-3 py-1.5 rounded-lg text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                      >
+                        {aulasSelecionadas.size === historico.filter(a => ehCoordenacao || (colaboradorLogadoId && a.colaborador_id === colaboradorLogadoId)).length ? 'Desmarcar todas' : 'Selecionar todas'}
+                      </button>
+                      <span className="text-sm text-gray-500">{aulasSelecionadas.size} selecionada(s)</span>
+                    </>
+                  )}
+                </div>
+                {selecaoAtiva && aulasSelecionadas.size > 0 && (
+                  <button
+                    onClick={handleDeleteSelecionadas}
+                    disabled={excluindoLote}
+                    className="px-4 py-1.5 rounded-lg text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <Trash2 size={14} /> {excluindoLote ? 'Excluindo...' : `Excluir ${aulasSelecionadas.size} aula(s)`}
+                  </button>
+                )}
+              </div>
+            )}
             {historico.length === 0 ? (
               <div className="bg-white p-12 rounded-xl text-center shadow-sm border border-gray-100">
                 <Clock size={48} className="mx-auto text-gray-300 mb-4" />
@@ -564,7 +634,18 @@ export default function DiarioClasse() {
                 const podeExcluir = ehCoordenacao || (colaboradorLogadoId && aula.colaborador_id === colaboradorLogadoId);
 
                 return (
-                <div key={aula.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
+                <div key={aula.id} className={`bg-white p-6 rounded-xl shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow ${selecaoAtiva && aulasSelecionadas.has(aula.id) ? 'border-red-300 bg-red-50' : 'border-gray-100'}`}>
+                  {selecaoAtiva && podeExcluir && (
+                    <input
+                      type="checkbox"
+                      checked={aulasSelecionadas.has(aula.id)}
+                      onChange={() => toggleSelecionarAula(aula.id)}
+                      className="w-5 h-5 rounded border-gray-300 text-red-500 focus:ring-red-400 cursor-pointer flex-shrink-0 mt-1"
+                    />
+                  )}
+                  {selecaoAtiva && !podeExcluir && (
+                    <div className="w-5 h-5 flex-shrink-0" />
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
@@ -592,7 +673,7 @@ export default function DiarioClasse() {
                     >
                       <Edit size={16} /> Editar
                     </button>
-                    {podeExcluir && (
+                    {podeExcluir && !selecaoAtiva && (
                       <button
                         onClick={() => handleDelete(aula.id)}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
