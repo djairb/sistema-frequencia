@@ -869,9 +869,6 @@ router.post("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
 router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
     try {
         const turmaId = req.params.id;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 100;
-        const offset = (page - 1) * limit;
 
         // Traz a aula e o nome do professor que registrou
         const sqlDados = `
@@ -883,21 +880,14 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
             JOIN pessoa p ON c.pessoa_id = p.id
             WHERE a.turma_id = ?
             ORDER BY a.data_aula DESC, a.created_at DESC
-            LIMIT ${limit} OFFSET ${offset}
         `;
 
-        const sqlCount = `SELECT COUNT(*) as total FROM aulas WHERE turma_id = ?`;
-
-        const [dados, countRes] = await Promise.all([
-            querySys(sqlDados, [turmaId]),
-            querySys(sqlCount, [turmaId])
-        ]);
+        const dados = await querySys(sqlDados, [turmaId]);
 
         // Para cada aula, vamos contar quantos Presentes/Ausentes tiveram (Resumo)
-        // Isso evita ter que abrir a aula pra saber se veio gente
         const aulasComResumo = await Promise.all(dados.map(async (aula) => {
             const [resumo] = await querySys(`
-                SELECT 
+                SELECT
                     COALESCE(SUM(CASE WHEN status = 'Presente' THEN 1 ELSE 0 END), 0) as presentes,
                     COALESCE(SUM(CASE WHEN status = 'Ausente' THEN 1 ELSE 0 END), 0) as ausentes,
                     COALESCE(SUM(CASE WHEN status = 'Justificado' THEN 1 ELSE 0 END), 0) as justificados
@@ -907,13 +897,7 @@ router.get("/turmas/:id/aulas", verificarUsuario, async (req, res) => {
         }));
 
         res.json({
-            data: aulasComResumo,
-            pagination: {
-                total: countRes[0].total,
-                page,
-                totalPages: Math.ceil(countRes[0].total / limit),
-                limit
-            }
+            data: aulasComResumo
         });
 
     } catch (error) {

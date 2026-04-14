@@ -845,15 +845,25 @@ export default function DiarioClasse() {
                         onChange={e => setEditConteudo(e.target.value)}
                         disabled={modalMode === 'view'}
                       />
-                      <label className="block text-sm font-medium text-gray-600 mb-1 mt-4">Observações Gerais (Opcional)</label>
-                      <textarea
-                        rows="4"
-                        className="w-full border p-2 rounded resize-none disabled:bg-gray-100 disabled:text-gray-500"
-                        value={editObservacoesAula}
-                        onChange={e => setEditObservacoesAula(e.target.value)}
-                        disabled={modalMode === 'view' || (!ehCoordenacao && colaboradorLogadoId !== aulaEditandoAutorId)}
-                        title={(!ehCoordenacao && colaboradorLogadoId !== aulaEditandoAutorId) ? "Apenas o autor da aula pode editar as observações." : ""}
-                      />
+                      <label className="block text-sm font-medium text-gray-600 mb-1 mt-4">Observações do Professor</label>
+                      {modalMode === 'view' ? (
+                        editObservacoesAula ? (
+                          <div className="w-full border border-yellow-200 bg-yellow-50 p-3 rounded text-sm text-gray-800 whitespace-pre-wrap">
+                            {editObservacoesAula}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-400 italic">Nenhuma observação registrada.</p>
+                        )
+                      ) : (
+                        <textarea
+                          rows="4"
+                          className="w-full border p-2 rounded resize-none disabled:bg-gray-100 disabled:text-gray-500"
+                          value={editObservacoesAula}
+                          onChange={e => setEditObservacoesAula(e.target.value)}
+                          disabled={!ehCoordenacao && colaboradorLogadoId !== aulaEditandoAutorId}
+                          title={(!ehCoordenacao && colaboradorLogadoId !== aulaEditandoAutorId) ? "Apenas o autor da aula pode editar as observações." : ""}
+                        />
+                      )}
                     </div>
 
                     {/* GALERIA NO MODAL */}
